@@ -2,7 +2,7 @@
 function App() {
 
   return (
-    <div>Dossier</div>
+    <div className="text-xl p-4">Dossier</div>
   )
 }
 
