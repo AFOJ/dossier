@@ -20,7 +20,7 @@ const buttonVariants = cva(
     {
         variants: {
             intent: {
-                primary: "bg-gray-900 text-white enabled:hover:bg-gray-700 focus:ring-gray-400",
+                primary: "bg-gray-950 text-white enabled:hover:bg-gray-700 focus:ring-gray-400",
                 secondary: "bg-white text-gray-900 border border-gray-400/40 enabled:hover:bg-gray-50 focus:ring-gray-600",
             },
         },
