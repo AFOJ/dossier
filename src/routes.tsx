@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, redirect, Outlet, Navigate } from "react-router-dom"
 import { getProfile } from "./db/profile"
 import type { ProtectedRouteData } from "./hooks/useProtectedRouteData"
+import CreateProfilePage from "./pages/profile/create"
 
 const protectedRouteLoader = async () => {
     const profile = await getProfile()
@@ -31,7 +32,7 @@ const router = createBrowserRouter(
         <Route path="/" element={<Outlet />}>
 
             <Route id="protected" element={<PublicOnlyLayout />} loader={publicOnlyRouteLoader}>
-                <Route path="setup" element={<>Setup your profile</>} />
+                <Route path="setup" element={<CreateProfilePage />} />
             </Route>
 
             <Route element={<ProtectedLayout />} loader={protectedRouteLoader}>
