@@ -1,11 +1,15 @@
 import { Button, Heading1, Subheading } from '../../../components/ui'
 import { FormProvider } from 'react-hook-form'
+import { usePageTitle } from '../../../hooks/usePageTitle'
 import { PersonalInfoFields } from './components/PersonalInfoFields'
 import { SocialLinksFields } from './components/SocialLinksFields'
 import { useCreateProfileForm } from './hooks/useCreateProfileForm'
 
 export default function CreateProfilePage() {
   const { form, isSubmitting, onSubmit, formError } = useCreateProfileForm()
+
+  usePageTitle('Create Profile')
+
   return (
     <main className="w-full flex justify-center">
       <section className="flex flex-col gap-10 p-4 w-full max-w-4xl mt-20 ">
