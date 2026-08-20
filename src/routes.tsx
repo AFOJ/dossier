@@ -10,6 +10,7 @@ import {
 import { getProfile } from './db/profile'
 import type { ProtectedRouteData } from './hooks/useProtectedRouteData'
 import CreateProfilePage from './pages/profile/create'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
