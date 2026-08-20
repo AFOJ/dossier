@@ -1,9 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  Copy01Icon,
-  Edit02Icon,
-  EyeIcon,
-} from '@hugeicons/core-free-icons'
+import { Copy01Icon, Edit02Icon, EyeIcon } from '@hugeicons/core-free-icons'
 import { Button, Tooltip, type IconProps } from '@/components/ui'
 import type { Resume } from '@/db/db'
 import { Pagination } from '@/pages/resumes/list/components/Pagination'
