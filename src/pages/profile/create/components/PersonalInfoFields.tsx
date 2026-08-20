@@ -22,6 +22,10 @@ export function PersonalInfoFields() {
         />
       </Field>
 
+      <Field label="Job Title" inputId="job-title">
+        <Input id="job-title" placeholder="Farmer" {...register('jobTitle')} />
+      </Field>
+
       <Field label="Location" inputId="location">
         <Input
           id="location"
