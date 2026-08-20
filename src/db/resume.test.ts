@@ -3,6 +3,7 @@ import {
   createResume,
   getResume,
   getAllResumes,
+  queryResumes,
   updateResume,
   deleteResume,
 } from './resume'
@@ -59,5 +60,22 @@ describe('Resume Service', () => {
       'Resume 3',
       'Resume 1',
     ])
+  })
+
+  it('returns the effective pagination with its page slice', async () => {
+    for (let index = 0; index < 5; index += 1) {
+      await createResume(`Resume ${index}`, [])
+      await delay(2)
+    }
+
+    const result = await queryResumes({ query: '', page: 99, perPage: 2 })
+
+    expect(result.pagination).toMatchObject({
+      page: 3,
+      perPage: 2,
+      totalCount: 5,
+      totalPages: 3,
+    })
+    expect(result.items).toHaveLength(1)
   })
 })

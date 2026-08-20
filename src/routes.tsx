@@ -11,6 +11,7 @@ import { getProfile } from './db/profile'
 import type { ProtectedRouteData } from './hooks/useProtectedRouteData'
 import CreateProfilePage from './pages/profile/create'
 import ProtectedLayout from './layouts/ProtectedLayout'
+import ResumesListPage from './pages/resumes/list'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 const protectedRouteLoader = async () => {
@@ -49,7 +50,7 @@ const router = createBrowserRouter(
       >
         <Route index element={<Navigate to="resumes" replace />} />
         <Route path="resumes">
-          <Route index element={<>List of resumes</>} />
+          <Route index element={<ResumesListPage />} />
           <Route path="create" element={<>Create resume</>} />
           <Route path="upload" element={<>Upload resume</>} />
         </Route>

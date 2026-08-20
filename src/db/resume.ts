@@ -1,7 +1,43 @@
 import { db, type Resume } from './db'
 import type { ResumeSection } from './types'
+import {
+  DEFAULT_PAGE_SIZE,
+  getPageMetadata,
+  type PaginationInput,
+} from '../lib/pagination'
 
 const RESUME_TABLE = db.resumes
+
+type ResumeQueryResult = {
+  items: Resume[]
+  pagination: ReturnType<typeof getPageMetadata>
+}
+
+export async function queryResumes(
+  options: { query: string } & PaginationInput,
+): Promise<ResumeQueryResult> {
+  const q = options.query.trim().toLowerCase()
+  const requestedPagination = {
+    page: options.page ?? 1,
+    perPage: options.perPage ?? DEFAULT_PAGE_SIZE,
+  }
+  const collection = q
+    ? RESUME_TABLE.orderBy('updatedAt')
+        .reverse()
+        .filter((r) => r.title.toLowerCase().includes(q))
+    : RESUME_TABLE.orderBy('updatedAt').reverse()
+
+  return db.transaction('r', RESUME_TABLE, async () => {
+    const totalCount = await collection.count()
+    const pagination = getPageMetadata(totalCount, requestedPagination)
+    const items = await collection
+      .offset((pagination.page - 1) * pagination.perPage)
+      .limit(pagination.perPage)
+      .toArray()
+
+    return { items, pagination }
+  })
+}
 
 export async function createResume(
   title: string,
