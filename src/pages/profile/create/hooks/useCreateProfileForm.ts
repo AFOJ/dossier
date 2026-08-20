@@ -20,7 +20,7 @@ export function useCreateProfileForm(
       location: '',
       phone: '',
       email: '',
-      socials: [{ label: 'LinkedIn', url: '' }],
+      socials: [],
       ...defaultValues,
     },
   })
