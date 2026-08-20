@@ -4,7 +4,7 @@ import {
   ArrowDown01Icon,
   Trash,
 } from '@hugeicons/core-free-icons'
-import { Button, Heading2, Input } from '../../../../components/ui'
+import { Button, Field, Heading2, Input } from '../../../../components/ui'
 import { useFieldArray } from 'react-hook-form'
 import { useProfileFormContext } from '../hooks/useCreateProfileForm'
 
@@ -55,7 +55,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
   const { index, isFirst, isLast, onMove, onRemove } = props
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-center sm:border-none sm:p-0">
+    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start sm:border-none sm:p-0">
       <div className="flex items-center justify-between sm:hidden">
         <ReorderControls
           index={index}
@@ -66,7 +66,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
         <RemoveButton index={index} onRemove={onRemove} />
       </div>
 
-      <div className="hidden sm:block">
+      <div className="hidden sm:block sm:pt-1">
         <ReorderControls
           index={index}
           isFirst={isFirst}
@@ -77,7 +77,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
 
       <SocialLinkInputs index={index} />
 
-      <div className="hidden sm:block">
+      <div className="hidden sm:block sm:pt-1">
         <RemoveButton index={index} onRemove={onRemove} />
       </div>
     </div>
@@ -122,20 +122,40 @@ type SocialLinkInputsProps = {
 
 function SocialLinkInputs(props: Readonly<SocialLinkInputsProps>) {
   const { index } = props
-  const { register } = useProfileFormContext()
+  const {
+    register,
+    formState: { errors },
+  } = useProfileFormContext()
+
+  const fieldErrors = errors.socials?.[index]
 
   return (
-    <div className="flex flex-col gap-2 w-full sm:flex-row">
-      <Input
-        className="grow"
-        placeholder="Label (e.g. GitHub)"
-        {...register(`socials.${index}.label`)}
-      />
-      <Input
-        className="grow"
-        placeholder="URL"
-        {...register(`socials.${index}.url`)}
-      />
+    <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-start">
+      <div className="grow">
+        <Field
+          inputId={`socials.${index}.label`}
+          error={fieldErrors?.label?.message}
+        >
+          <Input
+            id={`socials.${index}.label`}
+            placeholder="Label (e.g. GitHub)"
+            {...register(`socials.${index}.label`)}
+          />
+        </Field>
+      </div>
+
+      <div className="grow">
+        <Field
+          inputId={`socials.${index}.url`}
+          error={fieldErrors?.url?.message}
+        >
+          <Input
+            id={`socials.${index}.url`}
+            placeholder="URL"
+            {...register(`socials.${index}.url`)}
+          />
+        </Field>
+      </div>
     </div>
   )
 }
