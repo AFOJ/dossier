@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { db } from './db'
+import { db, type Profile } from './db'
 import { upsertProfile, getProfile, deleteProfile } from './profile'
 import { createResume, getAllResumes } from './resume'
 
@@ -9,12 +9,22 @@ beforeEach(async () => {
   await db.resumes.clear()
 })
 
+const baseProfile: Profile = {
+  full_name: 'John Doe',
+  role: 'Teacher',
+  phone: '123',
+  location: null,
+  email: null,
+  links: [],
+}
+
 describe('Profile Service', () => {
   it('manages single-profile lifecycle (upsert and fetch)', async () => {
     expect(await getProfile()).toBeNull()
 
     // Create a new profile
     const id1 = await upsertProfile({
+      ...baseProfile,
       full_name: 'John',
       phone: '123',
       links: [],
@@ -26,6 +36,7 @@ describe('Profile Service', () => {
 
     // Update the created profile
     const id2 = await upsertProfile({
+      ...baseProfile,
       full_name: 'Jack',
       phone: '123',
       location: 'Remote',
@@ -40,7 +51,12 @@ describe('Profile Service', () => {
   })
 
   it('cascades deletion to resumes', async () => {
-    await upsertProfile({ full_name: 'John', phone: '123', links: [] })
+    await upsertProfile({
+      ...baseProfile,
+      full_name: 'John',
+      phone: '123',
+      links: [],
+    })
     await createResume('Resume 1', [])
 
     await deleteProfile()

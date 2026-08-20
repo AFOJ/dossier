@@ -5,10 +5,10 @@ import type { Link, ResumeSection } from './types'
 export interface Profile {
   id?: number
   full_name: string
-  role?: string
-  email?: string
-  phone?: string
-  location?: string
+  role: string | null
+  email: string | null
+  phone: string | null
+  location: string | null
   links: Link[]
 }
 
