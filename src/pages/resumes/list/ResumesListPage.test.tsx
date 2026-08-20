@@ -2,18 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import ResumesListPage from './ResumesListPage'
-import { createResume } from '../../../db/resume'
-import type { Resume } from '../../../db/db'
-import type { ResumeSection } from '../../../db/types'
-import { useResumeTable } from '../../../hooks/useResumeTable'
+import ResumesListPage from '@/pages/resumes/list/ResumesListPage'
+import { createResume } from '@/db/resume'
+import type { Resume } from '@/db/db'
+import type { ResumeSection } from '@/db/types'
+import { useResumeTable } from '@/hooks/useResumeTable'
 
-vi.mock('../../../hooks/useResumeTable', () => ({
+vi.mock('@/hooks/useResumeTable', () => ({
   useResumeTable: vi.fn(),
   PAGE_SIZE_OPTIONS: [2, 5, 10, 25],
 }))
 
-vi.mock('../../../db/resume', () => ({
+vi.mock('@/db/resume', () => ({
   createResume: vi.fn(),
 }))
 

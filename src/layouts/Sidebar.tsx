@@ -6,9 +6,9 @@ import {
   UserIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon, type HugeiconsIconProps } from '@hugeicons/react'
-import { Divider } from '../components/ui'
-import useProtectedRouteData from '../hooks/useProtectedRouteData'
-import { cn } from '../utils'
+import { Divider } from '@/components/ui'
+import useProtectedRouteData from '@/hooks/useProtectedRouteData'
+import { cn } from '@/utils'
 
 type NavItem = {
   to: string

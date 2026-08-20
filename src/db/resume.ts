@@ -1,10 +1,10 @@
-import { db, type Resume } from './db'
-import type { ResumeSection } from './types'
+import { db, type Resume } from '@/db/db'
+import type { ResumeSection } from '@/db/types'
 import {
   DEFAULT_PAGE_SIZE,
   getPageMetadata,
   type PaginationInput,
-} from '../lib/pagination'
+} from '@/lib/pagination'
 
 const RESUME_TABLE = db.resumes
 

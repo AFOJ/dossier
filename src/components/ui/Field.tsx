@@ -1,4 +1,4 @@
-import { cn } from '../../utils'
+import { cn } from '@/utils'
 import { Field as BaseField } from '@base-ui/react/field'
 import * as React from 'react'
 

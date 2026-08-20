@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { queryResumes } from '../db/resume'
-import { DEFAULT_PAGE_SIZE, getPageMetadata, toPositiveInteger } from '../lib/pagination'
+import { queryResumes } from '@/db/resume'
+import { DEFAULT_PAGE_SIZE, getPageMetadata, toPositiveInteger } from '@/lib/pagination'
 
 const DEFAULT_PAGE = 1
 

@@ -4,7 +4,7 @@ import {
   isRouteErrorResponse,
 } from 'react-router-dom'
 import { Home01Icon, Refresh04Icon } from '@hugeicons/core-free-icons'
-import { Button, Heading2, Subheading } from './ui'
+import { Button, Heading2, Subheading } from '@/components/ui'
 
 const FALLBACK_MESSAGE =
   'We encountered an unexpected error while rendering this page.'

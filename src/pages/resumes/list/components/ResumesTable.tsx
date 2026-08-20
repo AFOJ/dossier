@@ -6,7 +6,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { Button, Tooltip, type IconProps } from '@/components/ui'
 import type { Resume } from '@/db/db'
-import { Pagination } from './Pagination'
+import { Pagination } from '@/pages/resumes/list/components/Pagination'
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',

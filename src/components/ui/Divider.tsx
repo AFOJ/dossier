@@ -1,4 +1,4 @@
-import { cn } from '../../utils'
+import { cn } from '@/utils'
 import type { ComponentPropsWithoutRef } from 'react'
 
 export const Divider = (props: Readonly<ComponentPropsWithoutRef<'hr'>>) => {

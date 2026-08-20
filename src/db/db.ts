@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Link, ResumeSection } from './types'
+import type { Link, ResumeSection } from '@/db/types'
 
 // --- SCHEMA ---
 export interface Profile {

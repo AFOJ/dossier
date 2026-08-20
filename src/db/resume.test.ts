@@ -6,8 +6,8 @@ import {
   queryResumes,
   updateResume,
   deleteResume,
-} from './resume'
-import { db } from './db'
+} from '@/db/resume'
+import { db } from '@/db/db'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 const delay = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms))

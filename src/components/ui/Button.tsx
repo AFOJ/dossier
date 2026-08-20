@@ -2,7 +2,7 @@ import { Button as BaseButton } from '@base-ui/react'
 import { cn } from '@/utils'
 import { cva } from 'class-variance-authority'
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
-import { Icon, type IconProps } from './Icon'
+import { Icon, type IconProps } from '@/components/ui/Icon'
 
 interface ButtonProps extends ComponentPropsWithoutRef<typeof BaseButton> {
   intent?: 'primary' | 'secondary'

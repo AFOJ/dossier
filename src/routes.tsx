@@ -7,12 +7,12 @@ import {
   Outlet,
   Navigate,
 } from 'react-router-dom'
-import { getProfile } from './db/profile'
-import type { ProtectedRouteData } from './hooks/useProtectedRouteData'
-import CreateProfilePage from './pages/profile/create'
-import ProtectedLayout from './layouts/ProtectedLayout'
-import ResumesListPage from './pages/resumes/list'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { getProfile } from '@/db/profile'
+import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
+import ProtectedLayout from '@/layouts/ProtectedLayout'
+import CreateProfilePage from '@/pages/profile/create'
+import ResumesListPage from '@/pages/resumes/list'
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()

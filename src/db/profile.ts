@@ -1,4 +1,4 @@
-import { db, type Profile } from './db'
+import { db, type Profile } from '@/db/db'
 
 export async function upsertProfile(
   data: Omit<Profile, 'id'>,

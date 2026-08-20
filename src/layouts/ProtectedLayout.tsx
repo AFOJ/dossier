@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Drawer } from '@base-ui/react/drawer'
 import { Menu01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Sidebar } from './Sidebar'
+import { Sidebar } from '@/layouts/Sidebar'
 
 export default function ProtectedLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)

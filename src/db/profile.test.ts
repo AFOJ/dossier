@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { db, type Profile } from './db'
-import { upsertProfile, getProfile, deleteProfile } from './profile'
-import { createResume, getAllResumes } from './resume'
+import { db, type Profile } from '@/db/db'
+import { upsertProfile, getProfile, deleteProfile } from '@/db/profile'
+import { createResume, getAllResumes } from '@/db/resume'
 
 beforeEach(async () => {
   await db.profiles.clear()

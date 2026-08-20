@@ -4,9 +4,9 @@ import {
   ArrowDown01Icon,
   Trash,
 } from '@hugeicons/core-free-icons'
-import { Button, Field, Heading2, Input } from '../../../../components/ui'
+import { Button, Field, Heading2, Input } from '@/components/ui'
 import { useFieldArray } from 'react-hook-form'
-import { useProfileFormContext } from '../hooks/useCreateProfileForm'
+import { useProfileFormContext } from '@/pages/profile/create/hooks/useCreateProfileForm'
 
 export function SocialLinksFields() {
   const { control } = useProfileFormContext()

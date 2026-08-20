@@ -6,12 +6,12 @@ import {
   Heading3,
   SearchInput,
   Subheading,
-} from '../../../components/ui'
-import type { Resume } from '../../../db/db'
-import { createResume } from '../../../db/resume'
-import { usePageTitle } from '../../../hooks/usePageTitle'
-import { useResumeTable } from '../../../hooks/useResumeTable'
-import { ResumesTable } from './components/ResumesTable'
+} from '@/components/ui'
+import type { Resume } from '@/db/db'
+import { createResume } from '@/db/resume'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { useResumeTable } from '@/hooks/useResumeTable'
+import { ResumesTable } from '@/pages/resumes/list/components/ResumesTable'
 
 export default function ResumesListPage() {
   const table = useResumeTable()

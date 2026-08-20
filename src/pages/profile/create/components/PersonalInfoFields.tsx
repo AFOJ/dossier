@@ -1,5 +1,5 @@
-import { Field, Input } from '../../../../components/ui'
-import { useProfileFormContext } from '../hooks/useCreateProfileForm'
+import { Field, Input } from '@/components/ui'
+import { useProfileFormContext } from '@/pages/profile/create/hooks/useCreateProfileForm'
 
 export function PersonalInfoFields() {
   const {

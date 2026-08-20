@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { ErrorBoundary } from './ErrorBoundary'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const GENERIC_MESSAGE =
   'We encountered an unexpected error while rendering this page.'

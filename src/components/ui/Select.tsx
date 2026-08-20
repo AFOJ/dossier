@@ -1,6 +1,6 @@
 import { Select as BaseSelect } from '@base-ui/react/select'
 import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
-import { Icon } from './Icon'
+import { Icon } from '@/components/ui/Icon'
 
 type SelectOption<T extends string | number> = {
   label: string

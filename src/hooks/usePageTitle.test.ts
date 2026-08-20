@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { usePageTitle } from './usePageTitle'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 describe('usePageTitle', () => {
   it('sets the document title with the Dossier suffix', () => {

@@ -1,12 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import CreateProfilePage from './CreateProfilePage'
-import { upsertProfile } from '../../../db/profile'
+import CreateProfilePage from '@/pages/profile/create/CreateProfilePage'
+import { upsertProfile } from '@/db/profile'
 
 // Only mock the network boundary and router — everything else (zod validation,
 // react-hook-form, useFieldArray reordering) runs for real.
-vi.mock('../../../db/profile', () => ({
+vi.mock('@/db/profile', () => ({
   upsertProfile: vi.fn(),
 }))
 

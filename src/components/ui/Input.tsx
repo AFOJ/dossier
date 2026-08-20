@@ -1,6 +1,6 @@
 import { Input as BaseInput } from '@base-ui/react'
 import { forwardRef } from 'react'
-import { cn } from '../../utils'
+import { cn } from '@/utils'
 
 type InputProps = React.ComponentPropsWithoutRef<typeof BaseInput>
 

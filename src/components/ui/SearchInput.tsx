@@ -1,7 +1,7 @@
 import { Search01Icon } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/utils'
-import { Input } from './Input'
+import { Input } from '@/components/ui/Input'
 
 type SearchInputProps = {
   value: string

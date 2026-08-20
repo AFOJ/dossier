@@ -2,7 +2,7 @@ import { useForm, useFormContext } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { upsertProfile } from '../../../../db/profile'
+import { upsertProfile } from '@/db/profile'
 import { useState } from 'react'
 
 export type CreateProfileFormData = z.infer<typeof profileSchema>

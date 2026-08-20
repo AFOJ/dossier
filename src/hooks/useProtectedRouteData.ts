@@ -1,5 +1,5 @@
 import { useRouteLoaderData } from 'react-router-dom'
-import type { Profile } from '../db/db'
+import type { Profile } from '@/db/db'
 
 export interface ProtectedRouteData {
   profile: Profile

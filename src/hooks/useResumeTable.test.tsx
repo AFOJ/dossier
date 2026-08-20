@@ -3,9 +3,9 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter, useSearchParams } from 'react-router-dom'
 import { beforeEach, describe, it, expect } from 'vitest'
-import { useResumeTable } from './useResumeTable'
-import { db } from '../db/db'
-import { createResume } from '../db/resume'
+import { useResumeTable } from '@/hooks/useResumeTable'
+import { db } from '@/db/db'
+import { createResume } from '@/db/resume'
 
 const delay = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms))
 

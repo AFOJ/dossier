@@ -1,9 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useCreateProfileForm } from './useCreateProfileForm'
-import { upsertProfile } from '../../../../db/profile'
+import { useCreateProfileForm } from '@/pages/profile/create/hooks/useCreateProfileForm'
+import { upsertProfile } from '@/db/profile'
 
-vi.mock('../../../../db/profile', () => ({
+vi.mock('@/db/profile', () => ({
   upsertProfile: vi.fn(),
 }))
 
