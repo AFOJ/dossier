@@ -140,8 +140,8 @@ describe('CreateProfilePage', () => {
     await user.type(labels[2], 'Twitter')
     await user.type(urls[2], 'https://twitter.com/c')
 
-    // remove the middle row (controls are duplicated for mobile/desktop layouts)
-    await user.click(screen.getAllByRole('button', { name: 'Remove link 2' })[0])
+    // remove the middle row
+    await user.click(screen.getByRole('button', { name: 'Remove link 2' }))
 
     const remainingLabels = screen.getAllByPlaceholderText(
       'Label (e.g. GitHub)',
@@ -162,20 +162,17 @@ describe('CreateProfilePage', () => {
     await user.type(labels[1], 'Second')
 
     // first row's "up" is disabled, last row's "down" is disabled
-    // (the controls are duplicated for mobile/desktop layouts, so query all)
     expect(
-      screen.getAllByRole('button', { name: 'Move link 1 up' })[0],
+      screen.getByRole('button', { name: 'Move link 1 up' }),
     ).toBeDisabled()
     expect(
-      screen.getAllByRole('button', { name: 'Move link 2 down' })[0],
+      screen.getByRole('button', { name: 'Move link 2 down' }),
     ).toBeDisabled()
     expect(
-      screen.getAllByRole('button', { name: 'Move link 1 down' })[0],
+      screen.getByRole('button', { name: 'Move link 1 down' }),
     ).toBeEnabled()
 
-    await user.click(
-      screen.getAllByRole('button', { name: 'Move link 1 down' })[0],
-    )
+    await user.click(screen.getByRole('button', { name: 'Move link 1 down' }))
 
     const reordered = screen.getAllByPlaceholderText('Label (e.g. GitHub)')
     expect(reordered[0]).toHaveValue('Second')
@@ -183,10 +180,10 @@ describe('CreateProfilePage', () => {
 
     // boundary state should now be flipped for row 1
     expect(
-      screen.getAllByRole('button', { name: 'Move link 1 up' })[0],
+      screen.getByRole('button', { name: 'Move link 1 up' }),
     ).toBeDisabled()
     expect(
-      screen.getAllByRole('button', { name: 'Move link 2 down' })[0],
+      screen.getByRole('button', { name: 'Move link 2 down' }),
     ).toBeDisabled()
   })
 
