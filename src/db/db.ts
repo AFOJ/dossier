@@ -7,9 +7,8 @@ export interface Profile {
   full_name: string
   role?: string
   email?: string
-  phone: string
+  phone?: string
   location?: string
-  website?: string
   links: Link[]
 }
 
