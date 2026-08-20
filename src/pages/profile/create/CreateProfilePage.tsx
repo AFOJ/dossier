@@ -1,4 +1,4 @@
-import { Button, Heading1, Subheading } from '../../../components/ui'
+import { Button, Divider, Heading1, Subheading } from '../../../components/ui'
 import { FormProvider } from 'react-hook-form'
 import { usePageTitle } from '../../../hooks/usePageTitle'
 import { PersonalInfoFields } from './components/PersonalInfoFields'
@@ -25,7 +25,7 @@ export default function CreateProfilePage() {
           <form onSubmit={onSubmit} className="contents">
             <PersonalInfoFields />
 
-            <hr className="border-gray-300" />
+            <Divider className="border-gray-300" />
             <SocialLinksFields />
 
             {formError && (
