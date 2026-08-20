@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="100%" height="100%">
-  <!-- Solid White Background -->
-  <rect width="32" height="32" rx="6" fill="#FFFFFF"/>
+  <!-- Solid Gray-900 Background -->
+  <rect width="32" height="32" rx="6" fill="#111827"/>
   
-  <!-- Black "D" Spine & Outer Curve -->
+  <!-- White "D" Spine & Outer Curve -->
   <path 
     d="M 6,5 
        H 17 
@@ -16,12 +16,12 @@
        C 20,23 22,20 22,16 
        C 22,12 20,9 16,9 
        Z" 
-    fill="#000000" 
+    fill="#FFFFFF" 
     fill-rule="evenodd"
   />
   
-  <!-- Black Document Lines inside the "D" -->
-  <rect x="12" y="12" width="6" height="2" rx="1" fill="#000000"/>
-  <rect x="12" y="15" width="5" height="2" rx="1" fill="#000000"/>
-  <rect x="12" y="18" width="4" height="2" rx="1" fill="#000000"/>
+  <!-- White Document Lines inside the "D" -->
+  <rect x="12" y="12" width="6" height="2" rx="1" fill="#FFFFFF"/>
+  <rect x="12" y="15" width="5" height="2" rx="1" fill="#FFFFFF"/>
+  <rect x="12" y="18" width="4" height="2" rx="1" fill="#FFFFFF"/>
 </svg>
