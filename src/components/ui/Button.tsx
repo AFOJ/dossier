@@ -1,12 +1,12 @@
 import { Button as BaseButton } from '@base-ui/react'
-import { cn } from '../../utils'
+import { cn } from '@/utils'
 import { cva } from 'class-variance-authority'
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
-import { HugeiconsIcon, type HugeiconsIconProps } from '@hugeicons/react'
+import { Icon, type IconProps } from './Icon'
 
 interface ButtonProps extends ComponentPropsWithoutRef<typeof BaseButton> {
   intent?: 'primary' | 'secondary'
-  icon?: HugeiconsIconProps['icon']
+  icon?: IconProps['icon']
   iconClassname?: string
 }
 
@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, Readonly<ButtonProps>>(
         className={cn(buttonVariants({ intent }), className)}
       >
         {icon && (
-          <HugeiconsIcon
+          <Icon
             aria-hidden
             icon={icon}
             size={16}

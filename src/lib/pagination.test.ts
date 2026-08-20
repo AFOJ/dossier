@@ -3,7 +3,7 @@ import {
   getPageMetadata,
   getPageRange,
   getVisiblePageNumbers,
-} from './pagination'
+} from '@/lib/pagination'
 
 describe('pagination', () => {
   it('normalises invalid pagination and clamps an unavailable page', () => {

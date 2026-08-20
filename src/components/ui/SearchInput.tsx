@@ -1,6 +1,6 @@
 import { Search01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { cn } from '../../utils'
+import { Icon } from '@/components/ui/Icon'
+import { cn } from '@/utils'
 import { Input } from './Input'
 
 type SearchInputProps = {
@@ -15,7 +15,7 @@ export function SearchInput(props: Readonly<SearchInputProps>) {
 
   return (
     <div className={cn('relative w-full sm:w-56', className)}>
-      <HugeiconsIcon
+      <Icon
         aria-hidden
         className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
         icon={Search01Icon}

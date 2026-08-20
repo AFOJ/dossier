@@ -1,12 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Tooltip } from '@base-ui/react/tooltip'
 import {
   Copy01Icon,
   Edit02Icon,
   EyeIcon,
 } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon, type HugeiconsIconProps } from '@hugeicons/react'
-import type { Resume } from '../../../../db/db'
+import { Button, Tooltip, type IconProps } from '@/components/ui'
+import type { Resume } from '@/db/db'
 import { Pagination } from './Pagination'
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -132,7 +131,7 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 
 type QuickActionProps = {
   label: string
-  icon: HugeiconsIconProps['icon']
+  icon: IconProps['icon']
   onClick: () => void
 }
 
@@ -140,21 +139,14 @@ function QuickAction(props: Readonly<QuickActionProps>) {
   const { label, icon, onClick } = props
 
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger
+    <Tooltip content={label}>
+      <Button
         aria-label={label}
+        icon={icon}
+        intent="secondary"
         onClick={onClick}
-        className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400"
-      >
-        <HugeiconsIcon icon={icon} size={16} strokeWidth={2} />
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Positioner sideOffset={6}>
-          <Tooltip.Popup className="rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-sm">
-            {label}
-          </Tooltip.Popup>
-        </Tooltip.Positioner>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+        className="size-8 p-0 text-gray-500 hover:text-gray-900"
+      />
+    </Tooltip>
   )
 }
