@@ -37,7 +37,7 @@ const ProtectedLayout = () => <Outlet />
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<Outlet />}>
+    <Route path="/" element={<Outlet />} errorElement={<ErrorBoundary />}>
       <Route
         id="protected"
         element={<PublicOnlyLayout />}
@@ -52,7 +52,16 @@ const router = createBrowserRouter(
         <Route path="profile" element={<>Profile</>} />
       </Route>
 
-      <Route path="*" element={<>Page not found</>} />
+      <Route
+        path="*"
+        element={<div />}
+        loader={() => {
+          throw new Response(
+            "The page you are looking for doesn't exist or has been moved.",
+            { status: 404, statusText: 'Page not found' },
+          )
+        }}
+      />
     </Route>,
   ),
 )
