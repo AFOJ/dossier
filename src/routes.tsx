@@ -1,51 +1,61 @@
-import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, redirect, Outlet, Navigate } from "react-router-dom"
-import { getProfile } from "./db/profile"
-import type { ProtectedRouteData } from "./hooks/useProtectedRouteData"
-import CreateProfilePage from "./pages/profile/create"
+import {
+  createBrowserRouter,
+  RouterProvider,
+  createRoutesFromElements,
+  Route,
+  redirect,
+  Outlet,
+  Navigate,
+} from 'react-router-dom'
+import { getProfile } from './db/profile'
+import type { ProtectedRouteData } from './hooks/useProtectedRouteData'
+import CreateProfilePage from './pages/profile/create'
 
 const protectedRouteLoader = async () => {
-    const profile = await getProfile()
+  const profile = await getProfile()
 
-    if (!profile) {
-        return redirect("/setup")
-    }
+  if (!profile) {
+    return redirect('/setup')
+  }
 
-    return { profile } satisfies ProtectedRouteData
+  return { profile } satisfies ProtectedRouteData
 }
 
 const publicOnlyRouteLoader = async () => {
-    const profile = await getProfile()
+  const profile = await getProfile()
 
-    if (profile) {
-        return redirect("/resumes")
-    }
+  if (profile) {
+    return redirect('/resumes')
+  }
 
-    return null
+  return null
 }
 
 const PublicOnlyLayout = () => <Outlet />
 const ProtectedLayout = () => <Outlet />
 
-
 const router = createBrowserRouter(
-    createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+  createRoutesFromElements(
+    <Route path="/" element={<Outlet />}>
+      <Route
+        id="protected"
+        element={<PublicOnlyLayout />}
+        loader={publicOnlyRouteLoader}
+      >
+        <Route path="setup" element={<CreateProfilePage />} />
+      </Route>
 
-            <Route id="protected" element={<PublicOnlyLayout />} loader={publicOnlyRouteLoader}>
-                <Route path="setup" element={<CreateProfilePage />} />
-            </Route>
+      <Route element={<ProtectedLayout />} loader={protectedRouteLoader}>
+        <Route index element={<Navigate to="resumes" replace />} />
+        <Route path="resumes" element={<>List of resumes</>} />
+        <Route path="profile" element={<>Profile</>} />
+      </Route>
 
-            <Route element={<ProtectedLayout />} loader={protectedRouteLoader}>
-                <Route index element={<Navigate to="resumes" replace />} />
-                <Route path="resumes" element={<>List of resumes</>} />
-                <Route path="profile" element={<>Profile</>} />
-            </Route>
-
-            <Route path="*" element={<>Page not found</>} />
-        </Route>
-    )
+      <Route path="*" element={<>Page not found</>} />
+    </Route>,
+  ),
 )
 
 export default function AppRoutes() {
-    return <RouterProvider router={router} />
+  return <RouterProvider router={router} />
 }

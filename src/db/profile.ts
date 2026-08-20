@@ -1,6 +1,8 @@
 import { db, type Profile } from './db'
 
-export async function upsertProfile(data: Omit<Profile, 'id'>): Promise<number> {
+export async function upsertProfile(
+  data: Omit<Profile, 'id'>,
+): Promise<number> {
   const existing = await db.profiles.toCollection().first()
   if (existing) {
     await db.profiles.update(existing.id!, data)

@@ -18,20 +18,27 @@ beforeEach(async () => {
 
 describe('Resume Service', () => {
   it('handles resume lifecycle, updates, and timestamps', async () => {
-    const id = await createResume('Original', [{ type: 'summary', text: 'Old' }])
+    const id = await createResume('Original', [
+      { type: 'summary', text: 'Old' },
+    ])
     const initial = await getResume(id)
-    
+
     expect(initial).toBeDefined()
     expect(initial?.createdAt).toEqual(initial?.updatedAt)
 
     await delay(10)
 
-    await updateResume(id, { title: 'Updated', sections: [{ type: 'summary', text: 'New' }] })
+    await updateResume(id, {
+      title: 'Updated',
+      sections: [{ type: 'summary', text: 'New' }],
+    })
     const updated = await getResume(id)
 
     expect(updated?.title).toBe('Updated')
     expect(updated?.createdAt).toEqual(initial?.createdAt) // Unchanged
-    expect(updated!.updatedAt.getTime()).toBeGreaterThan(initial!.updatedAt.getTime()) // Bumped
+    expect(updated!.updatedAt.getTime()).toBeGreaterThan(
+      initial!.updatedAt.getTime(),
+    ) // Bumped
 
     await deleteResume(id)
     expect(await getResume(id)).toBeUndefined()
@@ -47,7 +54,7 @@ describe('Resume Service', () => {
     await updateResume(targetId, { title: 'Resume 2 (Updated)' })
 
     const resumes = await getAllResumes()
-    expect(resumes.map(r => r.title)).toEqual([
+    expect(resumes.map((r) => r.title)).toEqual([
       'Resume 2 (Updated)',
       'Resume 3',
       'Resume 1',
