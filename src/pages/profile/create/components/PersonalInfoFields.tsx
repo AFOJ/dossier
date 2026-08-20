@@ -15,11 +15,7 @@ export function PersonalInfoFields() {
         required
         error={errors.fullName?.message}
       >
-        <Input
-          id="fullName"
-          placeholder="John Doe"
-          {...register('fullName', { required: 'Name is required' })}
-        />
+        <Input id="fullName" placeholder="John Doe" {...register('fullName')} />
       </Field>
 
       <Field label="Job Title" inputId="job-title">
@@ -34,24 +30,24 @@ export function PersonalInfoFields() {
         />
       </Field>
 
-      <Field label="Phone" inputId="phone">
-        <Input
-          id="phone"
-          placeholder="+1 (555) 000-0000"
-          {...register('phone')}
-        />
-      </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Phone" inputId="phone">
+          <Input
+            id="phone"
+            placeholder="+1 (555) 000-0000"
+            {...register('phone')}
+          />
+        </Field>
 
-      <Field label="Email" inputId="email" error={errors.email?.message}>
-        <Input
-          id="email"
-          type="email"
-          placeholder="john@doe.com"
-          {...register('email', {
-            pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' },
-          })}
-        />
-      </Field>
+        <Field label="Email" inputId="email" error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            placeholder="john@doe.com"
+            {...register('email')}
+          />
+        </Field>
+      </div>
     </div>
   )
 }
