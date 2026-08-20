@@ -5,7 +5,7 @@ import { SocialLinksFields } from './components/SocialLinksFields'
 import { useCreateProfileForm } from './hooks/useCreateProfileForm'
 
 export default function CreateProfilePage() {
-  const { form, isSubmitting, onSubmit } = useCreateProfileForm()
+  const { form, isSubmitting, onSubmit, formError } = useCreateProfileForm()
   return (
     <main className="w-full flex justify-center">
       <section className="flex flex-col gap-10 p-4 w-full max-w-4xl mt-20 ">
@@ -23,6 +23,13 @@ export default function CreateProfilePage() {
 
             <hr className="border-gray-300" />
             <SocialLinksFields />
+
+            {formError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
+                {formError}
+              </div>
+            )}
+
             <Button type="submit" disabled={isSubmitting}>
               Create My Profile
             </Button>
