@@ -6,6 +6,7 @@ import {
 import { Home01Icon, Refresh04Icon } from '@hugeicons/core-free-icons'
 import { IsometricFace } from '@/components/illustrations'
 import { Button, Heading2, Subheading } from '@/components/ui'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const FALLBACK_MESSAGE =
   'We encountered an unexpected error while rendering this page.'
@@ -79,6 +80,8 @@ export function ErrorBoundary(props: Readonly<ErrorBoundaryProps>) {
               ? error
               : FALLBACK_MESSAGE,
       }
+
+  usePageTitle(resolved.title)
 
   return (
     <main className="flex w-full justify-center">
