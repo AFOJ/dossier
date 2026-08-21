@@ -1,8 +1,8 @@
 import { Button, Divider, Heading1, Subheading } from '@/components/ui'
 import { FormProvider } from 'react-hook-form'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { PersonalInfoFields } from '@/pages/profile/create/components/PersonalInfoFields'
-import { SocialLinksFields } from '@/pages/profile/create/components/SocialLinksFields'
+import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
+import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
 import { useCreateProfileForm } from '@/pages/profile/create/hooks/useCreateProfileForm'
 
 export default function CreateProfilePage() {

@@ -1,19 +1,20 @@
-import { useForm, useFormContext } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { upsertProfile } from '@/db/profile'
 import { useState } from 'react'
-
-export type CreateProfileFormData = z.infer<typeof profileSchema>
+import { upsertProfile } from '@/db/profile'
+import {
+  profileSchema,
+  type ProfileFormData,
+} from '@/pages/profile/schema'
 
 export function useCreateProfileForm(
-  defaultValues?: Partial<CreateProfileFormData>,
+  defaultValues?: Partial<ProfileFormData>,
 ) {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<CreateProfileFormData>({
+  const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: '',
@@ -60,24 +61,3 @@ export function useCreateProfileForm(
     isSubmitting,
   }
 }
-
-export function useProfileFormContext() {
-  return useFormContext<CreateProfileFormData>()
-}
-
-export const profileSchema = z.object({
-  fullName: z
-    .string()
-    .min(1, 'Full name is required')
-    .min(2, 'Full name must be at least 2 characters'),
-  location: z.string().optional(),
-  jobTitle: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.email('Invalid email address').or(z.literal('')),
-  socials: z.array(
-    z.object({
-      label: z.string().min(1, 'Label is required'),
-      url: z.url('Must be a valid URL'),
-    }),
-  ),
-})

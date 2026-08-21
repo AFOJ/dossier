@@ -1,11 +1,11 @@
 import { Field, Input } from '@/components/ui'
-import { useProfileFormContext } from '@/pages/profile/create/hooks/useCreateProfileForm'
+import { useProfileFieldContext } from '@/pages/profile/schema'
 
 export function PersonalInfoFields() {
   const {
     register,
     formState: { errors },
-  } = useProfileFormContext()
+  } = useProfileFieldContext()
 
   return (
     <div className="grid gap-4">
