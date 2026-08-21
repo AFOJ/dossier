@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import ResumesListPage from '@/pages/resumes/list/ResumesListPage'
-import { createResume } from '@/db/resume'
+import { createResume, deleteResume } from '@/db/resume'
 import type { Resume } from '@/db/db'
 import type { ResumeSection } from '@/db/types'
 import { useResumeTable } from '@/hooks/useResumeTable'
+import { ModalProvider } from '@/components/modal'
 
 vi.mock('@/hooks/useResumeTable', () => ({
   useResumeTable: vi.fn(),
@@ -15,6 +16,7 @@ vi.mock('@/hooks/useResumeTable', () => ({
 
 vi.mock('@/db/resume', () => ({
   createResume: vi.fn(),
+  deleteResume: vi.fn(),
 }))
 
 const mockUseResumeTable = vi.mocked(useResumeTable)
@@ -52,13 +54,18 @@ function renderPage(state: TableState) {
   mockUseResumeTable.mockReturnValue(state)
 
   render(
-    <MemoryRouter initialEntries={['/resumes']}>
-      <Routes>
-        <Route path="/resumes" element={<ResumesListPage />} />
-        <Route path="/resumes/create" element={<div>Create resume page</div>} />
-        <Route path="/resumes/:id" element={<div>Resume detail page</div>} />
-      </Routes>
-    </MemoryRouter>,
+    <ModalProvider>
+      <MemoryRouter initialEntries={['/resumes']}>
+        <Routes>
+          <Route path="/resumes" element={<ResumesListPage />} />
+          <Route
+            path="/resumes/create"
+            element={<div>Create resume page</div>}
+          />
+          <Route path="/resumes/:id" element={<div>Resume detail page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </ModalProvider>,
   )
 }
 
@@ -143,6 +150,33 @@ describe('ResumesListPage', () => {
         sections,
       )
     })
+  })
+
+  it('confirms before deleting a resume', async () => {
+    const user = userEvent.setup()
+    renderPage(
+      makeTableState({
+        totalCount: 1,
+        pageItems: [
+          makeResume({ id: 'delete-me', title: 'Frontend Engineer' }),
+        ],
+      }),
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
+      'Delete resume?',
+    )
+    expect(screen.getByRole('dialog')).toHaveTextContent('Frontend Engineer')
+    expect(deleteResume).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Delete resume' }))
+
+    await waitFor(() => {
+      expect(deleteResume).toHaveBeenCalledWith('delete-me')
+    })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('delegates query changes to the hook', async () => {
@@ -250,7 +284,9 @@ describe('ResumesListPage', () => {
       }),
     )
 
-    await user.click(await screen.findByRole('combobox', { name: 'Rows per page' }))
+    await user.click(
+      await screen.findByRole('combobox', { name: 'Rows per page' }),
+    )
     await user.click(await screen.findByRole('option', { name: '2' }))
 
     expect(setPerPage).toHaveBeenCalledWith(2)

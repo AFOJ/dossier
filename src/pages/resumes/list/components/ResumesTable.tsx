@@ -1,5 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Copy01Icon, Edit02Icon, EyeIcon } from '@hugeicons/core-free-icons'
+import {
+  Copy01Icon,
+  Delete02Icon,
+  Edit02Icon,
+  EyeIcon,
+} from '@hugeicons/core-free-icons'
 import { Button, Tooltip, type IconProps } from '@/components/ui'
 import type { Resume } from '@/db/db'
 import { Pagination } from '@/pages/resumes/list/components/Pagination'
@@ -22,6 +27,7 @@ type ResumesTableProps = {
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
   onDuplicate: (resume: Resume) => void
+  onDelete: (resume: Resume) => void
 }
 
 export function ResumesTable(props: Readonly<ResumesTableProps>) {
@@ -34,6 +40,7 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
     onPageChange,
     onPerPageChange,
     onDuplicate,
+    onDelete,
   } = props
 
   return (
@@ -54,6 +61,7 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
                 key={resume.id}
                 resume={resume}
                 onDuplicate={onDuplicate}
+                onDelete={onDelete}
               />
             ))}
           </tbody>
@@ -74,10 +82,11 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
 type ResumesTableRowProps = {
   resume: Resume
   onDuplicate: (resume: Resume) => void
+  onDelete: (resume: Resume) => void
 }
 
 function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
-  const { resume, onDuplicate } = props
+  const { resume, onDuplicate, onDelete } = props
   const navigate = useNavigate()
 
   const viewUrl = `/resumes/${resume.id}`
@@ -118,6 +127,11 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
             label="Duplicate"
             icon={Copy01Icon}
             onClick={() => onDuplicate(resume)}
+          />
+          <QuickAction
+            label="Delete"
+            icon={Delete02Icon}
+            onClick={() => onDelete(resume)}
           />
         </div>
       </td>
