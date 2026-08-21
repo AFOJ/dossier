@@ -10,14 +10,16 @@ export function DeleteResumeDialog({
   close,
 }: Readonly<ModalContentProps<Resume>>) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const toast = useToast()
 
   const handleDelete = async () => {
     setIsDeleting(true)
+    setError(null)
 
     if (!resume.id) {
-      toast.error('Failed to delete resume', 'Please try again.')
-      setIsDeleting(false)
+      toast.error('Failed to delete resume', 'This resume could not be found.')
+      close()
       return
     }
 
@@ -26,6 +28,7 @@ export function DeleteResumeDialog({
       toast.success('Resume deleted', `"${resume.title}" was deleted.`)
       close()
     } catch {
+      setError('Failed to delete resume. Please try again.')
       toast.error('Failed to delete resume', 'Please try again.')
       setIsDeleting(false)
     }
@@ -41,6 +44,12 @@ export function DeleteResumeDialog({
           cannot be undone.
         </p>
       </div>
+
+      {error && (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-wrap justify-end gap-2">
         <Button
