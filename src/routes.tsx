@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -11,13 +12,32 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { getProfile } from '@/db/profile'
 import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
 import ProtectedLayout from '@/layouts/ProtectedLayout'
-import CreateProfilePage from '@/pages/profile/create'
-import ProfilePage from '@/pages/profile/view'
-import CreateResumePage from '@/pages/resumes/create'
-import EditResumePage from '@/pages/resumes/edit'
-import ResumesListPage from '@/pages/resumes/list'
-import UploadResumePage from '@/pages/resumes/upload'
-import ViewResumePage from '@/pages/resumes/view'
+
+const CreateProfilePage = lazy(() => import('@/pages/profile/create'))
+const ProfilePage = lazy(() => import('@/pages/profile/view'))
+const CreateResumePage = lazy(() => import('@/pages/resumes/create'))
+const EditResumePage = lazy(() => import('@/pages/resumes/edit'))
+const ResumesListPage = lazy(() => import('@/pages/resumes/list'))
+const UploadResumePage = lazy(() => import('@/pages/resumes/upload'))
+const ViewResumePage = lazy(() => import('@/pages/resumes/view'))
+
+function RouteSuspense(props: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <div
+            role="status"
+            aria-label="Loading page"
+            className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"
+          />
+        </div>
+      }
+    >
+      {props.children}
+    </Suspense>
+  )
+}
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -45,7 +65,14 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Outlet />} errorElement={<ErrorBoundary />}>
       <Route element={<PublicOnlyLayout />} loader={publicOnlyRouteLoader}>
-        <Route path="setup" element={<CreateProfilePage />} />
+        <Route
+          path="setup"
+          element={
+            <RouteSuspense>
+              <CreateProfilePage />
+            </RouteSuspense>
+          }
+        />
       </Route>
 
       <Route
@@ -55,13 +82,55 @@ const router = createBrowserRouter(
       >
         <Route index element={<Navigate to="resumes" replace />} />
         <Route path="resumes">
-          <Route index element={<ResumesListPage />} />
-          <Route path="create" element={<CreateResumePage />} />
-          <Route path="upload" element={<UploadResumePage />} />
-          <Route path=":resumeId" element={<ViewResumePage />} />
-          <Route path=":resumeId/edit" element={<EditResumePage />} />
+          <Route
+            index
+            element={
+              <RouteSuspense>
+                <ResumesListPage />
+              </RouteSuspense>
+            }
+          />
+          <Route
+            path="create"
+            element={
+              <RouteSuspense>
+                <CreateResumePage />
+              </RouteSuspense>
+            }
+          />
+          <Route
+            path="upload"
+            element={
+              <RouteSuspense>
+                <UploadResumePage />
+              </RouteSuspense>
+            }
+          />
+          <Route
+            path=":resumeId"
+            element={
+              <RouteSuspense>
+                <ViewResumePage />
+              </RouteSuspense>
+            }
+          />
+          <Route
+            path=":resumeId/edit"
+            element={
+              <RouteSuspense>
+                <EditResumePage />
+              </RouteSuspense>
+            }
+          />
         </Route>
-        <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="profile"
+          element={
+            <RouteSuspense>
+              <ProfilePage />
+            </RouteSuspense>
+          }
+        />
       </Route>
 
       <Route
