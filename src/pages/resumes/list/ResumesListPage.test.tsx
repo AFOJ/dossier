@@ -26,6 +26,11 @@ type TableState = ReturnType<typeof useResumeTable>
 function makeTableState(overrides: Partial<TableState> = {}): TableState {
   return {
     query: '',
+    debouncedQuery: '',
+    resultQuery: '',
+    isSearchPending: false,
+    isInitialLoading: false,
+    totalDbCount: 1,
     setQuery: vi.fn(),
     page: 1,
     setPage: vi.fn(),
@@ -75,7 +80,7 @@ describe('ResumesListPage', () => {
   })
 
   it('shows an empty state with a CTA when there are no resumes', async () => {
-    renderPage(makeTableState())
+    renderPage(makeTableState({ totalDbCount: 0 }))
 
     expect(await screen.findByText('No resumes yet')).toBeInTheDocument()
 
@@ -223,12 +228,30 @@ describe('ResumesListPage', () => {
     renderPage(
       makeTableState({
         query: 'nope',
+        resultQuery: 'nope',
         totalCount: 0,
         pageItems: [],
       }),
     )
 
     expect(await screen.findByText('No matches')).toBeInTheDocument()
+  })
+
+  it('shows the skeleton while a cleared search is pending', async () => {
+    renderPage(
+      makeTableState({
+        query: '',
+        resultQuery: 'njdfdjfjdnjfnjnfdjdjfjdfnjdfdfjdfnjfnddfnjf',
+        isSearchPending: true,
+        totalCount: 0,
+        pageItems: [],
+      }),
+    )
+
+    expect(await screen.findByLabelText('Loading resumes')).toBeInTheDocument()
+    expect(screen.queryByText('Frontend Engineer')).not.toBeInTheDocument()
+    expect(screen.queryByText('No matches')).not.toBeInTheDocument()
+    expect(screen.queryByText('No resumes yet')).not.toBeInTheDocument()
   })
 
   it('shows the visible range and page buttons', async () => {

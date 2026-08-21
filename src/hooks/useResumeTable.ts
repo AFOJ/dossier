@@ -1,83 +1,86 @@
-import { useCallback, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/db/db'
 import { queryResumes } from '@/db/resume'
-import { DEFAULT_PAGE_SIZE, getPageMetadata, toPositiveInteger } from '@/lib/pagination'
+import {
+  DEFAULT_PAGE_SIZE,
+  getPageMetadata,
+  toPositiveInteger,
+} from '@/lib/pagination'
 
 const DEFAULT_PAGE = 1
+const SEARCH_DEBOUNCE_MS = 250
 
-function readPositiveInteger(value: string | null, fallback: number) {
-  return toPositiveInteger(Number(value), fallback)
+type ResumeQueryResult = Awaited<ReturnType<typeof queryResumes>>
+
+type TaggedResumeQueryResult = {
+  key: string
+  result: ResumeQueryResult
+}
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedValue(value), delay)
+    return () => window.clearTimeout(timeout)
+  }, [delay, value])
+
+  return debouncedValue
 }
 
 export function useResumeTable() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [query, setInputQuery] = useState('')
+  const [page, setPageState] = useState(DEFAULT_PAGE)
+  const [perPage, setPerPageState] = useState(DEFAULT_PAGE_SIZE)
 
-  const query = searchParams.get('query') ?? ''
-  const requestedPage = readPositiveInteger(searchParams.get('page'), DEFAULT_PAGE)
-  const requestedPerPage = readPositiveInteger(searchParams.get('perPage'), DEFAULT_PAGE_SIZE)
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
 
-  const result = useLiveQuery(
-    () => queryResumes({ query, page: requestedPage, perPage: requestedPerPage }),
-    [query, requestedPage, requestedPerPage],
+  const totalDbCount = useLiveQuery(() => db.resumes.count(), [])
+
+  const queryKey = `${debouncedQuery}\u0000${page}\u0000${perPage}`
+  const taggedResult = useLiveQuery<TaggedResumeQueryResult>(
+    async () => ({
+      key: queryKey,
+      result: await queryResumes({
+        query: debouncedQuery,
+        page,
+        perPage,
+      }),
+    }),
+    [queryKey],
   )
+
+  const result =
+    taggedResult?.key === queryKey ? taggedResult.result : undefined
+
+  const pagination = result?.pagination ?? getPageMetadata(0, { page, perPage })
 
   const isLoading = result === undefined
-  const pagination = result?.pagination ?? getPageMetadata(0, {
-    page: requestedPage,
-    perPage: requestedPerPage,
-  })
+  const isSearching = query !== debouncedQuery
+  const isInitialLoading = isLoading || totalDbCount === undefined
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>, replace = false) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          for (const [key, value] of Object.entries(updates)) {
-            if (value === null) {
-              next.delete(key)
-            } else {
-              next.set(key, value)
-            }
-          }
-          return next
-        },
-        { replace },
-      )
-    },
-    [setSearchParams],
-  )
+  const setQuery = useCallback((value: string) => {
+    setInputQuery(value)
+    setPageState(DEFAULT_PAGE)
+  }, [])
 
-  useEffect(() => {
-    if (result && requestedPage !== pagination.page) {
-      updateParams({ page: String(pagination.page) }, true)
-    }
-  }, [pagination.page, requestedPage, result, updateParams])
+  const setPage = useCallback((value: number) => {
+    setPageState(toPositiveInteger(value, DEFAULT_PAGE))
+  }, [])
 
-  const setQuery = useCallback(
-    (value: string) => {
-      const trimmed = value.trim()
-      updateParams({ query: trimmed === '' ? null : trimmed, page: null }, true)
-    },
-    [updateParams],
-  )
-
-  const setPage = useCallback(
-    (value: number) => {
-      updateParams({ page: String(value) })
-    },
-    [updateParams],
-  )
-
-  const setPerPage = useCallback(
-    (value: number) => {
-      updateParams({ perPage: String(value), page: null })
-    },
-    [updateParams],
-  )
+  const setPerPage = useCallback((value: number) => {
+    setPerPageState(toPositiveInteger(value, DEFAULT_PAGE_SIZE))
+    setPageState(DEFAULT_PAGE)
+  }, [])
 
   return {
     query,
+    debouncedQuery,
+    resultQuery: debouncedQuery,
+    isSearchPending: isSearching,
+    isInitialLoading,
+    totalDbCount,
     setQuery,
     page: pagination.page,
     setPage,
