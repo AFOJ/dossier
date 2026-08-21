@@ -6,7 +6,11 @@ import {
   Cancel01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { toastManager } from '@/components/toast/useToast'
+import {
+  toastManager,
+  type ToastData,
+  type ToastIntent,
+} from '@/components/toast/useToast'
 import { cn } from '@/utils'
 import './Toast.css'
 
@@ -19,8 +23,6 @@ const INTENT_ICONS = {
   success: CircleCheckIcon,
   error: Alert02Icon,
 } as const
-
-type ToastIntent = keyof typeof INTENT_STYLES
 
 export function Toaster() {
   return (
@@ -35,7 +37,7 @@ export function Toaster() {
 }
 
 function ToastList() {
-  const { toasts } = BaseToast.useToastManager()
+  const { toasts } = BaseToast.useToastManager<ToastData>()
 
   return (
     <>
@@ -46,14 +48,12 @@ function ToastList() {
   )
 }
 
-type AppToastData = Record<string, unknown>
-
 type ToastCardProps = {
-  toast: ToastObject<AppToastData>
+  toast: ToastObject<ToastData>
 }
 
 function ToastCard({ toast }: Readonly<ToastCardProps>) {
-  const intent = (toast.type as ToastIntent) ?? 'success'
+  const intent: ToastIntent = toast.data?.intent ?? 'success'
   const Icon = INTENT_ICONS[intent]
 
   return (

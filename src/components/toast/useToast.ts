@@ -1,8 +1,12 @@
 import { Toast as BaseToast } from '@base-ui/react/toast'
 
-export const toastManager = BaseToast.createToastManager()
+export type ToastIntent = 'success' | 'error'
 
-type ToastIntent = 'success' | 'error'
+export interface ToastData {
+  intent: ToastIntent
+}
+
+export const toastManager = BaseToast.createToastManager<ToastData>()
 
 export function useToast() {
   return {
@@ -19,7 +23,7 @@ function showToast(
 ) {
   return toastManager.add({
     ...options,
-    type: intent,
+    data: { intent },
     priority: intent === 'error' ? 'high' : 'low',
     timeout: intent === 'error' ? 8000 : 4000,
   })
