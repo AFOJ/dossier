@@ -61,7 +61,9 @@ function NoResults({ query }: Readonly<{ query: string }>) {
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
       <IsometricCircleX />
       <Heading3>No matches</Heading3>
-      <Subheading>No resumes match "{query}".</Subheading>
+      <Subheading>
+        No resumes match "<span className="break-all">{query}</span>".
+      </Subheading>
     </div>
   )
 }
