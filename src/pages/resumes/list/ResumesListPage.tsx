@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom'
 import { Heading1, Subheading } from '@/components/ui'
 import { useModal } from '@/components/modal'
 import type { Resume } from '@/db/db'
@@ -11,15 +10,12 @@ import { DeleteResumeDialog } from '@/pages/resumes/list/components/DeleteResume
 
 export default function ResumesListPage() {
   const table = useResumeTable()
-  const navigate = useNavigate()
   const deleteModal = useModal(DeleteResumeDialog, {
     closeOnBackdropClick: false,
     closeOnEscape: true,
   })
 
   usePageTitle('Resumes')
-
-  const goToCreate = () => navigate('/resumes/create')
 
   const handleDuplicate = async (resume: Resume) => {
     await createResume(`Copy of ${resume.title}`, resume.sections)
@@ -37,12 +33,10 @@ export default function ResumesListPage() {
       <Toolbar
         query={table.query}
         onQueryChange={table.setQuery}
-        onCreateResume={goToCreate}
       />
 
       <ResumeListContent
         table={table}
-        onCreateResume={goToCreate}
         onDuplicate={handleDuplicate}
         onDelete={deleteModal.open}
       />

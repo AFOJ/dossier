@@ -1,11 +1,16 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   Copy01Icon,
   Delete02Icon,
   Edit02Icon,
   EyeIcon,
 } from '@hugeicons/core-free-icons'
-import { Button, Tooltip, type IconProps } from '@/components/ui'
+import {
+  Button,
+  ButtonLink,
+  Tooltip,
+  type IconProps,
+} from '@/components/ui'
 import type { Resume } from '@/db/db'
 import { Pagination } from '@/pages/resumes/list/components/Pagination'
 
@@ -87,7 +92,6 @@ type ResumesTableRowProps = {
 
 function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
   const { resume, onDuplicate, onDelete } = props
-  const navigate = useNavigate()
 
   const viewUrl = `/resumes/${resume.id}`
   const editUrl = `/resumes/${resume.id}/edit`
@@ -113,16 +117,8 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <QuickAction
-            label="View"
-            icon={EyeIcon}
-            onClick={() => navigate(viewUrl)}
-          />
-          <QuickAction
-            label="Edit"
-            icon={Edit02Icon}
-            onClick={() => navigate(editUrl)}
-          />
+          <QuickAction label="View" icon={EyeIcon} to={viewUrl} />
+          <QuickAction label="Edit" icon={Edit02Icon} to={editUrl} />
           <QuickAction
             label="Duplicate"
             icon={Copy01Icon}
@@ -142,21 +138,34 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 type QuickActionProps = {
   label: string
   icon: IconProps['icon']
-  onClick: () => void
-}
+} & (
+  | { to: string; onClick?: undefined }
+  | { to?: undefined; onClick: () => void }
+)
 
 function QuickAction(props: Readonly<QuickActionProps>) {
-  const { label, icon, onClick } = props
+  const { label, icon, to, onClick } = props
+  const className = 'size-8 p-0 text-gray-500 hover:text-gray-900'
 
   return (
     <Tooltip content={label}>
-      <Button
-        aria-label={label}
-        icon={icon}
-        intent="secondary"
-        onClick={onClick}
-        className="size-8 p-0 text-gray-500 hover:text-gray-900"
-      />
+      {to !== undefined ? (
+        <ButtonLink
+          aria-label={label}
+          icon={icon}
+          intent="secondary"
+          className={className}
+          to={to}
+        />
+      ) : (
+        <Button
+          aria-label={label}
+          icon={icon}
+          intent="secondary"
+          onClick={onClick}
+          className={className}
+        />
+      )}
     </Tooltip>
   )
 }

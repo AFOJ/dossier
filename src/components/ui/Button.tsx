@@ -1,4 +1,5 @@
 import { Button as BaseButton } from '@base-ui/react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/utils'
 import { cva } from 'class-variance-authority'
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
@@ -8,6 +9,10 @@ interface ButtonProps extends ComponentPropsWithoutRef<typeof BaseButton> {
   intent?: 'primary' | 'secondary'
   icon?: IconProps['icon']
   iconClassname?: string
+}
+
+type ButtonLinkProps = Omit<ButtonProps, 'nativeButton' | 'render'> & {
+  to: string
 }
 
 const buttonVariants = cva(
@@ -63,3 +68,15 @@ export const Button = forwardRef<HTMLButtonElement, Readonly<ButtonProps>>(
     )
   },
 )
+
+export function ButtonLink(props: Readonly<ButtonLinkProps>) {
+  const { to, ...rest } = props
+
+  return (
+    <Button
+      {...rest}
+      nativeButton={false}
+      render={<Link to={to} role={undefined} />}
+    />
+  )
+}

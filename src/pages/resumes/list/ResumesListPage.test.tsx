@@ -84,7 +84,7 @@ describe('ResumesListPage', () => {
 
     expect(await screen.findByText('No resumes yet')).toBeInTheDocument()
 
-    const cta = screen.getByRole('button', {
+    const cta = screen.getByRole('link', {
       name: 'Create your first resume',
     })
     await userEvent.setup().click(cta)
@@ -121,7 +121,7 @@ describe('ResumesListPage', () => {
     expect(await screen.findByText('Resume detail page')).toBeInTheDocument()
   })
 
-  it('navigates to create via the toolbar "New resume" button', async () => {
+  it('navigates to create via the toolbar "New resume" link', async () => {
     const user = userEvent.setup()
     renderPage(
       makeTableState({
@@ -130,7 +130,7 @@ describe('ResumesListPage', () => {
       }),
     )
 
-    await user.click(await screen.findByRole('button', { name: 'New resume' }))
+    await user.click(await screen.findByRole('link', { name: 'New resume' }))
 
     expect(await screen.findByText('Create resume page')).toBeInTheDocument()
   })
@@ -267,7 +267,8 @@ describe('ResumesListPage', () => {
 
     expect(await screen.findByText('Resume 0')).toBeInTheDocument()
     expect(screen.getByText('1 - 10 of 12')).toBeInTheDocument()
-    expect(screen.getAllByRole('link')).toHaveLength(10)
+    // Toolbar link + (title + view + edit) links per row
+    expect(screen.getAllByRole('link')).toHaveLength(31)
     expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled()
   })
