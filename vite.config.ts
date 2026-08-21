@@ -11,6 +11,19 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'framework', test: /node_modules\/(react|react-dom|react-router|scheduler)[\\/]/ },
+            { name: 'ui', test: /node_modules[\\/]@base-ui[\\/]react/ },
+            { name: 'db', test: /node_modules\/(dexie|dexie-react-hooks)/ },
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
