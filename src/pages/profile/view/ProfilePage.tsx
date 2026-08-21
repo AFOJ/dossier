@@ -1,11 +1,10 @@
+import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
-import {
-  Button,
-  Divider,
-  Heading1,
-  Subheading,
-} from '@/components/ui'
+import { Button, Divider, Heading1, Subheading } from '@/components/ui'
 import { useModal } from '@/components/modal'
+import { useToast } from '@/components/toast'
+import { buildExportData } from '@/db/export'
+import { downloadJson, getExportFilename } from '@/lib/download'
 import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
 import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -21,8 +20,29 @@ export default function ProfilePage() {
     closeOnBackdropClick: false,
     closeOnEscape: true,
   })
+  const toast = useToast()
+  const [isExporting, setIsExporting] = useState(false)
 
-  usePageTitle('Profile')
+  usePageTitle('Manage your profile')
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+
+      const data = await buildExportData()
+      downloadJson(getExportFilename('profile'), data)
+
+      toast.success(
+        'Profile data exported',
+        'Your profile and resumes were downloaded as JSON.',
+      )
+    } catch (error) {
+      toast.error('Failed to export data', 'Please try again.')
+      console.error('Failed to export data:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
     <section className="flex flex-col gap-6">
@@ -36,8 +56,13 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button type="button" intent="secondary" disabled title="Coming soon">
-              Export
+            <Button
+              type="button"
+              intent="secondary"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exporting...' : 'Export data'}
             </Button>
             <Button type="button" onClick={() => deleteModal.open(undefined)}>
               Delete

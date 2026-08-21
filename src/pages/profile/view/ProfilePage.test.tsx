@@ -1,12 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { buildExportData } from '@/db/export'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import ProfilePage from '@/pages/profile/view/ProfilePage'
-import useProtectedRouteData from '@/hooks/useProtectedRouteData'
 import { deleteProfile, upsertProfile } from '@/db/profile'
-import type { Profile } from '@/db/db'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { downloadJson, getExportFilename } from '@/lib/download'
 import { ModalProvider } from '@/components/modal'
+import { render, screen, waitFor } from '@testing-library/react'
+import ProfilePage from '@/pages/profile/view/ProfilePage'
+import type { Profile } from '@/db/db'
+import useProtectedRouteData from '@/hooks/useProtectedRouteData'
+import userEvent from '@testing-library/user-event'
 
 vi.mock('@/hooks/useProtectedRouteData', () => ({
   default: vi.fn(),
@@ -15,6 +17,26 @@ vi.mock('@/hooks/useProtectedRouteData', () => ({
 vi.mock('@/db/profile', () => ({
   upsertProfile: vi.fn(),
   deleteProfile: vi.fn(),
+}))
+
+vi.mock('@/db/export', () => ({
+  buildExportData: vi.fn(),
+}))
+
+vi.mock('@/lib/download', () => ({
+  downloadJson: vi.fn(),
+  getExportFilename: vi.fn(
+    (kind: string) => `dossier-${kind}-export-2026-08-23.json`,
+  ),
+}))
+
+const mockToast = {
+  success: vi.fn(),
+  error: vi.fn(),
+}
+
+vi.mock('@/components/toast', () => ({
+  useToast: () => mockToast,
 }))
 
 const mockUseProtectedRouteData = vi.mocked(useProtectedRouteData)
@@ -58,9 +80,7 @@ describe('ProfilePage', () => {
     renderPage()
 
     expect(screen.getByLabelText(/full name/i)).toHaveValue('John Doe')
-    expect(screen.getByLabelText('Job Title')).toHaveValue(
-      'Frontend Engineer',
-    )
+    expect(screen.getByLabelText('Job Title')).toHaveValue('Frontend Engineer')
     expect(screen.getByLabelText('Email')).toHaveValue('john@doe.com')
   })
 
@@ -101,7 +121,9 @@ describe('ProfilePage', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+      expect(
+        screen.getByRole('button', { name: 'Save changes' }),
+      ).toBeDisabled()
     })
   })
 
@@ -119,6 +141,47 @@ describe('ProfilePage', () => {
     expect(upsertProfile).not.toHaveBeenCalled()
   })
 
+  it('exports the profile and resumes as a downloaded JSON file', async () => {
+    const user = userEvent.setup()
+    const exportData = {
+      version: 1 as const,
+      exportedAt: '2026-08-23T00:00:00.000Z',
+      profile,
+      resumes: [],
+    }
+    vi.mocked(buildExportData).mockResolvedValueOnce(exportData)
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Export data' }))
+
+    await waitFor(() => {
+      expect(buildExportData).toHaveBeenCalled()
+      expect(getExportFilename).toHaveBeenCalledWith('profile')
+      expect(downloadJson).toHaveBeenCalledWith(
+        'dossier-profile-export-2026-08-23.json',
+        exportData,
+      )
+    })
+  })
+
+  it('shows an error toast when exporting fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(buildExportData).mockRejectedValueOnce(new Error('Boom'))
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Export data' }))
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith(
+        'Failed to export data',
+        'Please try again.',
+      )
+    })
+
+    consoleSpy.mockRestore()
+  })
+
   it('opens a confirmation dialog and deletes the profile on confirm', async () => {
     const user = userEvent.setup()
     vi.mocked(deleteProfile).mockResolvedValueOnce(undefined)
@@ -128,12 +191,10 @@ describe('ProfilePage', () => {
 
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveTextContent('Delete profile?')
-    expect(dialog).toHaveTextContent('all of your resumes')
+    expect(dialog).toHaveTextContent('export it first')
     expect(deleteProfile).not.toHaveBeenCalled()
 
-    await user.click(
-      screen.getByRole('button', { name: 'Delete profile' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }))
 
     await waitFor(() => {
       expect(deleteProfile).toHaveBeenCalled()

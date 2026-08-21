@@ -29,7 +29,8 @@ export function DeleteProfileDialog({
         <p className="text-sm leading-6 text-gray-600">
           This will permanently delete your profile and{' '}
           <span className="font-medium text-gray-900">all of your resumes</span>
-          . You will be redirected to the setup flow and this cannot be undone.
+          . If you want to keep your data for use in another browser or share it
+          with someone, export it first. This action cannot be undone.
         </p>
       </div>
 
