@@ -51,6 +51,7 @@ describe('Resume Service', () => {
     const targetId = await createResume('Resume 2', [])
     await delay(10)
     await createResume('Resume 3', [])
+    await delay(10)
 
     await updateResume(targetId, { title: 'Resume 2 (Updated)' })
 
