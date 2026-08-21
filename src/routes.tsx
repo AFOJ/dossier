@@ -12,7 +12,12 @@ import { getProfile } from '@/db/profile'
 import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
 import ProtectedLayout from '@/layouts/ProtectedLayout'
 import CreateProfilePage from '@/pages/profile/create'
+import ProfilePage from '@/pages/profile/view'
+import CreateResumePage from '@/pages/resumes/create'
+import EditResumePage from '@/pages/resumes/edit'
 import ResumesListPage from '@/pages/resumes/list'
+import UploadResumePage from '@/pages/resumes/upload'
+import ViewResumePage from '@/pages/resumes/view'
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -51,10 +56,12 @@ const router = createBrowserRouter(
         <Route index element={<Navigate to="resumes" replace />} />
         <Route path="resumes">
           <Route index element={<ResumesListPage />} />
-          <Route path="create" element={<>Create resume</>} />
-          <Route path="upload" element={<>Upload resume</>} />
+          <Route path="create" element={<CreateResumePage />} />
+          <Route path="upload" element={<UploadResumePage />} />
+          <Route path=":resumeId" element={<ViewResumePage />} />
+          <Route path=":resumeId/edit" element={<EditResumePage />} />
         </Route>
-        <Route path="profile" element={<>Profile</>} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       <Route
