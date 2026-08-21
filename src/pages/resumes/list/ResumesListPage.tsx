@@ -1,5 +1,6 @@
 import { Heading1, Subheading } from '@/components/ui'
 import { useModal } from '@/components/modal'
+import { useToast } from '@/components/toast'
 import type { Resume } from '@/db/db'
 import { createResume } from '@/db/resume'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -14,11 +15,17 @@ export default function ResumesListPage() {
     closeOnBackdropClick: false,
     closeOnEscape: true,
   })
+  const toast = useToast()
 
   usePageTitle('Resumes')
 
   const handleDuplicate = async (resume: Resume) => {
-    await createResume(`Copy of ${resume.title}`, resume.sections)
+    try {
+      await createResume(`Copy of ${resume.title}`, resume.sections)
+      toast.success('Resume duplicated', `"${resume.title}" was duplicated.`)
+    } catch {
+      toast.error('Failed to duplicate resume', 'Please try again.')
+    }
   }
 
   return (
@@ -30,10 +37,7 @@ export default function ResumesListPage() {
         </div>
       </header>
 
-      <Toolbar
-        query={table.query}
-        onQueryChange={table.setQuery}
-      />
+      <Toolbar query={table.query} onQueryChange={table.setQuery} />
 
       <ResumeListContent
         table={table}

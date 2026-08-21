@@ -1,0 +1,103 @@
+.toast-viewport {
+  position: fixed;
+  z-index: 60;
+  right: 1rem;
+  bottom: 1rem;
+  width: calc(100vw - 2rem);
+  max-width: 24rem;
+  outline: none;
+}
+
+@media (min-width: 640px) {
+  .toast-viewport {
+    right: 1.5rem;
+    bottom: 1.5rem;
+  }
+}
+
+.toast-card {
+  --gap: 0.5rem;
+  --peek: 0.65rem;
+  --scale: calc(max(0, 1 - (var(--toast-index) * 0.07)));
+  --shrink: calc(1 - var(--scale));
+  --height: var(--toast-frontmost-height, var(--toast-height));
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: 0 8px 20px -4px rgb(0 0 0 / 0.12);
+  transform-origin: bottom center;
+  user-select: none;
+  cursor: default;
+  z-index: calc(1000 - var(--toast-index));
+  height: var(--height);
+  transform: translateX(var(--toast-swipe-movement-x))
+    translateY(
+      calc(
+        var(--toast-swipe-movement-y) - (var(--toast-index) * var(--peek)) -
+          (var(--shrink) * var(--height))
+      )
+    )
+    scale(var(--scale));
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s,
+    height 0.15s;
+}
+
+.toast-card::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: calc(var(--gap) + 1px);
+}
+
+.toast-card[data-expanded] {
+  height: var(--toast-height);
+  transform: translateX(var(--toast-swipe-movement-x))
+    translateY(
+      calc(
+        var(--toast-offset-y) * -1 + (var(--toast-index) * var(--gap) * -1) +
+          var(--toast-swipe-movement-y)
+      )
+    );
+}
+
+.toast-card[data-starting-style],
+.toast-card[data-ending-style] {
+  transform: translateY(150%);
+}
+
+.toast-card[data-limited] {
+  opacity: 0;
+}
+
+.toast-card[data-ending-style] {
+  opacity: 0;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  overflow: hidden;
+  transition: opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toast-content[data-behind] {
+  opacity: 0;
+}
+
+.toast-content[data-expanded] {
+  opacity: 1;
+}
