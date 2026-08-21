@@ -1,7 +1,12 @@
+import { ModalProvider } from '@/components/modal'
 import AppRoutes from '@/routes'
 
 function App() {
-  return <AppRoutes />
+  return (
+    <ModalProvider>
+      <AppRoutes />
+    </ModalProvider>
+  )
 }
 
 export default App
