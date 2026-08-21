@@ -21,10 +21,10 @@ export function ModalProvider({ children }: Readonly<PropsWithChildren>) {
   const [modals, setModals] = useState<ModalEntry[]>([])
 
   const openModal = useCallback<ModalContextValue['openModal']>(
-    (id, Content, data) => {
+    (id, Content, data, options) => {
       setModals((current) => [
         ...current.filter((modal) => modal.id !== id),
-        { id, Content: Content as ModalComponent<unknown>, data },
+        { id, Content: Content as ModalComponent<unknown>, data, options },
       ])
     },
     [],
@@ -57,6 +57,7 @@ export function ModalProvider({ children }: Readonly<PropsWithChildren>) {
         <ModalSurface
           key={modal.id}
           onClose={() => closeModal(modal.id)}
+          options={modal.options}
           isTopmost={index === modals.length - 1}
           zIndex={50 + index * 2}
         >
@@ -69,12 +70,13 @@ export function ModalProvider({ children }: Readonly<PropsWithChildren>) {
 
 type ModalSurfaceProps = PropsWithChildren<{
   onClose: () => void
+  options: ModalEntry['options']
   isTopmost: boolean
   zIndex: number
 }>
 
 function ModalSurface(props: Readonly<ModalSurfaceProps>) {
-  const { children, onClose, isTopmost, zIndex } = props
+  const { children, onClose, options, isTopmost, zIndex } = props
   const dialogRef = useRef<HTMLDivElement>(null)
   const lastFocusedElement = useRef<HTMLElement | null>(null)
 
@@ -104,7 +106,7 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
       return
     }
 
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && options.closeOnEscape) {
       event.preventDefault()
       onClose()
       return
@@ -141,7 +143,13 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
       className="fixed inset-0 flex items-center justify-center bg-gray-950/40 p-4"
       style={{ zIndex }}
       onMouseDown={(event) => {
-        if (isTopmost && event.target === event.currentTarget) onClose()
+        if (
+          isTopmost &&
+          options.closeOnBackdropClick &&
+          event.target === event.currentTarget
+        ) {
+          onClose()
+        }
       }}
     >
       <div

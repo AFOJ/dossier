@@ -21,6 +21,10 @@ function TestModal({ data, close }: Readonly<ModalContentProps<string>>) {
 function ModalControls() {
   const firstModal = useModal(TestModal)
   const secondModal = useModal(TestModal)
+  const persistentModal = useModal(TestModal, {
+    closeOnBackdropClick: false,
+    closeOnEscape: false,
+  })
 
   return (
     <>
@@ -29,6 +33,12 @@ function ModalControls() {
       </button>
       <button type="button" onClick={() => secondModal.open('Second modal')}>
         Open second
+      </button>
+      <button
+        type="button"
+        onClick={() => persistentModal.open('Persistent modal')}
+      >
+        Open persistent
       </button>
     </>
   )
@@ -58,5 +68,27 @@ describe('ModalProvider', () => {
 
     expect(screen.getAllByRole('dialog')).toHaveLength(1)
     expect(screen.getByRole('dialog')).toHaveTextContent('First modal')
+  })
+
+  it('honours dismissal options supplied to useModal', async () => {
+    const user = userEvent.setup()
+    render(
+      <ModalProvider>
+        <ModalControls />
+      </ModalProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Open persistent' }))
+    const dialog = screen.getByRole('dialog')
+
+    await user.keyboard('{Escape}')
+    await user.click(dialog.parentElement!)
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Persistent modal')
+
+    await user.click(
+      screen.getByRole('button', { name: 'Close Persistent modal' }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

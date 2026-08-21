@@ -1,12 +1,25 @@
 import {
   ModalContext,
   type ModalComponent,
+  type ModalOptions,
+  type ResolvedModalOptions,
 } from '@/components/modal/modalContext'
 import { useCallback, useContext, useEffect, useState } from 'react'
 
-export { type ModalContentProps } from '@/components/modal/modalContext'
+export {
+  type ModalContentProps,
+  type ModalOptions,
+} from '@/components/modal/modalContext'
 
-export function useModal<TData = undefined>(Content: ModalComponent<TData>) {
+const defaultOptions: ResolvedModalOptions = {
+  closeOnBackdropClick: true,
+  closeOnEscape: true,
+}
+
+export function useModal<TData = undefined>(
+  Content: ModalComponent<TData>,
+  options: ModalOptions = {},
+) {
   const context = useContext(ModalContext)
   const [id] = useState(() => `modal-${crypto.randomUUID()}`)
 
@@ -16,8 +29,8 @@ export function useModal<TData = undefined>(Content: ModalComponent<TData>) {
 
   const { openModal, closeModal, isOpen } = context
   const open = useCallback(
-    (data: TData) => openModal(id, Content, data),
-    [Content, id, openModal],
+    (data: TData) => openModal(id, Content, data, { ...defaultOptions, ...options }),
+    [Content, id, openModal, options],
   )
   const close = useCallback(() => closeModal(id), [closeModal, id])
 
