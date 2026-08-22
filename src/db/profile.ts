@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db, type Profile, type Resume } from '@/db/db'
+import { resumeSectionSchema } from '@/db/schemas'
 import { getAllResumes } from '@/db/resume'
 
 export async function upsertProfile(
@@ -61,57 +62,6 @@ const linkSchema = z.object({
   url: z.url(),
 })
 
-const bulletSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('text'), text: z.string() }),
-  z.object({
-    type: z.literal('text-with-title'),
-    title: z.string(),
-    text: z.string(),
-  }),
-])
-
-const sectionSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('summary'), text: z.string() }),
-  z.object({
-    type: z.literal('education'),
-    institutions: z.array(
-      z.object({
-        name: z.string(),
-        degree: z.string(),
-        start_date: z.string(),
-        end_date: z.string(),
-        location: z.string(),
-      }),
-    ),
-  }),
-  z.object({
-    type: z.literal('skills'),
-    groups: z.array(
-      z.object({
-        title: z.string(),
-        items: z.array(z.string()),
-      }),
-    ),
-  }),
-  z.object({
-    type: z.literal('experience'),
-    companies: z.array(
-      z.object({
-        company_name: z.string(),
-        company_website: z.url().optional(),
-        start_date: z.string(),
-        end_date: z.string().optional(),
-        roles: z.array(
-          z.object({
-            job_title: z.string(),
-            bullets: z.array(bulletSchema),
-          }),
-        ),
-      }),
-    ),
-  }),
-])
-
 export const exportFileSchema = z.object({
   version: z.literal(1),
   exportedAt: z.string(),
@@ -128,7 +78,7 @@ export const exportFileSchema = z.object({
       z.object({
         id: z.string().optional(),
         title: z.string(),
-        sections: z.array(sectionSchema),
+        sections: z.array(resumeSectionSchema),
         createdAt: z.iso.datetime(),
         updatedAt: z.iso.datetime(),
       }),

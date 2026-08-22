@@ -11,13 +11,17 @@ export interface SkillGroup {
 export interface EducationalInstitution {
   name: string
   degree: string
+  grade?: string
   start_date: string
   end_date: string
   location: string
+  paragraph?: string
 }
 
 export interface ExperienceCompanyRole {
   job_title: string
+  employment_type?: string
+  location?: string
   bullets: ExperienceCompanyRoleBullet[]
 }
 
