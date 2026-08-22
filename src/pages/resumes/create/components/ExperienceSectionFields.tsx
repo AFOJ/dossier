@@ -126,8 +126,8 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                     value={bullet.title}
                     className={
                       bulletErrors?.[index]?.title
-                        ? 'border-red-400 focus:border-red-600 focus:ring-red-600'
-                        : undefined
+                        ? 'w-full border-red-400 focus:border-red-600 focus:ring-red-600'
+                        : 'w-full'
                     }
                     onChange={(event) =>
                       onChange(
