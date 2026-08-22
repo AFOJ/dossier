@@ -42,8 +42,8 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
   const groupErrors = sectionErrors?.groups?.[index]
 
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-gray-200 p-3">
-      <div className="grid flex-1 gap-3 sm:grid-cols-2">
+    <div className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start">
+      <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
         <Field
           label="Group title"
           inputId={`group-title-${index}`}

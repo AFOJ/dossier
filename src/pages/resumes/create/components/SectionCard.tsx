@@ -36,8 +36,17 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center">
+        <Input
+          id={titleInputId}
+          aria-label="Section title"
+          className="min-w-0 sm:order-2 sm:flex-1"
+          placeholder={`Section title: ${label}`}
+          value={title}
+          onChange={(event) => onTitleChange(event.target.value)}
+        />
+
+        <div className="flex items-center gap-1 sm:contents">
           <Button
             type="button"
             intent="secondary"
@@ -54,25 +63,16 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
             onClick={onMoveDown}
             aria-label={`Move ${title || label} section down`}
           />
+          <Button
+            type="button"
+            intent="secondary"
+            iconClassname="text-gray-500 hover:text-red-500"
+            icon={Trash}
+            onClick={onRemove}
+            aria-label={`Remove ${title || label} section`}
+            className="ml-auto sm:order-3 sm:ml-0"
+          />
         </div>
-
-        <Input
-          id={titleInputId}
-          aria-label="Section title"
-          className="flex-1"
-          placeholder={`Section title: ${label}`}
-          value={title}
-          onChange={(event) => onTitleChange(event.target.value)}
-        />
-
-        <Button
-          type="button"
-          intent="secondary"
-          iconClassname="text-gray-500 hover:text-red-500"
-          icon={Trash}
-          onClick={onRemove}
-          aria-label={`Remove ${title || label} section`}
-        />
       </div>
 
       {children}

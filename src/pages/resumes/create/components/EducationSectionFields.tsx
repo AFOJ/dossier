@@ -45,8 +45,8 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="grid flex-1 gap-3 sm:grid-cols-2">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
+        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field
             label="School"
             inputId={`school-${index}`}

@@ -82,7 +82,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         return bullet.type === 'text' ? (
           <div
             key={index}
-            className="flex items-start gap-2 rounded-lg border border-gray-200 p-3"
+            className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
           >
             <div className="min-w-0 flex-1">
               <Input
@@ -112,7 +112,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         ) : (
           <div
             key={index}
-            className="flex items-start gap-2 rounded-lg border border-gray-200 p-3"
+            className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
           >
             <div className="min-w-0 flex-1">
               <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
@@ -196,14 +196,14 @@ function EndDateField(props: Readonly<EndDateFieldProps>) {
     <div className="flex flex-col gap-2">
       <p className="text-sm font-medium text-gray-900">End date</p>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Input
           id={props.id}
           type="month"
           aria-label="End date"
           aria-invalid={props.error ? true : undefined}
           disabled={props.isPresent}
-          className="min-w-0 flex-1"
+          className="min-w-0 flex-1 basis-40"
           value={props.value ?? ''}
           onChange={(event) =>
             props.onValueChange(
@@ -267,7 +267,7 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
         <div className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
@@ -426,8 +426,8 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="grid flex-1 gap-3 sm:grid-cols-2">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
+        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field
             label="Company"
             inputId={`company-${index}-name`}
