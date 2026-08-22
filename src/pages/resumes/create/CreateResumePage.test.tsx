@@ -119,6 +119,56 @@ describe('CreateResumePage', () => {
     expect(await screen.findByText('Resumes list')).toBeInTheDocument()
   })
 
+  it('lets the company switch be toggled off and back on beside the end date', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, 'Experience')
+
+    const currentSwitch = screen.getByRole('switch', {
+      name: 'I currently work here',
+    })
+    expect(currentSwitch).toBeChecked()
+
+    const endInput = screen.getByLabelText(/^End date/)
+    expect(endInput).toBeDisabled()
+
+    await user.click(currentSwitch)
+
+    expect(currentSwitch).not.toBeChecked()
+    expect(endInput).not.toBeDisabled()
+    expect(endInput).toHaveValue('')
+
+    await user.click(currentSwitch)
+
+    expect(currentSwitch).toBeChecked()
+    expect(endInput).toBeDisabled()
+  })
+
+  it('gives each role its own current-work switch', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, 'Experience')
+    await user.click(screen.getByRole('button', { name: /Add role/i }))
+
+    const switches = screen.getAllByRole('switch', {
+      name: 'I currently work here',
+    })
+    expect(switches).toHaveLength(2)
+    expect(switches[0]).toBeChecked()
+    expect(switches[1]).not.toBeChecked()
+
+    const endInputs = screen.getAllByLabelText(/^End date/)
+    expect(endInputs[0]).toBeDisabled()
+    expect(endInputs[1]).not.toBeDisabled()
+
+    await user.click(switches[1])
+
+    expect(switches[1]).toBeChecked()
+    expect(endInputs[1]).toBeDisabled()
+  })
+
   it('blocks submission without a title', async () => {
     const user = userEvent.setup()
     renderPage()

@@ -244,4 +244,360 @@ describe('useCreateResumeForm', () => {
     expect(result.current.form.getValues('syncProfile')).toBe(true)
     expect(result.current.form.getValues('fullName')).toBe('John Doe')
   })
+
+  describe('section guardrails', () => {
+    it('blocks an empty paragraph section', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('paragraph')
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.text',
+          result.current.form.formState,
+        ).error?.message,
+      ).toBe('Paragraph cannot be empty')
+    })
+
+    it('blocks an education section without institutions', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('education')
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.institutions',
+          result.current.form.formState,
+        ).error?.message,
+      ).toBe('Add at least one school to this section')
+    })
+
+    it('requires school and degree on each institution', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('education')
+        result.current.updateSection(0, {
+          type: 'education',
+          institutions: [
+            {
+              name: '',
+              degree: '',
+              start_date: '',
+              end_date: '',
+              location: '',
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.institutions.0.name',
+          formState,
+        ).error?.message,
+      ).toBe('School is required')
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.institutions.0.degree',
+          formState,
+        ).error?.message,
+      ).toBe('Degree is required')
+    })
+
+    it('requires a group title and at least one skill', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('skills')
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.groups.0.title',
+          formState,
+        ).error?.message,
+      ).toBe('Group title is required')
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.groups.0.items',
+          formState,
+        ).error?.message,
+      ).toBe('Add at least one skill')
+    })
+
+    it('requires added bullets to be filled', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('experience')
+        result.current.updateSection(0, {
+          type: 'experience',
+          companies: [
+            {
+              company_name: 'Spotify',
+              start_date: '',
+              roles: [
+                {
+                  job_title: 'Dev',
+                  bullets: [
+                    { type: 'text', text: '' },
+                    { type: 'text-with-title', title: '', text: '' },
+                  ],
+                },
+              ],
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.roles.0.bullets.0.text',
+          formState,
+        ).error?.message,
+      ).toBe('Bullet cannot be empty')
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.roles.0.bullets.1.title',
+          formState,
+        ).error?.message,
+      ).toBe('Bullet heading is required')
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.roles.0.bullets.1.text',
+          formState,
+        ).error?.message,
+      ).toBe('Bullet text is required')
+    })
+
+    it('blocks a role end date without a start date', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('experience')
+        result.current.updateSection(0, {
+          type: 'experience',
+          companies: [
+            {
+              company_name: 'Spotify',
+              start_date: '2020-01',
+              roles: [
+                {
+                  job_title: 'Dev',
+                  bullets: [],
+                  end_date: '2021-01',
+                },
+              ],
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.roles.0.start_date',
+          formState,
+        ).error?.message,
+      ).toBe('Start date is required when an end date is set')
+    })
+
+    it('blocks a company end date before its start date', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('experience')
+        result.current.updateSection(0, {
+          type: 'experience',
+          companies: [
+            {
+              company_name: 'Spotify',
+              start_date: '2022-01',
+              end_date: '2020-01',
+              roles: [],
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.end_date',
+          formState,
+        ).error?.message,
+      ).toBe('End date cannot be before start date')
+    })
+
+    it('blocks a role end date before its start date', async () => {
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('experience')
+        result.current.updateSection(0, {
+          type: 'experience',
+          companies: [
+            {
+              company_name: 'Spotify',
+              start_date: '2020-01',
+              roles: [
+                {
+                  job_title: 'Dev',
+                  bullets: [],
+                  start_date: '2022-01',
+                  end_date: '2020-01',
+                },
+              ],
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).not.toHaveBeenCalled()
+
+      const formState = result.current.form.formState
+      expect(
+        result.current.form.getFieldState(
+          'sections.0.companies.0.roles.0.end_date',
+          formState,
+        ).error?.message,
+      ).toBe('End date cannot be before start date')
+    })
+
+    it('allows an experience section with valid company and role dates', async () => {
+      vi.mocked(createResume).mockResolvedValueOnce('ok')
+
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('experience')
+        result.current.updateSection(0, {
+          type: 'experience',
+          companies: [
+            {
+              company_name: 'Spotify',
+              start_date: '2020-01',
+              end_date: '2024-06',
+              roles: [
+                {
+                  job_title: 'Dev',
+                  bullets: [],
+                  start_date: '2020-01',
+                  end_date: '2022-05',
+                },
+                {
+                  job_title: 'Senior Dev',
+                  bullets: [],
+                },
+                {
+                  job_title: 'Undated role',
+                  bullets: [],
+                  start_date: undefined,
+                  end_date: '',
+                },
+              ],
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).toHaveBeenCalled()
+      expect(mockToast.success).toHaveBeenCalled()
+    })
+
+    it('allows a fully valid resume through', async () => {
+      vi.mocked(createResume).mockResolvedValueOnce('ok')
+
+      const { result } = renderHook(() => useCreateResumeForm())
+
+      act(() => {
+        result.current.form.setValue('title', 'My Resume')
+        result.current.addSection('education')
+        result.current.updateSection(0, {
+          type: 'education',
+          institutions: [
+            {
+              name: 'Uni',
+              degree: 'BSc',
+              start_date: '',
+              end_date: '',
+              location: '',
+            },
+          ],
+        })
+      })
+
+      await act(async () => {
+        await result.current.onSubmit()
+      })
+
+      expect(createResume).toHaveBeenCalled()
+      expect(mockToast.success).toHaveBeenCalled()
+    })
+  })
 })

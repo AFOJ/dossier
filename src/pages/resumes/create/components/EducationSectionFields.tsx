@@ -4,8 +4,13 @@ import {
   AddItemButton,
   ItemControls,
 } from '@/pages/resumes/create/components/SectionCard'
+import {
+  getSectionErrors,
+  useResumeFieldContext,
+} from '@/pages/resumes/create/hooks/useCreateResumeForm'
 
 type InstitutionRowProps = {
+  sectionIndex: number
   institution: EducationalInstitution
   index: number
   isFirst: boolean
@@ -16,8 +21,24 @@ type InstitutionRowProps = {
 }
 
 export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
-  const { institution, index, isFirst, isLast, onChange, onMove, onRemove } =
-    props
+  const {
+    sectionIndex,
+    institution,
+    index,
+    isFirst,
+    isLast,
+    onChange,
+    onMove,
+    onRemove,
+  } = props
+
+  const {
+    formState: { errors },
+  } = useResumeFieldContext()
+
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+
+  const institutionErrors = sectionErrors?.institutions?.[index]
 
   const update = (patch: Partial<EducationalInstitution>) =>
     onChange({ ...institution, ...patch })
@@ -26,16 +47,27 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
-          <Field label="School" inputId={`school-${index}`} required>
+          <Field
+            label="School"
+            inputId={`school-${index}`}
+            required
+            error={institutionErrors?.name?.message}
+          >
             <Input
               id={`school-${index}`}
               placeholder="University of London"
+              aria-invalid={institutionErrors?.name ? true : undefined}
               value={institution.name}
               onChange={(event) => update({ name: event.target.value })}
             />
           </Field>
 
-          <Field label="Degree" inputId={`degree-${index}`} required>
+          <Field
+            label="Degree"
+            inputId={`degree-${index}`}
+            required
+            error={institutionErrors?.degree?.message}
+          >
             <Input
               id={`degree-${index}`}
               placeholder="BSc Computer Science"
@@ -101,7 +133,7 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
       <Field
         label="Paragraph"
         inputId={`education-paragraph-${index}`}
-        description="Anything else worth highlighting about this education."
+        description="Anything else worth highlighting about this."
       >
         <Textarea
           id={`education-paragraph-${index}`}
@@ -122,18 +154,34 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 }
 
 type InstitutionsEditorProps = {
+  sectionIndex: number
   institutions: EducationalInstitution[]
   onChange: (institutions: EducationalInstitution[]) => void
 }
 
 export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
-  const { institutions, onChange } = props
+  const { sectionIndex, institutions, onChange } = props
+
+  const {
+    formState: { errors },
+  } = useResumeFieldContext()
+
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+
+  const sectionError = sectionErrors?.institutions?.message
 
   return (
     <div className="flex flex-col gap-3">
+      {sectionError && (
+        <p role="alert" className="text-sm text-red-700">
+          {sectionError}
+        </p>
+      )}
+
       {institutions.map((institution, index) => (
         <InstitutionRow
           key={index}
+          sectionIndex={sectionIndex}
           institution={institution}
           index={index}
           isFirst={index === 0}

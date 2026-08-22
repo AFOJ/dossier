@@ -22,6 +22,8 @@ export interface ExperienceCompanyRole {
   job_title: string
   employment_type?: string
   location?: string
+  start_date?: string
+  end_date?: string
   bullets: ExperienceCompanyRoleBullet[]
 }
 

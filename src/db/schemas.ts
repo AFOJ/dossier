@@ -54,6 +54,8 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
             job_title: z.string(),
             employment_type: z.string().optional(),
             location: z.string().optional(),
+            start_date: z.string().optional(),
+            end_date: z.string().optional(),
             bullets: z.array(resumeBulletSchema),
           }),
         ),

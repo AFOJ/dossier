@@ -5,8 +5,13 @@ import {
   AddItemButton,
   ItemControls,
 } from '@/pages/resumes/create/components/SectionCard'
+import {
+  getSectionErrors,
+  useResumeFieldContext,
+} from '@/pages/resumes/create/hooks/useCreateResumeForm'
 
 type GroupRowProps = {
+  sectionIndex: number
   group: SkillGroup
   index: number
   isFirst: boolean
@@ -17,15 +22,38 @@ type GroupRowProps = {
 }
 
 export function GroupRow(props: Readonly<GroupRowProps>) {
-  const { group, index, isFirst, isLast, onChange, onMove, onRemove } = props
+  const {
+    sectionIndex,
+    group,
+    index,
+    isFirst,
+    isLast,
+    onChange,
+    onMove,
+    onRemove,
+  } = props
+
+  const {
+    formState: { errors },
+  } = useResumeFieldContext()
+
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+
+  const groupErrors = sectionErrors?.groups?.[index]
 
   return (
     <div className="flex items-start gap-2 rounded-lg border border-gray-200 p-3">
       <div className="grid flex-1 gap-3 sm:grid-cols-2">
-        <Field label="Group title" inputId={`group-title-${index}`}>
+        <Field
+          label="Group title"
+          inputId={`group-title-${index}`}
+          required
+          error={groupErrors?.title?.message}
+        >
           <Input
             id={`group-title-${index}`}
-            placeholder="Frontend"
+            placeholder="Soft Skills"
+            aria-invalid={groupErrors?.title ? true : undefined}
             value={group.title}
             onChange={(event) =>
               onChange({ ...group, title: event.target.value })
@@ -33,7 +61,12 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
           />
         </Field>
 
-        <Field label="Skills" inputId={`group-items-${index}`}>
+        <Field
+          label="Skills"
+          inputId={`group-items-${index}`}
+          required
+          error={groupErrors?.items?.message}
+        >
           <TagInput
             ariaLabel={`Skills for group ${index + 1}`}
             value={group.items}
@@ -55,18 +88,34 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
 }
 
 type GroupsEditorProps = {
+  sectionIndex: number
   groups: SkillGroup[]
   onChange: (groups: SkillGroup[]) => void
 }
 
 export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
-  const { groups, onChange } = props
+  const { sectionIndex, groups, onChange } = props
+
+  const {
+    formState: { errors },
+  } = useResumeFieldContext()
+
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+
+  const sectionError = sectionErrors?.groups?.message
 
   return (
     <div className="flex flex-col gap-3">
+      {sectionError && (
+        <p role="alert" className="text-sm text-red-700">
+          {sectionError}
+        </p>
+      )}
+
       {groups.map((group, index) => (
         <GroupRow
           key={index}
+          sectionIndex={sectionIndex}
           group={group}
           index={index}
           isFirst={index === 0}

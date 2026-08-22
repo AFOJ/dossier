@@ -148,9 +148,7 @@ describe('exportProfile', () => {
   })
 
   it('throws when there is no profile', async () => {
-    await expect(exportProfile()).rejects.toThrow(
-      'No profile found to export.',
-    )
+    await expect(exportProfile()).rejects.toThrow('No profile found to export.')
   })
 })
 
@@ -181,7 +179,7 @@ describe('importProfile', () => {
             type: 'experience',
             companies: [
               {
-                company_name: 'Acme',
+                company_name: 'Spotify',
                 start_date: '2020-01',
                 end_date: '2022-01',
                 roles: [

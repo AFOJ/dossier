@@ -44,6 +44,7 @@ function SectionRowImpl(props: Readonly<SectionRowProps>) {
       <SectionFields
         section={section}
         label={label}
+        index={index}
         onChange={(next) => updateSection(index, next)}
       />
     </SectionCard>

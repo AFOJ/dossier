@@ -50,7 +50,7 @@ export default function CreateResumePage() {
           >
             <Input
               id="resume-title"
-              placeholder="Frontend Engineer Resume"
+              placeholder="Data Analyst Resume"
               {...form.register('title')}
             />
           </Field>
