@@ -3,7 +3,7 @@ import type {
   ExperienceCompany,
   ExperienceCompanyRole,
 } from '@/db/types'
-import { Field, Input } from '@/components/ui'
+import { Field, Input, Textarea } from '@/components/ui'
 import { BulletAddMenu } from '@/pages/resumes/create/components/BulletAddMenu'
 import { SyncSwitch } from '@/pages/resumes/create/components/SyncSwitch'
 import {
@@ -146,17 +146,18 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                   {renderError(index, 'title')}
                 </div>
                 <div>
-                  <Input
+                  <Textarea
                     aria-label={`${roleLabel} bullet ${index + 1} text`}
                     aria-invalid={
                       bulletErrors?.[index]?.text ? true : undefined
                     }
                     placeholder="What did you achieve?"
+                    rows={3}
                     value={bullet.text}
                     className={
                       bulletErrors?.[index]?.text
-                        ? 'border-red-400 focus:border-red-600 focus:ring-red-600'
-                        : undefined
+                        ? 'w-full border-red-400 focus:border-red-600 focus:ring-red-600'
+                        : 'w-full'
                     }
                     onChange={(event) =>
                       onChange(
