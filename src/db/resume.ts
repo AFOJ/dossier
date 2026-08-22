@@ -39,9 +39,15 @@ export async function queryResumes(
   })
 }
 
+export interface CreateResumeOptions {
+  syncProfile?: boolean
+  contact?: Resume['contact']
+}
+
 export async function createResume(
   title: string,
   sections: ResumeSection[],
+  options: CreateResumeOptions = {},
 ): Promise<string> {
   const id = crypto.randomUUID()
   const now = new Date()
@@ -52,6 +58,8 @@ export async function createResume(
     sections,
     createdAt: now,
     updatedAt: now,
+    syncProfile: options.syncProfile ?? true,
+    contact: options.contact ?? null,
   })
 
   return id

@@ -11,13 +11,19 @@ export interface SkillGroup {
 export interface EducationalInstitution {
   name: string
   degree: string
+  grade?: string
   start_date: string
   end_date: string
   location: string
+  paragraph?: string
 }
 
 export interface ExperienceCompanyRole {
   job_title: string
+  employment_type?: string
+  location?: string
+  start_date?: string
+  end_date?: string
   bullets: ExperienceCompanyRoleBullet[]
 }
 
@@ -34,7 +40,7 @@ export interface ExperienceCompany {
 }
 
 export type ResumeSection =
-  | { type: 'summary'; text: string }
+  | { type: 'paragraph'; text: string }
   | { type: 'education'; institutions: EducationalInstitution[] }
   | { type: 'skills'; groups: SkillGroup[] }
   | { type: 'experience'; companies: ExperienceCompany[] }

@@ -20,7 +20,7 @@ beforeEach(async () => {
 describe('Resume Service', () => {
   it('handles resume lifecycle, updates, and timestamps', async () => {
     const id = await createResume('Original', [
-      { type: 'summary', text: 'Old' },
+      { type: 'paragraph', text: 'Old' },
     ])
     const initial = await getResume(id)
 
@@ -31,7 +31,7 @@ describe('Resume Service', () => {
 
     await updateResume(id, {
       title: 'Updated',
-      sections: [{ type: 'summary', text: 'New' }],
+      sections: [{ type: 'paragraph', text: 'New' }],
     })
     const updated = await getResume(id)
 

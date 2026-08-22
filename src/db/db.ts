@@ -18,6 +18,8 @@ export interface Resume {
   sections: ResumeSection[]
   createdAt: Date
   updatedAt: Date
+  syncProfile?: boolean
+  contact?: Omit<Profile, 'id'> | null
 }
 
 export class DossierDatabase extends Dexie {

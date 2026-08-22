@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db, type Profile, type Resume } from '@/db/db'
+import { resumeSectionSchema } from '@/db/schemas'
 import { getAllResumes } from '@/db/resume'
 
 export async function upsertProfile(
@@ -61,56 +62,14 @@ const linkSchema = z.object({
   url: z.url(),
 })
 
-const bulletSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('text'), text: z.string() }),
-  z.object({
-    type: z.literal('text-with-title'),
-    title: z.string(),
-    text: z.string(),
-  }),
-])
-
-const sectionSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('summary'), text: z.string() }),
-  z.object({
-    type: z.literal('education'),
-    institutions: z.array(
-      z.object({
-        name: z.string(),
-        degree: z.string(),
-        start_date: z.string(),
-        end_date: z.string(),
-        location: z.string(),
-      }),
-    ),
-  }),
-  z.object({
-    type: z.literal('skills'),
-    groups: z.array(
-      z.object({
-        title: z.string(),
-        items: z.array(z.string()),
-      }),
-    ),
-  }),
-  z.object({
-    type: z.literal('experience'),
-    companies: z.array(
-      z.object({
-        company_name: z.string(),
-        company_website: z.url().optional(),
-        start_date: z.string(),
-        end_date: z.string().optional(),
-        roles: z.array(
-          z.object({
-            job_title: z.string(),
-            bullets: z.array(bulletSchema),
-          }),
-        ),
-      }),
-    ),
-  }),
-])
+const contactSchema = z.object({
+  full_name: z.string().min(1),
+  role: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  location: z.string().nullable(),
+  links: z.array(linkSchema),
+})
 
 export const exportFileSchema = z.object({
   version: z.literal(1),
@@ -128,9 +87,11 @@ export const exportFileSchema = z.object({
       z.object({
         id: z.string().optional(),
         title: z.string(),
-        sections: z.array(sectionSchema),
+        sections: z.array(resumeSectionSchema),
         createdAt: z.iso.datetime(),
         updatedAt: z.iso.datetime(),
+        syncProfile: z.boolean().optional(),
+        contact: contactSchema.optional(),
       }),
     )
     .default([]),
@@ -169,6 +130,8 @@ export async function importProfile(fileContent: string): Promise<void> {
       sections: resume.sections,
       createdAt: new Date(resume.createdAt),
       updatedAt: new Date(resume.updatedAt),
+      syncProfile: resume.syncProfile ?? true,
+      contact: resume.contact ?? null,
     }))
 
     await db.resumes.clear()
