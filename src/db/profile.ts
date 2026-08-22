@@ -62,6 +62,15 @@ const linkSchema = z.object({
   url: z.url(),
 })
 
+const contactSchema = z.object({
+  full_name: z.string().min(1),
+  role: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  location: z.string().nullable(),
+  links: z.array(linkSchema),
+})
+
 export const exportFileSchema = z.object({
   version: z.literal(1),
   exportedAt: z.string(),
@@ -81,6 +90,8 @@ export const exportFileSchema = z.object({
         sections: z.array(resumeSectionSchema),
         createdAt: z.iso.datetime(),
         updatedAt: z.iso.datetime(),
+        syncProfile: z.boolean().optional(),
+        contact: contactSchema.optional(),
       }),
     )
     .default([]),
@@ -119,6 +130,8 @@ export async function importProfile(fileContent: string): Promise<void> {
       sections: resume.sections,
       createdAt: new Date(resume.createdAt),
       updatedAt: new Date(resume.updatedAt),
+      syncProfile: resume.syncProfile ?? true,
+      contact: resume.contact ?? null,
     }))
 
     await db.resumes.clear()

@@ -7,15 +7,19 @@ import {
 import {
   getSectionErrors,
   useResumeFieldContext,
+  itemKey,
+  withKey,
 } from '@/pages/resumes/create/hooks/useCreateResumeForm'
+
+type InstitutionItem = EducationalInstitution
 
 type InstitutionRowProps = {
   sectionIndex: number
-  institution: EducationalInstitution
+  institution: InstitutionItem
   index: number
   isFirst: boolean
   isLast: boolean
-  onChange: (institution: EducationalInstitution) => void
+  onChange: (institution: InstitutionItem) => void
   onMove: (from: number, to: number) => void
   onRemove: () => void
 }
@@ -36,9 +40,8 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-
-  const institutionErrors = sectionErrors?.institutions?.[index]
+  const institutionErrors = getSectionErrors(errors, sectionIndex)
+    ?.institutions?.[index]
 
   const update = (patch: Partial<EducationalInstitution>) =>
     onChange({ ...institution, ...patch })
@@ -49,12 +52,12 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
         <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field
             label="School"
-            inputId={`school-${index}`}
+            inputId={`section-${sectionIndex}-school-${index}`}
             required
             error={institutionErrors?.name?.message}
           >
             <Input
-              id={`school-${index}`}
+              id={`section-${sectionIndex}-school-${index}`}
               placeholder="University of London"
               aria-invalid={institutionErrors?.name ? true : undefined}
               value={institution.name}
@@ -64,21 +67,25 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 
           <Field
             label="Degree"
-            inputId={`degree-${index}`}
+            inputId={`section-${sectionIndex}-degree-${index}`}
             required
             error={institutionErrors?.degree?.message}
           >
             <Input
-              id={`degree-${index}`}
+              id={`section-${sectionIndex}-degree-${index}`}
               placeholder="BSc Computer Science"
+              aria-invalid={institutionErrors?.degree ? true : undefined}
               value={institution.degree}
               onChange={(event) => update({ degree: event.target.value })}
             />
           </Field>
 
-          <Field label="Grade" inputId={`grade-${index}`}>
+          <Field
+            label="Grade"
+            inputId={`section-${sectionIndex}-grade-${index}`}
+          >
             <Input
-              id={`grade-${index}`}
+              id={`section-${sectionIndex}-grade-${index}`}
               placeholder="First Class Honours"
               value={institution.grade ?? ''}
               onChange={(event) =>
@@ -92,27 +99,36 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
             />
           </Field>
 
-          <Field label="Location" inputId={`education-location-${index}`}>
+          <Field
+            label="Location"
+            inputId={`section-${sectionIndex}-education-location-${index}`}
+          >
             <Input
-              id={`education-location-${index}`}
+              id={`section-${sectionIndex}-education-location-${index}`}
               placeholder="London, UK"
               value={institution.location}
               onChange={(event) => update({ location: event.target.value })}
             />
           </Field>
 
-          <Field label="Start date" inputId={`education-start-${index}`}>
+          <Field
+            label="Start date"
+            inputId={`section-${sectionIndex}-education-start-${index}`}
+          >
             <Input
-              id={`education-start-${index}`}
+              id={`section-${sectionIndex}-education-start-${index}`}
               placeholder="2015"
               value={institution.start_date}
               onChange={(event) => update({ start_date: event.target.value })}
             />
           </Field>
 
-          <Field label="End date" inputId={`education-end-${index}`}>
+          <Field
+            label="End date"
+            inputId={`section-${sectionIndex}-education-end-${index}`}
+          >
             <Input
-              id={`education-end-${index}`}
+              id={`section-${sectionIndex}-education-end-${index}`}
               placeholder="2019"
               value={institution.end_date}
               onChange={(event) => update({ end_date: event.target.value })}
@@ -132,11 +148,11 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 
       <Field
         label="Paragraph"
-        inputId={`education-paragraph-${index}`}
+        inputId={`section-${sectionIndex}-education-paragraph-${index}`}
         description="Anything else worth highlighting about this."
       >
         <Textarea
-          id={`education-paragraph-${index}`}
+          id={`section-${sectionIndex}-education-paragraph-${index}`}
           rows={3}
           value={institution.paragraph ?? ''}
           onChange={(event) =>
@@ -155,8 +171,8 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 
 type InstitutionsEditorProps = {
   sectionIndex: number
-  institutions: EducationalInstitution[]
-  onChange: (institutions: EducationalInstitution[]) => void
+  institutions: InstitutionItem[]
+  onChange: (institutions: InstitutionItem[]) => void
 }
 
 export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
@@ -166,9 +182,8 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-
-  const sectionError = sectionErrors?.institutions?.message
+  const sectionError = getSectionErrors(errors, sectionIndex)?.institutions
+    ?.message
 
   return (
     <div className="flex flex-col gap-3">
@@ -180,7 +195,7 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
 
       {institutions.map((institution, index) => (
         <InstitutionRow
-          key={index}
+          key={itemKey(institution, index)}
           sectionIndex={sectionIndex}
           institution={institution}
           index={index}
@@ -205,13 +220,13 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
         onAdd={() =>
           onChange([
             ...institutions,
-            {
+            withKey({
               name: '',
               degree: '',
               start_date: '',
               end_date: '',
               location: '',
-            },
+            }),
           ])
         }
       />

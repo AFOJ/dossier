@@ -14,21 +14,19 @@ import {
 import {
   getSectionErrors,
   useResumeFieldContext,
+  itemKey,
+  withKey,
 } from '@/pages/resumes/create/hooks/useCreateResumeForm'
+
+type BulletItem = ExperienceCompanyRoleBullet
 
 type BulletsEditorProps = {
   sectionIndex: number
   companyIndex: number
   roleIndex: number
   roleLabel: string
-  bullets: ExperienceCompanyRoleBullet[]
-  onChange: (bullets: ExperienceCompanyRoleBullet[]) => void
-}
-
-function toBullet(title: string, text: string): ExperienceCompanyRoleBullet {
-  return title.trim() !== ''
-    ? { type: 'text-with-title', title: title.trim(), text }
-    : { type: 'text', text }
+  bullets: BulletItem[]
+  onChange: (bullets: BulletItem[]) => void
 }
 
 export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
@@ -58,7 +56,9 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
 
   const renderError = (index: number, field: 'title' | 'text') => {
     const message = bulletErrors?.[index]?.[field]?.message
-    if (!message) return null
+    if (!message) {
+      return null
+    }
     return (
       <p role="alert" className="mt-1 text-xs text-red-700">
         {message}
@@ -81,7 +81,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
 
         return bullet.type === 'text' ? (
           <div
-            key={index}
+            key={itemKey(bullet, index)}
             className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
           >
             <div className="min-w-0 flex-1">
@@ -99,7 +99,11 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                   onChange(
                     bullets.map((current, i) =>
                       i === index
-                        ? { type: 'text', text: event.target.value }
+                        ? {
+                            ...bullet,
+                            type: 'text' as const,
+                            text: event.target.value,
+                          }
                         : current,
                     ),
                   )
@@ -111,7 +115,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
           </div>
         ) : (
           <div
-            key={index}
+            key={itemKey(bullet, index)}
             className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
           >
             <div className="min-w-0 flex-1">
@@ -133,11 +137,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                       onChange(
                         bullets.map((current, i) =>
                           i === index
-                            ? {
-                                type: 'text-with-title',
-                                title: event.target.value,
-                                text: current.text,
-                              }
+                            ? { ...bullet, title: event.target.value }
                             : current,
                         ),
                       )
@@ -163,7 +163,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                       onChange(
                         bullets.map((current, i) =>
                           i === index
-                            ? toBullet(bullet.title, event.target.value)
+                            ? { ...bullet, text: event.target.value }
                             : current,
                         ),
                       )
@@ -178,7 +178,9 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         )
       })}
 
-      <BulletAddMenu onAdd={(bullet) => onChange([...bullets, bullet])} />
+      <BulletAddMenu
+        onAdd={(bullet) => onChange([...bullets, withKey(bullet)])}
+      />
     </div>
   )
 }
@@ -273,12 +275,12 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
               label="Job title"
-              inputId={`company-${companyIndex}-role-${roleIndex}-title`}
+              inputId={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-title`}
               required
               error={roleErrors?.job_title?.message}
             >
               <Input
-                id={`company-${companyIndex}-role-${roleIndex}-title`}
+                id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-title`}
                 placeholder="Data Analyst"
                 aria-invalid={roleErrors?.job_title ? true : undefined}
                 value={role.job_title}
@@ -290,10 +292,10 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
 
             <Field
               label="Employment type"
-              inputId={`company-${companyIndex}-role-${roleIndex}-type`}
+              inputId={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-type`}
             >
               <Input
-                id={`company-${companyIndex}-role-${roleIndex}-type`}
+                id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-type`}
                 placeholder="Full-time"
                 value={role.employment_type ?? ''}
                 onChange={(event) =>
@@ -310,10 +312,10 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
 
             <Field
               label="Location"
-              inputId={`company-${companyIndex}-role-${roleIndex}-location`}
+              inputId={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-location`}
             >
               <Input
-                id={`company-${companyIndex}-role-${roleIndex}-location`}
+                id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-location`}
                 placeholder="London, UK"
                 value={role.location ?? ''}
                 onChange={(event) =>
@@ -330,11 +332,11 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
 
             <Field
               label="Start date"
-              inputId={`company-${companyIndex}-role-${roleIndex}-start`}
+              inputId={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-start`}
               error={roleErrors?.start_date?.message}
             >
               <Input
-                id={`company-${companyIndex}-role-${roleIndex}-start`}
+                id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-start`}
                 type="month"
                 aria-invalid={roleErrors?.start_date ? true : undefined}
                 value={role.start_date ?? ''}
@@ -351,7 +353,7 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
             </Field>
 
             <EndDateField
-              id={`company-${companyIndex}-role-${roleIndex}-end`}
+              id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-end`}
               value={role.end_date}
               error={roleErrors?.end_date?.message}
               isPresent={role.end_date === undefined}
@@ -431,12 +433,12 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
         <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field
             label="Company"
-            inputId={`company-${index}-name`}
+            inputId={`section-${sectionIndex}-company-${index}-name`}
             required
             error={companyErrors?.company_name?.message}
           >
             <Input
-              id={`company-${index}-name`}
+              id={`section-${sectionIndex}-company-${index}-name`}
               placeholder="Spotify"
               aria-invalid={companyErrors?.company_name ? true : undefined}
               value={company.company_name}
@@ -444,9 +446,12 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
             />
           </Field>
 
-          <Field label="Website" inputId={`company-${index}-website`}>
+          <Field
+            label="Website"
+            inputId={`section-${sectionIndex}-company-${index}-website`}
+          >
             <Input
-              id={`company-${index}-website`}
+              id={`section-${sectionIndex}-company-${index}-website`}
               placeholder="https://example.com"
               value={company.company_website ?? ''}
               onChange={(event) =>
@@ -462,12 +467,12 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
 
           <Field
             label="Start date"
-            inputId={`company-${index}-start`}
+            inputId={`section-${sectionIndex}-company-${index}-start`}
             required
             error={companyErrors?.start_date?.message}
           >
             <Input
-              id={`company-${index}-start`}
+              id={`section-${sectionIndex}-company-${index}-start`}
               type="month"
               aria-invalid={companyErrors?.start_date ? true : undefined}
               value={company.start_date}
@@ -476,7 +481,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
           </Field>
 
           <EndDateField
-            id={`company-${index}-end`}
+            id={`section-${sectionIndex}-company-${index}-end`}
             value={company.end_date}
             error={companyErrors?.end_date?.message}
             isPresent={isCurrentRole}
@@ -500,7 +505,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
       <div className="flex flex-col gap-3">
         {roles.map((role, roleIndex) => (
           <RoleEditor
-            key={roleIndex}
+            key={itemKey(role, roleIndex)}
             sectionIndex={sectionIndex}
             companyIndex={index}
             roleIndex={roleIndex}
@@ -536,14 +541,14 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
               ...company,
               roles: [
                 ...roles,
-                {
+                withKey({
                   job_title: '',
                   employment_type: undefined,
                   location: undefined,
                   start_date: undefined,
                   end_date: '',
                   bullets: [],
-                },
+                }),
               ],
             })
           }
@@ -579,7 +584,7 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
 
       {companies.map((company, index) => (
         <CompanyRow
-          key={index}
+          key={itemKey(company, index)}
           sectionIndex={sectionIndex}
           company={company}
           index={index}
@@ -604,12 +609,12 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
         onAdd={() =>
           onChange([
             ...companies,
-            {
+            withKey({
               company_name: '',
               start_date: '',
               end_date: undefined,
               roles: [],
-            },
+            }),
           ])
         }
       />

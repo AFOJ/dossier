@@ -8,15 +8,19 @@ import {
 import {
   getSectionErrors,
   useResumeFieldContext,
+  itemKey,
+  withKey,
 } from '@/pages/resumes/create/hooks/useCreateResumeForm'
+
+type GroupItem = SkillGroup
 
 type GroupRowProps = {
   sectionIndex: number
-  group: SkillGroup
+  group: GroupItem
   index: number
   isFirst: boolean
   isLast: boolean
-  onChange: (group: SkillGroup) => void
+  onChange: (group: GroupItem) => void
   onMove: (from: number, to: number) => void
   onRemove: () => void
 }
@@ -37,21 +41,19 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-
-  const groupErrors = sectionErrors?.groups?.[index]
+  const groupErrors = getSectionErrors(errors, sectionIndex)?.groups?.[index]
 
   return (
     <div className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start">
       <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
         <Field
           label="Group title"
-          inputId={`group-title-${index}`}
+          inputId={`section-${sectionIndex}-group-title-${index}`}
           required
           error={groupErrors?.title?.message}
         >
           <Input
-            id={`group-title-${index}`}
+            id={`section-${sectionIndex}-group-title-${index}`}
             placeholder="Soft Skills"
             aria-invalid={groupErrors?.title ? true : undefined}
             value={group.title}
@@ -63,7 +65,7 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
 
         <Field
           label="Skills"
-          inputId={`group-items-${index}`}
+          inputId={`section-${sectionIndex}-group-items-${index}`}
           required
           error={groupErrors?.items?.message}
         >
@@ -89,8 +91,8 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
 
 type GroupsEditorProps = {
   sectionIndex: number
-  groups: SkillGroup[]
-  onChange: (groups: SkillGroup[]) => void
+  groups: GroupItem[]
+  onChange: (groups: GroupItem[]) => void
 }
 
 export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
@@ -100,9 +102,7 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-
-  const sectionError = sectionErrors?.groups?.message
+  const sectionError = getSectionErrors(errors, sectionIndex)?.groups?.message
 
   return (
     <div className="flex flex-col gap-3">
@@ -114,7 +114,7 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
 
       {groups.map((group, index) => (
         <GroupRow
-          key={index}
+          key={itemKey(group, index)}
           sectionIndex={sectionIndex}
           group={group}
           index={index}
@@ -134,7 +134,7 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
 
       <AddItemButton
         label="Add skill group"
-        onAdd={() => onChange([...groups, { title: '', items: [] }])}
+        onAdd={() => onChange([...groups, withKey({ title: '', items: [] })])}
       />
     </div>
   )

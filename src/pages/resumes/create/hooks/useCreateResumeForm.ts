@@ -264,26 +264,40 @@ export function getSectionErrors(errors: unknown, sectionIndex: number): any {
 
 export type SectionType = ResumeSectionData['type']
 
-const DEFAULT_SECTIONS: Record<SectionType, () => ResumeSectionData> = {
-  paragraph: () => ({ type: 'paragraph', text: '' }),
-  education: () => ({ type: 'education', institutions: [] }),
-  skills: () => ({
-    type: 'skills',
-    groups: [{ title: '', items: [] }],
-  }),
-  experience: () => ({
-    type: 'experience',
-    companies: [
-      {
-        company_name: '',
-        start_date: '',
-        end_date: undefined,
-        employment_type: undefined,
-        location: undefined,
-        roles: [],
-      },
-    ],
-  }),
+export type WithKey<T extends object> = T & { _key: string }
+
+export type FormSection = WithKey<ResumeSectionData>
+
+export const withKey = <T extends object>(value: T): T & { _key: string } =>
+  ({
+    ...value,
+    _key: crypto.randomUUID(),
+  }) as WithKey<T>
+
+export function itemKey(item: unknown, index: number): string {
+  return (item as { _key?: string })._key ?? String(index)
+}
+
+const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
+  paragraph: () => withKey({ type: 'paragraph', text: '' }),
+  education: () => withKey({ type: 'education', institutions: [] }),
+  skills: () =>
+    withKey({
+      type: 'skills',
+      groups: [withKey({ title: '', items: [] })],
+    }),
+  experience: () =>
+    withKey({
+      type: 'experience',
+      companies: [
+        withKey({
+          company_name: '',
+          start_date: '',
+          end_date: undefined,
+          roles: [],
+        }),
+      ],
+    }),
 }
 
 function toContactValues(profile: Profile) {
@@ -327,10 +341,12 @@ export function useCreateResumeForm(profile?: Profile) {
   const { setValue, getValues } = form
 
   const mutateSections = useCallback(
-    (mutate: (sections: ResumeSectionData[]) => ResumeSectionData[]) => {
-      setValue('sections', mutate(getValues('sections')), {
-        shouldDirty: true,
-      })
+    (mutate: (sections: FormSection[]) => FormSection[]) => {
+      setValue(
+        'sections',
+        mutate(getValues('sections') as FormSection[]),
+        { shouldDirty: true },
+      )
     },
     [getValues, setValue],
   )
@@ -368,7 +384,9 @@ export function useCreateResumeForm(profile?: Profile) {
   const updateSection = useCallback(
     (index: number, section: ResumeSectionData) => {
       mutateSections((sections) =>
-        sections.map((current, i) => (i === index ? section : current)),
+        sections.map((current, i) =>
+          i === index ? ({ ...section } as FormSection) : current,
+        ),
       )
     },
     [mutateSections],

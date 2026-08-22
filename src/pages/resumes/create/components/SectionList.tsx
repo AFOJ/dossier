@@ -1,9 +1,12 @@
 import { memo } from 'react'
+import { useWatch, type Control } from 'react-hook-form'
+import type { ResumeSectionData } from '@/db/schemas'
 import { SectionCard } from '@/pages/resumes/create/components/SectionCard'
 import { SectionFields } from '@/pages/resumes/create/components/SectionFields'
-import { useWatch, type Control } from 'react-hook-form'
-import type { ResumeFormData } from '@/pages/resumes/create/hooks/useCreateResumeForm'
-import type { ResumeSectionData } from '@/db/schemas'
+import {
+  itemKey,
+  type ResumeFormData,
+} from '@/pages/resumes/create/hooks/useCreateResumeForm'
 
 type SectionRowProps = {
   section: ResumeSectionData
@@ -67,9 +70,9 @@ export function SectionList(props: Readonly<SectionListProps>) {
 
   return (
     <div className="flex flex-col gap-4">
-      {sections.map((section, index) => (
+      {(sections ?? []).map((section, index) => (
         <SectionRow
-          key={`${section.type}-${index}`}
+          key={itemKey(section, index)}
           section={section}
           index={index}
           isFirst={index === 0}

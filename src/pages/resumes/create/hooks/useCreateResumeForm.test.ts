@@ -58,7 +58,7 @@ describe('useCreateResumeForm', () => {
     })
 
     const sections = getSections(result)
-    expect(sections).toEqual([
+    expect(stripKeys(sections)).toEqual([
       { type: 'paragraph', text: '' },
       {
         type: 'experience',
@@ -67,6 +67,9 @@ describe('useCreateResumeForm', () => {
         ],
       },
     ])
+    expect(
+      (sections[0] as { _key?: string })._key,
+    ).toEqual(expect.any(String))
   })
 
   it('removes and reorders sections', () => {
@@ -111,9 +114,21 @@ describe('useCreateResumeForm', () => {
     })
 
     const sections = getSections(result)
-    expect(sections[0]).toEqual({ type: 'paragraph', text: 'Hello' })
+    expect((sections[0] as { text?: string }).text).toBe('Hello')
     expect(sections[1]?.type).toBe('education')
   })
+
+  function stripKeys<T>(value: T): T {
+    if (Array.isArray(value)) return value.map(stripKeys) as T
+    if (value && typeof value === 'object') {
+      const clone: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(value)) {
+        if (k !== '_key') clone[k] = stripKeys(v)
+      }
+      return clone as T
+    }
+    return value
+  }
 
   it('does not submit without a title', async () => {
     const { result } = renderHook(() => useCreateResumeForm())
