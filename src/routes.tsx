@@ -8,6 +8,8 @@ import {
   Navigate,
 } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ModalProvider } from '@/components/modal'
+import { Toaster } from '@/components/toast'
 import { getProfile } from '@/db/profile'
 import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
 import ProtectedLayout from '@/layouts/ProtectedLayout'
@@ -41,9 +43,18 @@ const publicOnlyRouteLoader = async () => {
 
 const PublicOnlyLayout = () => <Outlet />
 
+function RootLayout() {
+  return (
+    <ModalProvider>
+      <Outlet />
+      <Toaster />
+    </ModalProvider>
+  )
+}
+
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<Outlet />} errorElement={<ErrorBoundary />}>
+    <Route path="/" element={<RootLayout />} errorElement={<ErrorBoundary />}>
       <Route element={<PublicOnlyLayout />} loader={publicOnlyRouteLoader}>
         <Route path="setup" element={<CreateProfilePage />} />
       </Route>

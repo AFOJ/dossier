@@ -1,8 +1,9 @@
 import { Button, Divider, Heading1, Subheading } from '@/components/ui'
 import { FormProvider } from 'react-hook-form'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { PersonalInfoFields } from '@/pages/profile/create/components/PersonalInfoFields'
-import { SocialLinksFields } from '@/pages/profile/create/components/SocialLinksFields'
+import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
+import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
+import { RestoreFromExport } from '@/pages/profile/create/components/RestoreFromExport'
 import { useCreateProfileForm } from '@/pages/profile/create/hooks/useCreateProfileForm'
 
 export default function CreateProfilePage() {
@@ -12,7 +13,7 @@ export default function CreateProfilePage() {
 
   return (
     <main className="w-full flex justify-center">
-      <section className="flex flex-col gap-10 p-4 w-full max-w-4xl mt-20 ">
+      <section className="flex flex-col gap-10 px-6 py-10 w-full max-w-4xl mt-20 sm:px-10">
         <div className="flex flex-col items-center justify-center gap-1">
           <Heading1 className="text-center">Get started with Dossier</Heading1>
           <Subheading className="text-center">
@@ -20,6 +21,8 @@ export default function CreateProfilePage() {
             across all your resumes.
           </Subheading>
         </div>
+
+        <RestoreFromExport />
 
         <FormProvider {...form}>
           <form onSubmit={onSubmit} className="contents">

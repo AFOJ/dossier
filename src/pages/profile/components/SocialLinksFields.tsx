@@ -6,10 +6,10 @@ import {
 } from '@hugeicons/core-free-icons'
 import { Button, Field, Heading2, Input } from '@/components/ui'
 import { useFieldArray } from 'react-hook-form'
-import { useProfileFormContext } from '@/pages/profile/create/hooks/useCreateProfileForm'
+import { useProfileFieldContext } from '@/pages/profile/schema'
 
 export function SocialLinksFields() {
-  const { control } = useProfileFormContext()
+  const { control } = useProfileFieldContext()
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: 'socials',
@@ -116,7 +116,7 @@ function SocialLinkInputs(props: Readonly<SocialLinkInputsProps>) {
   const {
     register,
     formState: { errors },
-  } = useProfileFormContext()
+  } = useProfileFieldContext()
 
   const fieldErrors = errors.socials?.[index]
 

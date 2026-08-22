@@ -2,12 +2,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import CreateProfilePage from '@/pages/profile/create/CreateProfilePage'
-import { upsertProfile } from '@/db/profile'
+import { upsertProfile, importProfile } from '@/db/profile'
 
 // Only mock the network boundary and router — everything else (zod validation,
 // react-hook-form, useFieldArray reordering) runs for real.
 vi.mock('@/db/profile', () => ({
   upsertProfile: vi.fn(),
+  importProfile: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
@@ -220,6 +221,59 @@ describe('CreateProfilePage', () => {
 
     expect(
       await screen.findByText('Failed to save profile. Please try again.'),
+    ).toBeInTheDocument()
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+})
+
+describe('CreateProfilePage — restore from export', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  async function uploadExportFile(
+    user: ReturnType<typeof userEvent.setup>,
+    content: string,
+  ) {
+    const input = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement
+
+    const file = new File([content], 'dossier-export.json', {
+      type: 'application/json',
+    })
+
+    await user.upload(input, file)
+  }
+
+  it('imports a valid export and navigates to resumes', async () => {
+    vi.mocked(importProfile).mockResolvedValueOnce(undefined)
+    const { user } = setup()
+
+    await uploadExportFile(
+      user,
+      JSON.stringify({ version: 1, profile: {}, resumes: [] }),
+    )
+
+    expect(importProfile).toHaveBeenCalledWith(
+      JSON.stringify({ version: 1, profile: {}, resumes: [] }),
+    )
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/profile')
+    })
+  })
+
+  it('shows an inline error and stays on the page when the file is invalid', async () => {
+    vi.mocked(importProfile).mockRejectedValueOnce(new Error('Bad file'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { user } = setup()
+
+    await uploadExportFile(user, '{}')
+
+    expect(
+      await screen.findByText(
+        'This file is not a valid Dossier export. Please check the file and try again.',
+      ),
     ).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalled()
   })
