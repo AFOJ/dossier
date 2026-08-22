@@ -71,7 +71,7 @@ export type ResumeFormData = z.infer<typeof resumeFormSchema>
 export type SectionType = ResumeSectionData['type']
 
 const DEFAULT_SECTIONS: Record<SectionType, () => ResumeSectionData> = {
-  summary: () => ({ type: 'summary', text: '' }),
+  paragraph: () => ({ type: 'paragraph', text: '' }),
   education: () => ({ type: 'education', institutions: [] }),
   skills: () => ({
     type: 'skills',

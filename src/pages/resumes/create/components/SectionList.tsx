@@ -1,5 +1,4 @@
 import { memo } from 'react'
-import { SECTION_LABELS } from '@/pages/resumes/create/components/sectionLabels'
 import { SectionCard } from '@/pages/resumes/create/components/SectionCard'
 import { SectionFields } from '@/pages/resumes/create/components/SectionFields'
 import { useWatch, type Control } from 'react-hook-form'
@@ -27,7 +26,9 @@ function SectionRowImpl(props: Readonly<SectionRowProps>) {
     removeSection,
   } = props
 
-  const label = section.title?.trim() || SECTION_LABELS[section.type]
+  const label =
+    section.title?.trim() ||
+    section.type.charAt(0).toUpperCase() + section.type.slice(1)
 
   return (
     <SectionCard

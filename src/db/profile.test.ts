@@ -100,7 +100,7 @@ describe('exportProfile', () => {
       {
         id: crypto.randomUUID(),
         title: 'Resume 2',
-        sections: [{ type: 'summary', text: 'Hello' }],
+        sections: [{ type: 'paragraph', text: 'Hello' }],
         createdAt: new Date('2026-01-02T10:00:00Z'),
         updatedAt: new Date('2026-01-02T10:00:00Z'),
       },
@@ -176,7 +176,7 @@ describe('importProfile', () => {
         id: 'resume-1',
         title: 'My Resume',
         sections: [
-          { type: 'summary', text: 'Hello' },
+          { type: 'paragraph', text: 'Hello' },
           {
             type: 'experience',
             companies: [

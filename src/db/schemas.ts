@@ -11,7 +11,7 @@ export const resumeBulletSchema = z.discriminatedUnion('type', [
 
 export const resumeSectionSchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal('summary'),
+    type: z.literal('paragraph'),
     title: z.string().optional(),
     text: z.string(),
   }),

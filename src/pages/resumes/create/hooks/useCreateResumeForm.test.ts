@@ -53,13 +53,13 @@ describe('useCreateResumeForm', () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('summary')
+      result.current.addSection('paragraph')
       result.current.addSection('experience')
     })
 
     const sections = getSections(result)
     expect(sections).toEqual([
-      { type: 'summary', text: '' },
+      { type: 'paragraph', text: '' },
       {
         type: 'experience',
         companies: [
@@ -73,7 +73,7 @@ describe('useCreateResumeForm', () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('summary')
+      result.current.addSection('paragraph')
       result.current.addSection('skills')
       result.current.addSection('education')
     })
@@ -83,7 +83,7 @@ describe('useCreateResumeForm', () => {
     })
 
     expect(getSections(result).map((s) => s.type)).toEqual([
-      'summary',
+      'paragraph',
       'education',
       'skills',
     ])
@@ -102,16 +102,16 @@ describe('useCreateResumeForm', () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('summary')
+      result.current.addSection('paragraph')
       result.current.addSection('education')
     })
 
     act(() => {
-      result.current.updateSection(0, { type: 'summary', text: 'Hello' })
+      result.current.updateSection(0, { type: 'paragraph', text: 'Hello' })
     })
 
     const sections = getSections(result)
-    expect(sections[0]).toEqual({ type: 'summary', text: 'Hello' })
+    expect(sections[0]).toEqual({ type: 'paragraph', text: 'Hello' })
     expect(sections[1]?.type).toBe('education')
   })
 
@@ -136,8 +136,8 @@ describe('useCreateResumeForm', () => {
 
     act(() => {
       result.current.form.setValue('title', 'My Resume')
-      result.current.addSection('summary')
-      result.current.updateSection(0, { type: 'summary', text: 'Hello' })
+      result.current.addSection('paragraph')
+      result.current.updateSection(0, { type: 'paragraph', text: 'Hello' })
     })
 
     await act(async () => {
@@ -146,7 +146,7 @@ describe('useCreateResumeForm', () => {
 
     expect(createResume).toHaveBeenCalledWith(
       'My Resume',
-      [{ type: 'summary', text: 'Hello' }],
+      [{ type: 'paragraph', text: 'Hello' }],
       { syncProfile: true, contact: null },
     )
     expect(mockToast.success).toHaveBeenCalledWith(
@@ -164,7 +164,7 @@ describe('useCreateResumeForm', () => {
     act(() => {
       result.current.form.setValue('title', 'My Resume')
       result.current.form.setValue('sections', [
-        { type: 'summary', text: 'Hi' },
+        { type: 'paragraph', text: 'Hi' },
       ])
     })
 

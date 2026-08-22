@@ -137,7 +137,7 @@ describe('ResumesListPage', () => {
 
   it('duplicates a resume with a copy title and its sections', async () => {
     const user = userEvent.setup()
-    const sections: ResumeSection[] = [{ type: 'summary', text: 'Hello' }]
+    const sections: ResumeSection[] = [{ type: 'paragraph', text: 'Hello' }]
     renderPage(
       makeTableState({
         totalCount: 1,

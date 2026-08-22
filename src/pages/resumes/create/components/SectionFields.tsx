@@ -15,7 +15,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
   const { section, label, onChange } = props
 
   switch (section.type) {
-    case 'summary':
+    case 'paragraph':
       return (
         <Textarea
           aria-label={`${label} text`}
@@ -23,7 +23,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           value={section.text}
           rows={4}
           onChange={(event) =>
-            onChange({ ...section, type: 'summary', text: event.target.value })
+            onChange({ ...section, type: 'paragraph', text: event.target.value })
           }
         />
       )

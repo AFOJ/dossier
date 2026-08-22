@@ -96,15 +96,15 @@ describe('CreateResumePage', () => {
     expect(screen.getByPlaceholderText('Farmer')).toBeInTheDocument()
   })
 
-  it('adds and edits a summary section via the add-section menu, then creates the resume', async () => {
+  it('adds and edits a paragraph section via the add-section menu, then creates the resume', async () => {
     const user = userEvent.setup()
     vi.mocked(createResume).mockResolvedValueOnce('resume-1')
     renderPage()
 
     await addSectionViaMenu(user, 'Paragraph')
 
-    const summary = screen.getByRole('textbox', { name: 'Paragraph text' })
-    await user.type(summary, 'Seasoned engineer.')
+    const paragraph = screen.getByRole('textbox', { name: 'Paragraph text' })
+    await user.type(paragraph, 'Seasoned engineer.')
 
     await user.type(screen.getByLabelText(/^Title/), 'My Resume')
     await user.click(screen.getByRole('button', { name: 'Create resume' }))
@@ -112,7 +112,7 @@ describe('CreateResumePage', () => {
     await waitFor(() => {
       expect(createResume).toHaveBeenCalledWith(
         'My Resume',
-        [{ type: 'summary', text: 'Seasoned engineer.' }],
+        [{ type: 'paragraph', text: 'Seasoned engineer.' }],
         { syncProfile: true, contact: null },
       )
     })
@@ -124,8 +124,8 @@ describe('CreateResumePage', () => {
     renderPage()
 
     await addSectionViaMenu(user, 'Paragraph')
-    const summary = screen.getByRole('textbox', { name: 'Paragraph text' })
-    await user.type(summary, 'Some text')
+    const paragraph = screen.getByRole('textbox', { name: 'Paragraph text' })
+    await user.type(paragraph, 'Some text')
 
     await user.click(screen.getByRole('button', { name: 'Create resume' }))
 
