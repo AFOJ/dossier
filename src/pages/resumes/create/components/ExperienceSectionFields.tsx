@@ -115,7 +115,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
             className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
           >
             <div className="min-w-0 flex-1">
-              <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+              <div className="flex flex-col gap-2">
                 <div>
                   <Input
                     aria-label={`${roleLabel} bullet ${index + 1} heading`}
