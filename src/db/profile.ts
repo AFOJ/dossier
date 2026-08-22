@@ -171,6 +171,8 @@ export async function importProfile(fileContent: string): Promise<void> {
       updatedAt: new Date(resume.updatedAt),
     }))
 
+    await db.resumes.clear()
+
     if (restoredResumes.length > 0) {
       await db.resumes.bulkPut(restoredResumes)
     }

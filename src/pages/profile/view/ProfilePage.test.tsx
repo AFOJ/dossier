@@ -213,4 +213,31 @@ describe('ProfilePage', () => {
     })
     expect(deleteProfile).not.toHaveBeenCalled()
   })
+
+  it('keeps the dialog open and shows an error when deletion fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(deleteProfile).mockRejectedValueOnce(new Error('Boom'))
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await screen.findByRole('dialog')
+
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }))
+
+    expect(
+      await screen.findByText(
+        'Unable to delete your profile. Please try again.',
+      ),
+    ).toBeInTheDocument()
+    expect(mockToast.error).toHaveBeenCalledWith(
+      'Failed to delete profile',
+      'Please try again.',
+    )
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Delete profile' }),
+      ).toBeEnabled()
+    })
+  })
 })

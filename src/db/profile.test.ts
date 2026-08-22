@@ -284,6 +284,35 @@ describe('importProfile', () => {
     )
   })
 
+  it('replaces existing resumes instead of merging with them', async () => {
+    await db.profiles.add({
+      full_name: 'Existing User',
+      role: null,
+      email: null,
+      phone: null,
+      location: null,
+      links: [],
+    })
+    await db.resumes.add({
+      id: 'stale-resume',
+      title: 'Old Resume',
+      sections: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    const { resumes, ...rest } = validExport
+    await importProfile(
+      JSON.stringify({
+        ...rest,
+        resumes: resumes.filter((resume) => resume.id === 'resume-1'),
+      }),
+    )
+
+    const restored = await db.resumes.toArray()
+    expect(restored.map((resume) => resume.id)).toEqual(['resume-1'])
+  })
+
   it('leaves the database untouched when validation fails', async () => {
     try {
       await importProfile(JSON.stringify({ version: 999 }))
