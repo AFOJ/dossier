@@ -5,7 +5,7 @@ import {
   Trash,
 } from '@hugeicons/core-free-icons'
 import { useState, type ReactNode } from 'react'
-import { Button, Field, Input } from '@/components/ui'
+import { Button, Input } from '@/components/ui'
 
 type SectionCardProps = {
   label: string
@@ -36,16 +36,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-gray-200 p-4">
-      <div className="flex items-end justify-between gap-2">
-        <Field label="Section title" inputId={titleInputId} className="flex-1">
-          <Input
-            id={titleInputId}
-            placeholder={label}
-            value={title}
-            onChange={(event) => onTitleChange(event.target.value)}
-          />
-        </Field>
-
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <Button
             type="button"
@@ -63,15 +54,25 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
             onClick={onMoveDown}
             aria-label={`Move ${title || label} section down`}
           />
-          <Button
-            type="button"
-            intent="secondary"
-            iconClassname="text-gray-500 hover:text-red-500"
-            icon={Trash}
-            onClick={onRemove}
-            aria-label={`Remove ${title || label} section`}
-          />
         </div>
+
+        <Input
+          id={titleInputId}
+          aria-label="Section title"
+          className="flex-1"
+          placeholder={`Section title: ${label}`}
+          value={title}
+          onChange={(event) => onTitleChange(event.target.value)}
+        />
+
+        <Button
+          type="button"
+          intent="secondary"
+          iconClassname="text-gray-500 hover:text-red-500"
+          icon={Trash}
+          onClick={onRemove}
+          aria-label={`Remove ${title || label} section`}
+        />
       </div>
 
       {children}
