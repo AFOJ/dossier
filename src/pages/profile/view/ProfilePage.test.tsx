@@ -1,6 +1,5 @@
-import { buildExportData } from '@/db/export'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { deleteProfile, upsertProfile } from '@/db/profile'
+import { deleteProfile, upsertProfile, exportProfile } from '@/db/profile'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { downloadJson, getExportFilename } from '@/lib/download'
 import { ModalProvider } from '@/components/modal'
@@ -17,10 +16,7 @@ vi.mock('@/hooks/useProtectedRouteData', () => ({
 vi.mock('@/db/profile', () => ({
   upsertProfile: vi.fn(),
   deleteProfile: vi.fn(),
-}))
-
-vi.mock('@/db/export', () => ({
-  buildExportData: vi.fn(),
+  exportProfile: vi.fn(),
 }))
 
 vi.mock('@/lib/download', () => ({
@@ -149,13 +145,13 @@ describe('ProfilePage', () => {
       profile,
       resumes: [],
     }
-    vi.mocked(buildExportData).mockResolvedValueOnce(exportData)
+    vi.mocked(exportProfile).mockResolvedValueOnce(exportData)
     renderPage()
 
     await user.click(screen.getByRole('button', { name: 'Export data' }))
 
     await waitFor(() => {
-      expect(buildExportData).toHaveBeenCalled()
+      expect(exportProfile).toHaveBeenCalled()
       expect(getExportFilename).toHaveBeenCalledWith('profile')
       expect(downloadJson).toHaveBeenCalledWith(
         'dossier-profile-export-2026-08-23.json',
@@ -166,7 +162,7 @@ describe('ProfilePage', () => {
 
   it('shows an error toast when exporting fails', async () => {
     const user = userEvent.setup()
-    vi.mocked(buildExportData).mockRejectedValueOnce(new Error('Boom'))
+    vi.mocked(exportProfile).mockRejectedValueOnce(new Error('Boom'))
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     renderPage()
 

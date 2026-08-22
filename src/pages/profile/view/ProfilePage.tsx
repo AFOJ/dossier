@@ -3,7 +3,7 @@ import { FormProvider } from 'react-hook-form'
 import { Button, Divider, Heading1, Subheading } from '@/components/ui'
 import { useModal } from '@/components/modal'
 import { useToast } from '@/components/toast'
-import { buildExportData } from '@/db/export'
+import { exportProfile } from '@/db/profile'
 import { downloadJson, getExportFilename } from '@/lib/download'
 import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
 import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
@@ -29,7 +29,7 @@ export default function ProfilePage() {
     try {
       setIsExporting(true)
 
-      const data = await buildExportData()
+      const data = await exportProfile()
       downloadJson(getExportFilename('profile'), data)
 
       toast.success(
