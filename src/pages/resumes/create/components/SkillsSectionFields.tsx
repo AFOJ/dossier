@@ -84,6 +84,7 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
         isLast={isLast}
         onMove={onMove}
         onRemove={onRemove}
+        className="self-start pt-7.5 max-sm:pt-0"
       />
     </div>
   )

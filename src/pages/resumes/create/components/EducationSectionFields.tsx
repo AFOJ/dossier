@@ -143,6 +143,7 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
           isLast={isLast}
           onMove={onMove}
           onRemove={onRemove}
+          className="self-start pt-7.5 max-sm:pt-0"
         />
       </div>
 
