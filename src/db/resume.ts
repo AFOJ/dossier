@@ -75,7 +75,9 @@ export async function getAllResumes(): Promise<Resume[]> {
 
 export async function updateResume(
   id: string,
-  changes: Partial<Pick<Resume, 'title' | 'sections'>>,
+  changes: Partial<
+    Pick<Resume, 'title' | 'sections' | 'syncProfile' | 'contact'>
+  >,
 ): Promise<void> {
   await RESUME_TABLE.update(id, {
     ...changes,

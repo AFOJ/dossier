@@ -45,7 +45,7 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
 
   return (
     <div className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start">
-      <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
+      <div className="grid min-w-0 flex-1 gap-3">
         <Field
           label="Group title"
           inputId={`section-${sectionIndex}-group-title-${index}`}
@@ -84,6 +84,7 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
         isLast={isLast}
         onMove={onMove}
         onRemove={onRemove}
+        className="self-start pt-7.5 max-sm:pt-0"
       />
     </div>
   )
