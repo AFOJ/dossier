@@ -20,7 +20,7 @@ export default function EditResumePage() {
 
   usePageTitle('Edit Resume')
 
-  return <EditResumeForm resume={resume} />
+  return <EditResumeForm key={resume.id} resume={resume} />
 }
 
 function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {

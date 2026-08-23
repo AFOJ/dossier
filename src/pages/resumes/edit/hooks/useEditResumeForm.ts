@@ -87,15 +87,15 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 
       if (sync && profile) {
         // Turning sync back on discards local edits in favour of the profile.
-        Object.entries(
-          profileToContactValues(profile),
-        ).forEach(([key, value]) => {
-          ;(
-            form as unknown as {
-              setValue: (name: string, value: unknown) => void
-            }
-          ).setValue(key, value)
-        })
+        Object.entries(profileToContactValues(profile)).forEach(
+          ([key, value]) => {
+            ;(
+              form as unknown as {
+                setValue: (name: string, value: unknown) => void
+              }
+            ).setValue(key, value)
+          },
+        )
       }
     },
     [form, profile, setValue],
@@ -143,9 +143,7 @@ function contactDefaults(resume: Resume, profile?: Profile) {
     }
   }
 
-  return profile
-    ? profileToContactValues(profile)
-    : emptyContactValues()
+  return profile ? profileToContactValues(profile) : emptyContactValues()
 }
 
 function profileToContactValues(profile: Profile) {
@@ -200,3 +198,4 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
       }
   }
 }
+
