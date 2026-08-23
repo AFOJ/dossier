@@ -60,6 +60,14 @@ const resumeEditRouteLoader = async ({
 
 const PublicOnlyLayout = () => <Outlet />
 
+function HydrateFallback() {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-white">
+      <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+    </div>
+  )
+}
+
 function RootLayout() {
   return (
     <ModalProvider>
@@ -72,7 +80,11 @@ function RootLayout() {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayout />} errorElement={<ErrorBoundary />}>
-      <Route element={<PublicOnlyLayout />} loader={publicOnlyRouteLoader}>
+      <Route
+        element={<PublicOnlyLayout />}
+        loader={publicOnlyRouteLoader}
+        hydrateFallbackElement={<HydrateFallback />}
+      >
         <Route path="setup" element={<CreateProfilePage />} />
       </Route>
 
@@ -80,6 +92,7 @@ const router = createBrowserRouter(
         id="protected"
         element={<ProtectedLayout />}
         loader={protectedRouteLoader}
+        hydrateFallbackElement={<HydrateFallback />}
       >
         <Route index element={<Navigate to="resumes" replace />} />
         <Route path="resumes">

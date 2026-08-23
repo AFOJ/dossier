@@ -18,6 +18,7 @@ function renderLoaderError(error: unknown, onRetry?: () => void) {
       {
         path: '/',
         element: <div />,
+        hydrateFallbackElement: <div />,
         loader: () => {
           throw error
         },
