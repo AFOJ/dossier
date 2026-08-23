@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ModalProvider } from '@/components/modal'
 import { Toaster } from '@/components/toast'
 import { getProfile } from '@/db/profile'
+import { getResume } from '@/db/resume'
 import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
 import ProtectedLayout from '@/layouts/ProtectedLayout'
 import CreateProfilePage from '@/pages/profile/create'
@@ -39,6 +40,22 @@ const publicOnlyRouteLoader = async () => {
   }
 
   return null
+}
+
+const resumeEditRouteId = 'resume-edit'
+
+const resumeEditRouteLoader = async ({
+  params,
+}: {
+  params: { resumeId?: string },
+}) => {
+  const resume = await getResume(params.resumeId ?? '')
+
+  if (!resume) {
+    return redirect('/resumes')
+  }
+
+  return { resume }
 }
 
 const PublicOnlyLayout = () => <Outlet />
@@ -70,7 +87,12 @@ const router = createBrowserRouter(
           <Route path="create" element={<CreateResumePage />} />
           <Route path="upload" element={<UploadResumePage />} />
           <Route path=":resumeId" element={<ViewResumePage />} />
-          <Route path=":resumeId/edit" element={<EditResumePage />} />
+          <Route
+            id={resumeEditRouteId}
+            path=":resumeId/edit"
+            loader={resumeEditRouteLoader}
+            element={<EditResumePage />}
+          />
         </Route>
         <Route path="profile" element={<ProfilePage />} />
       </Route>

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useForm, useFormContext } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
@@ -10,7 +10,7 @@ import { resumeSectionSchema, type ResumeSectionData } from '@/db/schemas'
 
 const isMonthValue = (value: string) => /^\d{4}-\d{2}$/.test(value)
 
-const resumeFormSchema = z
+export const resumeFormSchema = z
   .object({
     title: z.string().min(1, 'Title is required'),
     syncProfile: z.boolean(),
@@ -264,6 +264,47 @@ export function getSectionErrors(errors: unknown, sectionIndex: number): any {
 
 export type SectionType = ResumeSectionData['type']
 
+type SectionsApi = {
+  setValue: (name: 'sections', value: FormSection[], options?: object) => void
+  getValues: (name: 'sections') => FormSection[]
+}
+
+export function createSectionMutations({ setValue, getValues }: SectionsApi) {
+  const mutateSections = (
+    mutate: (sections: FormSection[]) => FormSection[],
+  ) => {
+    setValue('sections', mutate(getValues('sections')), { shouldDirty: true })
+  }
+
+  return {
+    addSection: (type: SectionType) => {
+      mutateSections((sections) => [...sections, DEFAULT_SECTIONS[type]()])
+    },
+    removeSection: (index: number) => {
+      mutateSections((sections) => sections.filter((_, i) => i !== index))
+    },
+    moveSection: (index: number, direction: -1 | 1) => {
+      mutateSections((sections) => {
+        const target = index + direction
+        if (target < 0 || target >= sections.length) {
+          return sections
+        }
+
+        const next = [...sections]
+        ;[next[index], next[target]] = [next[target], next[index]]
+        return next
+      })
+    },
+    updateSection: (index: number, section: ResumeSectionData) => {
+      mutateSections((sections) =>
+        sections.map((current, i) =>
+          i === index ? ({ ...section } as FormSection) : current,
+        ),
+      )
+    },
+  }
+}
+
 export type WithKey<T extends object> = T & { _key: string }
 
 export type FormSection = WithKey<ResumeSectionData>
@@ -298,6 +339,17 @@ const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
         }),
       ],
     }),
+}
+
+export function emptyContactValues() {
+  return {
+    fullName: '',
+    jobTitle: '',
+    location: '',
+    phone: '',
+    email: '',
+    socials: [] as { label: string; url: string }[],
+  }
 }
 
 function toContactValues(profile: Profile) {
@@ -340,56 +392,9 @@ export function useCreateResumeForm(profile?: Profile) {
 
   const { setValue, getValues } = form
 
-  const mutateSections = useCallback(
-    (mutate: (sections: FormSection[]) => FormSection[]) => {
-      setValue(
-        'sections',
-        mutate(getValues('sections') as FormSection[]),
-        { shouldDirty: true },
-      )
-    },
-    [getValues, setValue],
-  )
-
-  const addSection = useCallback(
-    (type: SectionType) => {
-      mutateSections((sections) => [...sections, DEFAULT_SECTIONS[type]()])
-    },
-    [mutateSections],
-  )
-
-  const removeSection = useCallback(
-    (index: number) => {
-      mutateSections((sections) => sections.filter((_, i) => i !== index))
-    },
-    [mutateSections],
-  )
-
-  const moveSection = useCallback(
-    (index: number, direction: -1 | 1) => {
-      mutateSections((sections) => {
-        const target = index + direction
-        if (target < 0 || target >= sections.length) {
-          return sections
-        }
-
-        const next = [...sections]
-        ;[next[index], next[target]] = [next[target], next[index]]
-        return next
-      })
-    },
-    [mutateSections],
-  )
-
-  const updateSection = useCallback(
-    (index: number, section: ResumeSectionData) => {
-      mutateSections((sections) =>
-        sections.map((current, i) =>
-          i === index ? ({ ...section } as FormSection) : current,
-        ),
-      )
-    },
-    [mutateSections],
+  const { addSection, removeSection, moveSection, updateSection } = useMemo(
+    () => createSectionMutations({ setValue, getValues }),
+    [setValue, getValues],
   )
 
   const setSyncProfile = useCallback(
