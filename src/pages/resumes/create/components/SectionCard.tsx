@@ -6,6 +6,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { useState, type ReactNode } from 'react'
 import { Button, Input } from '@/components/ui'
+import { cn } from '@/utils'
 
 type SectionCardProps = {
   label: string
@@ -36,17 +37,17 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-gray-200 p-4">
-      <div className="flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:items-center">
         <Input
           id={titleInputId}
           aria-label="Section title"
-          className="min-w-0 sm:order-2 sm:flex-1"
+          className="min-w-0 flex-1"
           placeholder={`Section title: ${label}`}
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
         />
 
-        <div className="flex items-center gap-1 sm:contents">
+        <div className="flex items-center gap-1 self-start">
           <Button
             type="button"
             intent="secondary"
@@ -70,7 +71,6 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
             icon={Trash}
             onClick={onRemove}
             aria-label={`Remove ${title || label} section`}
-            className="ml-auto sm:order-3 sm:ml-0"
           />
         </div>
       </div>
@@ -87,13 +87,14 @@ export type ItemControlsProps = {
   isLast: boolean
   onMove: (from: number, to: number) => void
   onRemove: () => void
+  className?: string
 }
 
 export function ItemControls(props: Readonly<ItemControlsProps>) {
-  const { label, index, isFirst, isLast, onMove, onRemove } = props
+  const { label, index, isFirst, isLast, onMove, onRemove, className } = props
 
   return (
-    <div className="flex items-center gap-1">
+    <div className={cn('flex items-center gap-1', className)}>
       <Button
         type="button"
         intent="secondary"

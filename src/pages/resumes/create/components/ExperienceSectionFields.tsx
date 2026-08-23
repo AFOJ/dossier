@@ -82,7 +82,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         return bullet.type === 'text' ? (
           <div
             key={itemKey(bullet, index)}
-            className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
+            className="flex flex-col-reverse items-start gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row"
           >
             <div className="min-w-0 flex-1">
               <Input
@@ -116,7 +116,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         ) : (
           <div
             key={itemKey(bullet, index)}
-            className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start"
+            className="flex flex-col-reverse items-start gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row"
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-2">
@@ -383,6 +383,7 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
           isLast={isLast}
           onMove={props.onMove}
           onRemove={props.onRemove}
+          className="self-start pt-7.5 max-sm:pt-0"
         />
       </div>
     </div>
@@ -499,6 +500,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
           isLast={isLast}
           onMove={onMove}
           onRemove={onRemove}
+          className="self-start pt-7.5 max-sm:pt-0"
         />
       </div>
 
