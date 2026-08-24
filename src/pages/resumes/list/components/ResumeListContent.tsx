@@ -13,12 +13,14 @@ type ResumeTableState = ReturnType<typeof useResumeTable>
 
 type ResumeListContentProps = {
   table: ResumeTableState
+  onPreview: (resume: Resume) => void
+  onExport: (resume: Resume) => void
   onDuplicate: (resume: Resume) => void
   onDelete: (resume: Resume) => void
 }
 
 export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
-  const { table, onDuplicate, onDelete } = props
+  const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
   if (
     table.isLoading ||
@@ -49,6 +51,8 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
       totalCount={table.totalCount}
       onPageChange={table.setPage}
       onPerPageChange={table.setPerPage}
+      onPreview={onPreview}
+      onExport={onExport}
       onDuplicate={onDuplicate}
       onDelete={onDelete}
     />
@@ -73,10 +77,7 @@ function EmptyState() {
       <IsometricLibraryAdd />
       <Heading3>No resumes yet</Heading3>
       <Subheading>Create your first resume to get started.</Subheading>
-      <ButtonLink
-        icon={FileAddIcon}
-        to="/resumes/create"
-      >
+      <ButtonLink icon={FileAddIcon} to="/resumes/create">
         Create your first resume
       </ButtonLink>
     </div>

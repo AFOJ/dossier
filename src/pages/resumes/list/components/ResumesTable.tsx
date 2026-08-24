@@ -1,16 +1,11 @@
-import { Link } from 'react-router-dom'
 import {
   Copy01Icon,
   Delete02Icon,
   Edit02Icon,
   EyeIcon,
+  FileExportIcon,
 } from '@hugeicons/core-free-icons'
-import {
-  Button,
-  ButtonLink,
-  Tooltip,
-  type IconProps,
-} from '@/components/ui'
+import { Button, ButtonLink, Tooltip, type IconProps } from '@/components/ui'
 import type { Resume } from '@/db/db'
 import { Pagination } from '@/pages/resumes/list/components/Pagination'
 
@@ -31,6 +26,8 @@ type ResumesTableProps = {
   totalCount: number
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
+  onPreview: (resume: Resume) => void
+  onExport: (resume: Resume) => void
   onDuplicate: (resume: Resume) => void
   onDelete: (resume: Resume) => void
 }
@@ -44,6 +41,8 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
     totalCount,
     onPageChange,
     onPerPageChange,
+    onPreview,
+    onExport,
     onDuplicate,
     onDelete,
   } = props
@@ -65,6 +64,8 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
               <ResumesTableRow
                 key={resume.id}
                 resume={resume}
+                onPreview={onPreview}
+                onExport={onExport}
                 onDuplicate={onDuplicate}
                 onDelete={onDelete}
               />
@@ -86,25 +87,28 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
 }
 type ResumesTableRowProps = {
   resume: Resume
+  onPreview: (resume: Resume) => void
+  onExport: (resume: Resume) => void
   onDuplicate: (resume: Resume) => void
   onDelete: (resume: Resume) => void
 }
 
 function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
-  const { resume, onDuplicate, onDelete } = props
+  const { resume, onPreview, onExport, onDuplicate, onDelete } = props
 
-  const viewUrl = `/resumes/${resume.id}`
   const editUrl = `/resumes/${resume.id}/edit`
 
   return (
     <tr className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-      <td className="w-full px-4 py-3">
-        <Link
-          to={viewUrl}
-          className="text-sm font-medium text-gray-900 hover:text-gray-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400"
+      <td className="w-full px-4 py-3 text-left">
+        <button
+          type="button"
+          aria-label={`View ${resume.title}`}
+          onClick={() => onPreview(resume)}
+          className="block w-full cursor-pointer text-left text-sm font-medium text-gray-900 hover:text-gray-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400"
         >
           {resume.title}
-        </Link>
+        </button>
       </td>
 
       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
@@ -117,7 +121,16 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <QuickAction label="View" icon={EyeIcon} to={viewUrl} />
+          <QuickAction
+            label="View"
+            icon={EyeIcon}
+            onClick={() => onPreview(resume)}
+          />
+          <QuickAction
+            label="Export JSON"
+            icon={FileExportIcon}
+            onClick={() => onExport(resume)}
+          />
           <QuickAction label="Edit" icon={Edit02Icon} to={editUrl} />
           <QuickAction
             label="Duplicate"
