@@ -14,6 +14,7 @@ export {
 const defaultOptions: ResolvedModalOptions = {
   closeOnBackdropClick: true,
   closeOnEscape: true,
+  contentClassName: 'max-w-md',
 }
 
 export function useModal<TData = undefined>(
