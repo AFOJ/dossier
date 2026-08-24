@@ -311,6 +311,36 @@ describe('importProfile', () => {
     expect(restored.map((resume) => resume.id)).toEqual(['resume-1'])
   })
 
+  it('round-trips through delete: synced resumes with null contact restore cleanly', async () => {
+    await upsertProfile({
+      ...baseProfile,
+      full_name: 'John Doe',
+      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+    })
+    // createResume defaults to syncProfile: true and contact: null.
+    await createResume('Production Resume', [
+      { type: 'paragraph', text: 'Summary' },
+    ])
+
+    const exported = JSON.stringify(await exportProfile())
+
+    await deleteProfile()
+    expect(await getProfile()).toBeNull()
+    expect(await getAllResumes()).toEqual([])
+
+    await importProfile(exported)
+
+    const profile = await getProfile()
+    expect(profile?.full_name).toBe('John Doe')
+
+    const resumes = await getAllResumes()
+    expect(resumes.map((resume) => resume.title)).toEqual([
+      'Production Resume',
+    ])
+    expect(resumes[0]?.contact).toBeNull()
+    expect(resumes[0]?.syncProfile).toBe(true)
+  })
+
   it('leaves the database untouched when validation fails', async () => {
     try {
       await importProfile(JSON.stringify({ version: 999 }))
