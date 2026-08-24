@@ -22,9 +22,18 @@ export interface Resume {
   contact?: Omit<Profile, 'id'> | null
 }
 
+export interface ResumeCacheEntry {
+  resumeId: string
+  data: ArrayBuffer
+  contentType: string
+  processedAt: Date
+  expiresAt: Date
+}
+
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   resumes!: Table<Resume, string>
+  resumeCache!: Table<ResumeCacheEntry, string>
 
   constructor() {
     super('DossierDatabase')
@@ -32,6 +41,12 @@ export class DossierDatabase extends Dexie {
     this.version(1).stores({
       profiles: '++id',
       resumes: 'id, updatedAt',
+    })
+
+    this.version(2).stores({
+      profiles: '++id',
+      resumes: 'id, updatedAt',
+      resumeCache: 'resumeId',
     })
   }
 }

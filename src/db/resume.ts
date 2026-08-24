@@ -1,4 +1,5 @@
 import { db, type Resume } from '@/db/db'
+import { clearProcessedResumeCache } from '@/db/resumeCache'
 import type { ResumeSection } from '@/db/types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -83,8 +84,11 @@ export async function updateResume(
     ...changes,
     updatedAt: new Date(),
   })
+  // Any change to the resume should invalidates its PDF cache immediately.
+  await clearProcessedResumeCache(id)
 }
 
 export async function deleteResume(id: string): Promise<void> {
   await RESUME_TABLE.delete(id)
+  await clearProcessedResumeCache(id)
 }
