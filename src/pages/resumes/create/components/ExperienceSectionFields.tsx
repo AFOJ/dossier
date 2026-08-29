@@ -450,6 +450,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
           <Field
             label="Website"
             inputId={`section-${sectionIndex}-company-${index}-website`}
+            error={companyErrors?.company_website?.message}
           >
             <Input
               id={`section-${sectionIndex}-company-${index}-website`}
@@ -548,7 +549,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
                   employment_type: undefined,
                   location: undefined,
                   start_date: undefined,
-                  end_date: '',
+                  end_date: undefined,
                   bullets: [],
                 }),
               ],
