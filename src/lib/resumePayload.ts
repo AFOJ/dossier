@@ -1,7 +1,6 @@
 import type { Resume } from '@/db/db'
 import { getProfile } from '@/db/profile'
 import type {
-  EducationalInstitution,
   ExperienceCompanyRoleBullet,
   ResumeSection,
   SkillGroup,
@@ -123,6 +122,32 @@ function toContactPayload(
   return payload
 }
 
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function formatMonthYear(date: string | undefined): string | undefined {
+  if (!date) return undefined
+  const [year, month] = date.split('-')
+  return `${MONTHS[parseInt(month, 10) - 1]} ${year}`
+}
+
+function cleanOptional(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}
+
 function toSectionPayload(section: ResumeSection): ResumePayloadSection {
   switch (section.type) {
     case 'paragraph': {
@@ -136,7 +161,15 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
       return {
         ...cleanTitle(section),
         type: 'education',
-        institutions: section.institutions.map(toInstitutionPayload),
+        institutions: section.institutions.map((inst) => ({
+          name: inst.name.trim(),
+          degree: inst.degree.trim(),
+          grade: cleanOptional(inst.grade),
+          start_date: cleanOptional(inst.start_date),
+          end_date: cleanOptional(inst.end_date),
+          location: cleanOptional(inst.location),
+          paragraph: cleanOptional(inst.paragraph),
+        })),
       }
     }
     case 'skills': {
@@ -155,53 +188,43 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
       return {
         ...cleanTitle(section),
         type: 'experience',
-        companies: section.companies.map((company) => ({
-          company_name: company.company_name.trim(),
-          company_website: cleanOptional(company.company_website),
-          start_date: cleanOptional(company.start_date),
-          end_date: cleanOptional(company.end_date) ?? null,
-          roles: company.roles.map((role) => ({
-            job_title: role.job_title.trim(),
-            employment_type: cleanOptional(role.employment_type),
-            location: cleanOptional(role.location),
-            start_date: cleanOptional(role.start_date),
-            end_date: cleanOptional(role.end_date),
-            bullets: role.bullets.map((bullet) =>
-              bullet.type === 'text'
-                ? { type: bullet.type, text: bullet.text }
-                : { type: bullet.type, title: bullet.title, text: bullet.text },
-            ),
-          })),
-        })),
+        companies: section.companies.map((company) => {
+          const startDate = formatMonthYear(cleanOptional(company.start_date))
+          const companyEndDate =
+            company.end_date === undefined && !!company.start_date
+              ? 'Present'
+              : (formatMonthYear(cleanOptional(company.end_date)) ?? null)
+          return {
+            company_name: company.company_name.trim(),
+            company_website: cleanOptional(company.company_website),
+            start_date: startDate,
+            end_date: companyEndDate,
+            roles: company.roles.map((role) => ({
+              job_title: role.job_title.trim(),
+              employment_type: cleanOptional(role.employment_type),
+              location: cleanOptional(role.location),
+              start_date: formatMonthYear(cleanOptional(role.start_date)),
+              end_date:
+                role.end_date === undefined && !!role.start_date
+                  ? 'Present'
+                  : formatMonthYear(cleanOptional(role.end_date)),
+              bullets: role.bullets.map((bullet) =>
+                bullet.type === 'text'
+                  ? { type: bullet.type, text: bullet.text }
+                  : {
+                      type: bullet.type,
+                      title: bullet.title,
+                      text: bullet.text,
+                    },
+              ),
+            })),
+          }
+        }),
       }
     }
   }
 }
 
-/**
- * The local model requires start/end/location strings on institutions (but
- * allows them to be empty), while the backend treats them as optional yet
- * non-empty when present — so empties are omitted.
- */
-function toInstitutionPayload(
-  institution: EducationalInstitution,
-): ResumePayloadInstitution {
-  return {
-    name: institution.name.trim(),
-    degree: institution.degree.trim(),
-    grade: cleanOptional(institution.grade),
-    start_date: cleanOptional(institution.start_date),
-    end_date: cleanOptional(institution.end_date),
-    location: cleanOptional(institution.location),
-    paragraph: cleanOptional(institution.paragraph),
-  }
-}
-
-/**
- * Sections may carry an optional `title` at runtime (accepted by the zod
- * schema and the backend, but not part of the local TS union), so it is
- * preserved via a presence check.
- */
 function cleanTitle(section: ResumeSection): WithOptionalTitle {
   const title = 'title' in section ? section.title : undefined
 
@@ -213,9 +236,4 @@ function cleanTitle(section: ResumeSection): WithOptionalTitle {
   }
 
   return {}
-}
-
-function cleanOptional(value: string | null | undefined): string | undefined {
-  const trimmed = value?.trim()
-  return trimmed ? trimmed : undefined
 }

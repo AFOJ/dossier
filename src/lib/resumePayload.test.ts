@@ -8,7 +8,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
   return {
     id: 'resume-1',
     title: '  Frontend Engineer  ',
-    sections: [{ type: 'paragraph', text: 'Summary' }],
+    sections: [{ type: 'paragraph', title: 'Summary', text: 'Summary' }],
     contact: null,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-02'),
@@ -27,7 +27,7 @@ describe('toResumePayload', () => {
 
     expect(payload).toEqual({
       title: 'Frontend Engineer',
-      sections: [{ type: 'paragraph', text: 'Summary' }],
+      sections: [{ type: 'paragraph', title: 'Summary', text: 'Summary' }],
     })
   })
 
@@ -50,7 +50,14 @@ describe('toResumePayload', () => {
     const payload = await toResumePayload(
       makeResume({
         syncProfile: true,
-        contact: { full_name: 'Frozen Name', role: null, email: null, phone: null, location: null, links: [] },
+        contact: {
+          full_name: 'Frozen Name',
+          role: null,
+          email: null,
+          phone: null,
+          location: null,
+          links: [],
+        },
       }),
     )
 
@@ -137,6 +144,7 @@ describe('toResumePayload', () => {
         sections: [
           {
             type: 'education',
+            title: 'Education',
             institutions: [
               {
                 name: 'Uni of Lagos',
@@ -175,6 +183,7 @@ describe('toResumePayload', () => {
         sections: [
           {
             type: 'skills',
+            title: 'Skills',
             groups: [
               { title: 'Languages', items: [' TypeScript ', '', 'Rust'] },
               { title: 'Empty group', items: ['', '   '] },
@@ -196,11 +205,12 @@ describe('toResumePayload', () => {
         sections: [
           {
             type: 'experience',
+            title: 'Experience',
             companies: [
               {
                 company_name: ' Acme ',
                 company_website: '  ',
-                start_date: '2020-01-01',
+                start_date: '2020-01',
                 roles: [
                   {
                     job_title: 'Engineer',
@@ -234,8 +244,8 @@ describe('toResumePayload', () => {
     // Empty optionals are omitted; missing end date becomes null.
     expect(JSON.parse(JSON.stringify(company))).toEqual({
       company_name: 'Acme',
-      start_date: '2020-01-01',
-      end_date: null,
+      start_date: 'January 2020',
+      end_date: 'Present',
       roles: [
         {
           job_title: 'Engineer',
@@ -246,7 +256,7 @@ describe('toResumePayload', () => {
         },
       ],
     })
-    expect(company.end_date).toBeNull()
+    expect(company.end_date).toBe('Present')
   })
 
   it('keeps an existing company end_date value', async () => {
@@ -255,11 +265,12 @@ describe('toResumePayload', () => {
         sections: [
           {
             type: 'experience',
+            title: 'Experience',
             companies: [
               {
                 company_name: 'Acme',
-                start_date: '2020-01-01',
-                end_date: '2022-06-30',
+                start_date: '2020-01',
+                end_date: '2022-06',
                 roles: [],
               },
             ],
@@ -273,6 +284,174 @@ describe('toResumePayload', () => {
       { type: 'experience' }
     >
 
-    expect(section.companies[0].end_date).toBe('2022-06-30')
+    expect(section.companies[0].end_date).toBe('June 2022')
+  })
+
+  it('sets role end_date to Present when start_date is present and end_date is undefined', async () => {
+    const payload = await toResumePayload(
+      makeResume({
+        sections: [
+          {
+            type: 'experience',
+            title: 'Experience',
+            companies: [
+              {
+                company_name: 'Acme',
+                start_date: '2020-01',
+                roles: [
+                  {
+                    job_title: 'Engineer',
+                    start_date: '2020-01',
+                    bullets: [{ type: 'text', text: 'Did things' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    const company = (
+      payload.sections[0] as Extract<
+        (typeof payload.sections)[number],
+        { type: 'experience' }
+      >
+    ).companies[0]
+
+    expect(company.roles[0].end_date).toBe('Present')
+  })
+
+  it('does not set end_date to Present when start_date is missing', async () => {
+    const payload = await toResumePayload(
+      makeResume({
+        sections: [
+          {
+            type: 'experience',
+            title: 'Experience',
+            companies: [
+              {
+                company_name: 'Acme',
+                start_date: '2020-01',
+                roles: [
+                  {
+                    job_title: 'Engineer',
+                    bullets: [{ type: 'text', text: 'Did things' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    const company = (
+      payload.sections[0] as Extract<
+        (typeof payload.sections)[number],
+        { type: 'experience' }
+      >
+    ).companies[0]
+
+    expect(company.roles[0].end_date).toBeUndefined()
+  })
+
+  it('sets company end_date to Present when end_date is undefined and start_date is present', async () => {
+    const payload = await toResumePayload(
+      makeResume({
+        sections: [
+          {
+            type: 'experience',
+            title: 'Experience',
+            companies: [
+              {
+                company_name: 'Acme',
+                start_date: '2020-01',
+                roles: [],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    const company = (
+      payload.sections[0] as Extract<
+        (typeof payload.sections)[number],
+        { type: 'experience' }
+      >
+    ).companies[0]
+
+    expect(company.end_date).toBe('Present')
+  })
+
+  it('does not set company end_date to Present when start_date is missing', async () => {
+    const payload = await toResumePayload(
+      makeResume({
+        sections: [
+          {
+            type: 'experience',
+            title: 'Experience',
+            companies: [
+              {
+                company_name: 'Acme',
+                start_date: '',
+                end_date: undefined,
+                roles: [],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    const company = (
+      payload.sections[0] as Extract<
+        (typeof payload.sections)[number],
+        { type: 'experience' }
+      >
+    ).companies[0]
+
+    expect(company.end_date).toBeNull()
+  })
+
+  it('formats dates as "Month YYYY"', async () => {
+    const payload = await toResumePayload(
+      makeResume({
+        sections: [
+          {
+            type: 'experience',
+            title: 'Experience',
+            companies: [
+              {
+                company_name: 'Acme',
+                start_date: '2020-01',
+                end_date: '2024-06',
+                roles: [
+                  {
+                    job_title: 'Engineer',
+                    start_date: '2021-03',
+                    end_date: '2022-05',
+                    bullets: [{ type: 'text', text: 'Did things' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    )
+
+    const company = (
+      payload.sections[0] as Extract<
+        (typeof payload.sections)[number],
+        { type: 'experience' }
+      >
+    ).companies[0]
+
+    expect(company.start_date).toBe('January 2020')
+    expect(company.end_date).toBe('June 2024')
+    expect(company.roles[0].start_date).toBe('March 2021')
+    expect(company.roles[0].end_date).toBe('May 2022')
   })
 })
