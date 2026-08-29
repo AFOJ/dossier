@@ -2,9 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Profile, Resume } from '@/db/db'
 import { updateResume } from '@/db/resume'
-import {
-  useEditResumeForm,
-} from '@/pages/resumes/edit/hooks/useEditResumeForm'
+import { useEditResumeForm } from '@/pages/resumes/edit/hooks/useEditResumeForm'
 
 vi.mock('@/db/resume', () => ({
   updateResume: vi.fn(),
@@ -38,7 +36,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
   return {
     id: 'resume-1',
     title: 'My Resume',
-    sections: [{ type: 'paragraph', text: 'Intro' }],
+    sections: [{ type: 'paragraph', text: 'Intro', title: 'Summary' }],
     createdAt: new Date(),
     updatedAt: new Date(),
     syncProfile: true,
@@ -46,6 +44,10 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     ...overrides,
   }
 }
+
+const defaultSections = [
+  { type: 'paragraph' as const, text: 'Intro', title: 'Summary' },
+]
 
 describe('useEditResumeForm', () => {
   beforeEach(() => {
@@ -58,6 +60,7 @@ describe('useEditResumeForm', () => {
       sections: [
         {
           type: 'education',
+          title: 'Education',
           institutions: [
             {
               name: 'Uni',
@@ -79,7 +82,10 @@ describe('useEditResumeForm', () => {
 
     const [section] = result.current.form.getValues(
       'sections',
-    ) as unknown as Array<{ _key?: string; institutions: Array<{ _key?: string }> }>
+    ) as unknown as Array<{
+      _key?: string
+      institutions: Array<{ _key?: string }>
+    }>
     expect(section._key).toEqual(expect.any(String))
     expect(section.institutions[0]._key).toEqual(expect.any(String))
     expect(result.current.isDirty).toBe(false)
@@ -152,7 +158,7 @@ describe('useEditResumeForm', () => {
 
     expect(updateResume).toHaveBeenCalledWith('resume-1', {
       title: 'Updated Title',
-      sections: [{ type: 'paragraph', text: 'Intro' }],
+      sections: defaultSections,
       syncProfile: false,
       contact: {
         full_name: 'Snapshot Person',

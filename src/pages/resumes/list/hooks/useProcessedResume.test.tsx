@@ -23,7 +23,7 @@ const PDF = () => new Blob(['%PDF-fake'], { type: 'application/pdf' })
 
 async function makeResume(): Promise<Resume> {
   const id = await createResume('Frontend Engineer', [
-    { type: 'paragraph', text: 'Summary' },
+    { type: 'paragraph', title: 'Summary', text: 'Summary' },
   ])
   return (await db.resumes.get(id))!
 }
@@ -34,9 +34,7 @@ beforeEach(async () => {
   await db.resumes.clear()
   await db.resumeCache.clear()
 
-  mockProcessResume.mockImplementation(() =>
-    Promise.resolve(PDF()),
-  )
+  mockProcessResume.mockImplementation(() => Promise.resolve(PDF()))
 })
 
 describe('useProcessedResume', () => {
@@ -96,7 +94,7 @@ describe('useProcessedResume', () => {
     first.unmount()
 
     await updateResume(resume.id!, {
-      sections: [{ type: 'paragraph', text: 'Updated' }],
+      sections: [{ type: 'paragraph', title: 'Updated', text: 'Updated' }],
     })
     const updated = (await db.resumes.get(resume.id!))!
 
@@ -115,9 +113,7 @@ describe('useProcessedResume', () => {
     const { result } = renderHook(() => useProcessedResume(resume))
 
     await waitFor(() => expect(result.current.status).toBe('error'))
-    expect(result.current.error?.message).toContain(
-      'Something went wrong',
-    )
+    expect(result.current.error?.message).toContain('Something went wrong')
 
     // Retry (same path as the download action) recovers.
     mockProcessResume.mockResolvedValueOnce(PDF())
