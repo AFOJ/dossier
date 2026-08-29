@@ -100,7 +100,7 @@ describe('exportProfile', () => {
       {
         id: crypto.randomUUID(),
         title: 'Resume 2',
-        sections: [{ type: 'paragraph', text: 'Hello' }],
+        sections: [{ type: 'paragraph', title: 'Introduction', text: 'Hello' }],
         createdAt: new Date('2026-01-02T10:00:00Z'),
         updatedAt: new Date('2026-01-02T10:00:00Z'),
       },
@@ -174,9 +174,10 @@ describe('importProfile', () => {
         id: 'resume-1',
         title: 'My Resume',
         sections: [
-          { type: 'paragraph', text: 'Hello' },
+          { type: 'paragraph', title: 'Summary', text: 'Hello' },
           {
             type: 'experience',
+            title: 'Experience',
             companies: [
               {
                 company_name: 'Spotify',
@@ -200,10 +201,12 @@ describe('importProfile', () => {
           },
           {
             type: 'skills',
+            title: 'Skills',
             groups: [{ title: 'Frontend', items: ['React'] }],
           },
           {
             type: 'education',
+            title: 'Education',
             institutions: [
               {
                 name: 'Uni',
@@ -319,7 +322,7 @@ describe('importProfile', () => {
     })
     // createResume defaults to syncProfile: true and contact: null.
     await createResume('Production Resume', [
-      { type: 'paragraph', text: 'Summary' },
+      { type: 'paragraph', title: 'Summary', text: 'Summary' },
     ])
 
     const exported = JSON.stringify(await exportProfile())
@@ -334,9 +337,7 @@ describe('importProfile', () => {
     expect(profile?.full_name).toBe('John Doe')
 
     const resumes = await getAllResumes()
-    expect(resumes.map((resume) => resume.title)).toEqual([
-      'Production Resume',
-    ])
+    expect(resumes.map((resume) => resume.title)).toEqual(['Production Resume'])
     expect(resumes[0]?.contact).toBeNull()
     expect(resumes[0]?.syncProfile).toBe(true)
   })

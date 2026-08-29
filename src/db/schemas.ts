@@ -12,12 +12,12 @@ export const resumeBulletSchema = z.discriminatedUnion('type', [
 export const resumeSectionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('paragraph'),
-    title: z.string().optional(),
+    title: z.string().min(1, 'Title is required'),
     text: z.string(),
   }),
   z.object({
     type: z.literal('education'),
-    title: z.string().optional(),
+    title: z.string().min(1, 'Title is required'),
     institutions: z.array(
       z.object({
         name: z.string(),
@@ -32,7 +32,7 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('skills'),
-    title: z.string().optional(),
+    title: z.string().min(1, 'Title is required'),
     groups: z.array(
       z.object({
         title: z.string(),
@@ -42,7 +42,7 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('experience'),
-    title: z.string().optional(),
+    title: z.string().min(1, 'Title is required'),
     companies: z.array(
       z.object({
         company_name: z.string(),
