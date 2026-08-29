@@ -80,11 +80,11 @@ export const resumeFormSchema = z
       })
     }
 
-    data.sections.forEach((section, s) => {
+    data.sections.forEach((section, sectionIndex) => {
       switch (section.type) {
         case 'paragraph': {
           if (section.text.trim() === '') {
-            addSectionIssue(s, ['text'], 'Paragraph cannot be empty')
+            addSectionIssue(sectionIndex, ['text'], 'Paragraph cannot be empty')
           }
           break
         }
@@ -92,18 +92,26 @@ export const resumeFormSchema = z
         case 'education': {
           if (section.institutions.length === 0) {
             addSectionIssue(
-              s,
+              sectionIndex,
               ['institutions'],
               'Add at least one school to this section',
             )
           }
 
-          section.institutions.forEach((institution, i) => {
+          section.institutions.forEach((institution, institutionIndex) => {
             if (institution.name.trim() === '') {
-              addSectionIssue(s, ['institutions', i, 'name'], 'School is required')
+              addSectionIssue(
+                sectionIndex,
+                ['institutions', institutionIndex, 'name'],
+                'School is required',
+              )
             }
             if (institution.degree.trim() === '') {
-              addSectionIssue(s, ['institutions', i, 'degree'], 'Degree is required')
+              addSectionIssue(
+                sectionIndex,
+                ['institutions', institutionIndex, 'degree'],
+                'Degree is required',
+              )
             }
           })
           break
@@ -112,24 +120,24 @@ export const resumeFormSchema = z
         case 'skills': {
           if (section.groups.length === 0) {
             addSectionIssue(
-              s,
+              sectionIndex,
               ['groups'],
               'Add at least one skill group to this section',
             )
           }
 
-          section.groups.forEach((group, i) => {
+          section.groups.forEach((group, groupIndex) => {
             if (group.title.trim() === '') {
               addSectionIssue(
-                s,
-                ['groups', i, 'title'],
+                sectionIndex,
+                ['groups', groupIndex, 'title'],
                 'Group title is required',
               )
             }
             if (group.items.length === 0) {
               addSectionIssue(
-                s,
-                ['groups', i, 'items'],
+                sectionIndex,
+                ['groups', groupIndex, 'items'],
                 'Add at least one skill',
               )
             }
@@ -140,26 +148,37 @@ export const resumeFormSchema = z
         case 'experience': {
           if (section.companies.length === 0) {
             addSectionIssue(
-              s,
+              sectionIndex,
               ['companies'],
               'Add at least one company to this section',
             )
           }
 
-          section.companies.forEach((company, c) => {
+          section.companies.forEach((company, companyIndex) => {
             if (company.company_name.trim() === '') {
               addSectionIssue(
-                s,
-                ['companies', c, 'company_name'],
+                sectionIndex,
+                ['companies', companyIndex, 'company_name'],
                 'Company is required',
               )
             }
 
             if (company.start_date.trim() === '') {
               addSectionIssue(
-                s,
-                ['companies', c, 'start_date'],
+                sectionIndex,
+                ['companies', companyIndex, 'start_date'],
                 'Start date is required',
+              )
+            }
+
+            if (
+              company.end_date !== undefined &&
+              !isMonthValue(company.end_date)
+            ) {
+              addSectionIssue(
+                sectionIndex,
+                ['companies', companyIndex, 'end_date'],
+                'End date is required',
               )
             }
 
@@ -170,52 +189,71 @@ export const resumeFormSchema = z
               company.end_date < company.start_date
             ) {
               addSectionIssue(
-                s,
-                ['companies', c, 'end_date'],
+                sectionIndex,
+                ['companies', companyIndex, 'end_date'],
                 'End date cannot be before start date',
               )
             }
 
-            company.roles.forEach((role, r) => {
+            company.roles.forEach((role, roleIndex) => {
               if (role.job_title.trim() === '') {
                 addSectionIssue(
-                  s,
-                  ['companies', c, 'roles', r, 'job_title'],
+                  sectionIndex,
+                  ['companies', companyIndex, 'roles', roleIndex, 'job_title'],
                   'Job title is required',
                 )
               }
 
-              if (
-                (role.end_date ?? '').trim() !== '' &&
-                (role.start_date ?? '').trim() === ''
-              ) {
+              const hasStart = (role.start_date ?? '').trim() !== ''
+              const endDateIsNonEmptyInvalid =
+                role.end_date !== undefined &&
+                role.end_date !== '' &&
+                !isMonthValue(role.end_date)
+              const hasValidEnd =
+                role.end_date !== undefined &&
+                role.end_date !== '' &&
+                isMonthValue(role.end_date)
+
+              if (endDateIsNonEmptyInvalid) {
                 addSectionIssue(
-                  s,
-                  ['companies', c, 'roles', r, 'start_date'],
+                  sectionIndex,
+                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
+                  'End date is required',
+                )
+              } else if (role.end_date === '' && hasStart) {
+                addSectionIssue(
+                  sectionIndex,
+                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
+                  'End date is required',
+                )
+              } else if (!hasStart && hasValidEnd) {
+                addSectionIssue(
+                  sectionIndex,
+                  ['companies', companyIndex, 'roles', roleIndex, 'start_date'],
                   'Start date is required when an end date is set',
                 )
-              }
-
-              if (
-                role.start_date !== undefined &&
+              } else if (
+                hasStart &&
+                hasValidEnd &&
                 role.end_date !== undefined &&
+                role.start_date !== undefined &&
                 isMonthValue(role.start_date) &&
                 isMonthValue(role.end_date) &&
                 role.end_date < role.start_date
               ) {
                 addSectionIssue(
-                  s,
-                  ['companies', c, 'roles', r, 'end_date'],
+                  sectionIndex,
+                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
                   'End date cannot be before start date',
                 )
               }
 
-              role.bullets.forEach((bullet, b) => {
+              role.bullets.forEach((bullet, bulletIndex) => {
                 if (bullet.type === 'text') {
                   if (bullet.text.trim() === '') {
                     addSectionIssue(
-                      s,
-                      ['companies', c, 'roles', r, 'bullets', b, 'text'],
+                      sectionIndex,
+                      ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'text'],
                       'Bullet cannot be empty',
                     )
                   }
@@ -224,15 +262,15 @@ export const resumeFormSchema = z
 
                 if (bullet.title.trim() === '') {
                   addSectionIssue(
-                    s,
-                    ['companies', c, 'roles', r, 'bullets', b, 'title'],
+                    sectionIndex,
+                    ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'title'],
                     'Bullet heading is required',
                   )
                 }
                 if (bullet.text.trim() === '') {
                   addSectionIssue(
-                    s,
-                    ['companies', c, 'roles', r, 'bullets', b, 'text'],
+                    sectionIndex,
+                    ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'text'],
                     'Bullet text is required',
                   )
                 }
@@ -320,16 +358,18 @@ export function itemKey(item: unknown, index: number): string {
 }
 
 const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
-  paragraph: () => withKey({ type: 'paragraph', text: '' }),
-  education: () => withKey({ type: 'education', institutions: [] }),
+  paragraph: () => withKey({ type: 'paragraph', title: '', text: '' }),
+  education: () => withKey({ type: 'education', title: '', institutions: [] }),
   skills: () =>
     withKey({
       type: 'skills',
+      title: '',
       groups: [withKey({ title: '', items: [] })],
     }),
   experience: () =>
     withKey({
       type: 'experience',
+      title: '',
       companies: [
         withKey({
           company_name: '',
