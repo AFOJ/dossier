@@ -26,7 +26,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
 
   switch (section.type) {
     case 'paragraph': {
-      const textError = sectionErrors?.text?.message
+      const textError = sectionErrors?.type === 'paragraph' ? sectionErrors.text?.message : undefined
 
       return (
         <div className="flex flex-col gap-1">

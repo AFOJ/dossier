@@ -168,6 +168,7 @@ describe('toResumePayload', () => {
     // Empty strings must not reach the backend; optional fields are omitted.
     expect(JSON.parse(JSON.stringify(section))).toEqual({
       type: 'education',
+      title: 'Education',
       institutions: [
         {
           name: 'Uni of Lagos',
@@ -195,6 +196,7 @@ describe('toResumePayload', () => {
 
     expect(payload.sections[0]).toEqual({
       type: 'skills',
+      title: 'Skills',
       groups: [{ title: 'Languages', items: ['TypeScript', 'Rust'] }],
     })
   })

@@ -41,7 +41,8 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const groupErrors = getSectionErrors(errors, sectionIndex)?.groups?.[index]
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const groupErrors = sectionErrors?.type === 'skills' ? sectionErrors.groups?.[index] : undefined
 
   return (
     <div className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start">
@@ -103,7 +104,8 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionError = getSectionErrors(errors, sectionIndex)?.groups?.message
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const sectionError = sectionErrors?.type === 'skills' ? sectionErrors.groups?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">

@@ -44,9 +44,9 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-
-  const bulletErrors =
-    sectionErrors?.companies?.[companyIndex]?.roles?.[roleIndex]?.bullets
+  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[companyIndex] : undefined
+  const roleErrors = companyErrors?.roles?.[roleIndex]
+  const bulletErrors = roleErrors?.bullets
 
   const move = (from: number, to: number) => {
     const next = [...bullets]
@@ -264,9 +264,9 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const roleErrors = getSectionErrors(errors, sectionIndex)?.companies?.[
-    companyIndex
-  ]?.roles?.[roleIndex]
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[companyIndex] : undefined
+  const roleErrors = companyErrors?.roles?.[roleIndex]
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -417,9 +417,8 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const companyErrors = getSectionErrors(errors, sectionIndex)?.companies?.[
-    index
-  ]
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[index] : undefined
 
   const isCurrentRole = company.end_date === undefined
 
@@ -574,8 +573,8 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionError = getSectionErrors(errors, sectionIndex)?.companies
-    ?.message
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const sectionError = sectionErrors?.type === 'experience' ? sectionErrors.companies?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">

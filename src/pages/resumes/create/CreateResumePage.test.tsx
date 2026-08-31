@@ -182,7 +182,11 @@ describe('CreateResumePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create resume' }))
 
-    expect(await screen.findByText('Title is required')).toBeInTheDocument()
+    // Find the error message for the resume title (id="resume-title"), not the section title
+    const resumeTitleError = await screen.findByText('Title is required', {
+      selector: '[id="base-ui-_r_54_"]',
+    })
+    expect(resumeTitleError).toBeInTheDocument()
     expect(createResume).not.toHaveBeenCalled()
   })
 })

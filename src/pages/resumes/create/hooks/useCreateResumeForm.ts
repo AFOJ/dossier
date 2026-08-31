@@ -289,14 +289,78 @@ export function useResumeFieldContext() {
   return useFormContext<ResumeFormData>()
 }
 
-/**
- * Section error nodes are a discriminated union, so consumers index into them
- * loosely based on which variant they render.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getSectionErrors(errors: unknown, sectionIndex: number): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodes = errors as { sections?: any[] } | undefined
+export interface ParagraphSectionErrors {
+  type: 'paragraph'
+  title?: { message: string }
+  text?: { message: string }
+}
+
+export interface EducationInstitutionErrors {
+  name?: { message: string }
+  degree?: { message: string }
+  grade?: { message: string }
+  start_date?: { message: string }
+  end_date?: { message: string }
+  location?: { message: string }
+  paragraph?: { message: string }
+}
+
+export interface EducationSectionErrors {
+  type: 'education'
+  title?: { message: string }
+  institutions?: EducationInstitutionErrors[] & { message?: string }
+}
+
+export interface SkillGroupErrors {
+  title?: { message: string }
+  items?: { message: string }
+}
+
+export interface SkillsSectionErrors {
+  type: 'skills'
+  title?: { message: string }
+  groups?: SkillGroupErrors[] & { message?: string }
+}
+
+export interface BulletErrors {
+  title?: { message: string }
+  text?: { message: string }
+}
+
+export interface ExperienceRoleErrors {
+  job_title?: { message: string }
+  employment_type?: { message: string }
+  location?: { message: string }
+  start_date?: { message: string }
+  end_date?: { message: string }
+  bullets?: BulletErrors[] & { message?: string }
+}
+
+export interface ExperienceCompanyErrors {
+  company_name?: { message: string }
+  company_website?: { message: string }
+  start_date?: { message: string }
+  end_date?: { message: string }
+  roles?: ExperienceRoleErrors[] & { message?: string }
+}
+
+export interface ExperienceSectionErrors {
+  type: 'experience'
+  title?: { message: string }
+  companies?: ExperienceCompanyErrors[] & { message?: string }
+}
+
+export type SectionErrors =
+  | ParagraphSectionErrors
+  | EducationSectionErrors
+  | SkillsSectionErrors
+  | ExperienceSectionErrors
+
+export function getSectionErrors(
+  errors: unknown,
+  sectionIndex: number
+): SectionErrors | undefined {
+  const nodes = errors as { sections?: SectionErrors[] } | undefined
   return nodes?.sections?.[sectionIndex]
 }
 
