@@ -1,4 +1,5 @@
 import type { Resume } from '@/db/db'
+import { db } from '@/db/db'
 import {
   entryToBlob,
   getValidProcessedResume,
@@ -28,7 +29,14 @@ export async function ensureProcessedResume(
     return { blob: entryToBlob(cached), processedAt: cached.processedAt }
   }
 
+  const expectedUpdatedAt = resume.updatedAt
   const blob = await processResume(await toResumePayload(resume))
+
+  const currentResume = await db.resumes.get(resume.id!)
+  if (!currentResume || currentResume.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+    throw new Error('Resume was modified during PDF generation')
+  }
+
   const processedAt = new Date()
   await saveProcessedResume(resume.id!, blob, { processedAt })
 

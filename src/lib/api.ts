@@ -77,7 +77,15 @@ export async function processResume(payload: ResumePayload): Promise<Blob> {
     throw await toApiError(response)
   }
 
-  return response.blob()
+  try {
+    return await response.blob()
+  } catch {
+    throw new ApiError(
+      'NETWORK_ERROR',
+      'Could not reach the server. Check your connection and try again.',
+      [],
+    )
+  }
 }
 
 async function toApiError(response: Response): Promise<ApiError> {
@@ -100,7 +108,16 @@ async function toApiError(response: Response): Promise<ApiError> {
       : `Request failed (${response.status}).`
 
   const details = Array.isArray(envelope.error?.details)
-    ? (envelope.error.details as ApiErrorDetail[])
+    ? envelope.error.details.filter(
+        (detail): detail is ApiErrorDetail =>
+          typeof detail === 'string' ||
+          (typeof detail === 'object' &&
+            detail !== null &&
+            'path' in detail &&
+            typeof detail.path === 'string' &&
+            'message' in detail &&
+            typeof detail.message === 'string'),
+      )
     : []
 
   return new ApiError(code, message, details)
@@ -235,15 +252,10 @@ export function parseApiValidationErrors(
     const fieldPath = segments.slice(2) // e.g., ['institutions', '1', 'name']
     const sectionErrors = buildSectionErrors(fieldPath, message)
 
-    // Merge with existing section errors, preserving type if already set
-    if (sections[sectionIndex].type === 'paragraph' && !sectionErrors.type) {
-      // Keep placeholder type if new errors don't specify type
-    } else {
-      sections[sectionIndex] = mergeSectionErrors(
-        sections[sectionIndex],
-        sectionErrors,
-      )
-    }
+    sections[sectionIndex] = mergeSectionErrors(
+      sections[sectionIndex],
+      sectionErrors,
+    )
   }
 
   return sections

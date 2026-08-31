@@ -140,7 +140,11 @@ const MONTHS = [
 function formatMonthYear(date: string | undefined): string | undefined {
   if (!date) return undefined
   const [year, month] = date.split('-')
-  return `${MONTHS[parseInt(month, 10) - 1]} ${year}`
+  const monthIndex = parseInt(month, 10) - 1
+  if (!year || monthIndex < 0 || monthIndex >= MONTHS.length) {
+    return undefined
+  }
+  return `${MONTHS[monthIndex]} ${year}`
 }
 
 function cleanOptional(value: string | null | undefined): string | undefined {

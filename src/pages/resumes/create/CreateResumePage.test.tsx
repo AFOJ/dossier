@@ -182,9 +182,11 @@ describe('CreateResumePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create resume' }))
 
-    // Find the error message for the resume title (id="resume-title"), not the section title
+    // Find the error message for the resume title (inputId="resume-title"), not the section title
+    const resumeTitleInput = screen.getByRole('textbox', { name: 'Title *' })
+    const describedBy = resumeTitleInput.getAttribute('aria-describedby') || ''
     const resumeTitleError = await screen.findByText('Title is required', {
-      selector: '[id="base-ui-_r_54_"]',
+      selector: describedBy.split(' ').map((id) => `[id="${id}"]`).join(','),
     })
     expect(resumeTitleError).toBeInTheDocument()
     expect(createResume).not.toHaveBeenCalled()

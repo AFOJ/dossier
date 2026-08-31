@@ -84,11 +84,21 @@ export async function updateResume(
     ...changes,
     updatedAt: new Date(),
   })
-  // Any change to the resume should invalidates its PDF cache immediately.
-  await clearProcessedResumeCache(id)
+  // Any change to the resume should invalidate its PDF cache immediately.
+  try {
+    await clearProcessedResumeCache(id)
+  } catch (error) {
+    // TODO: log this to a logging service in the future
+    console.error('Failed to clear resume cache:', error)
+  }
 }
 
 export async function deleteResume(id: string): Promise<void> {
   await RESUME_TABLE.delete(id)
-  await clearProcessedResumeCache(id)
+  try {
+    await clearProcessedResumeCache(id)
+  } catch (error) {
+    // TODO: log this to a logging service in the future
+    console.error('Failed to clear resume cache:', error)
+  }
 }
