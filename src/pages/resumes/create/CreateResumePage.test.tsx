@@ -103,7 +103,10 @@ describe('CreateResumePage', () => {
 
     await addSectionViaMenu(user, 'Paragraph')
 
-    const paragraph = screen.getByRole('textbox', { name: 'Paragraph text' })
+    const sectionTitle = screen.getByLabelText('Section title')
+    await user.type(sectionTitle, 'Summary')
+
+    const paragraph = screen.getByRole('textbox', { name: 'Summary text' })
     await user.type(paragraph, 'Seasoned engineer.')
 
     await user.type(screen.getByLabelText(/^Title/), 'My Resume')
@@ -112,7 +115,7 @@ describe('CreateResumePage', () => {
     await waitFor(() => {
       expect(createResume).toHaveBeenCalledWith(
         'My Resume',
-        [{ type: 'paragraph', text: 'Seasoned engineer.' }],
+        [{ type: 'paragraph', text: 'Seasoned engineer.', title: 'Summary' }],
         { syncProfile: true, contact: null },
       )
     })
@@ -157,16 +160,16 @@ describe('CreateResumePage', () => {
     })
     expect(switches).toHaveLength(2)
     expect(switches[0]).toBeChecked()
-    expect(switches[1]).not.toBeChecked()
+    expect(switches[1]).toBeChecked()
 
     const endInputs = screen.getAllByLabelText(/^End date/)
     expect(endInputs[0]).toBeDisabled()
-    expect(endInputs[1]).not.toBeDisabled()
+    expect(endInputs[1]).toBeDisabled()
 
     await user.click(switches[1])
 
-    expect(switches[1]).toBeChecked()
-    expect(endInputs[1]).toBeDisabled()
+    expect(switches[1]).not.toBeChecked()
+    expect(endInputs[1]).not.toBeDisabled()
   })
 
   it('blocks submission without a title', async () => {
@@ -179,7 +182,13 @@ describe('CreateResumePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create resume' }))
 
-    expect(await screen.findByText('Title is required')).toBeInTheDocument()
+    // Find the error message for the resume title (inputId="resume-title"), not the section title
+    const resumeTitleInput = screen.getByRole('textbox', { name: 'Title *' })
+    const describedBy = resumeTitleInput.getAttribute('aria-describedby') || ''
+    const resumeTitleError = await screen.findByText('Title is required', {
+      selector: describedBy.split(' ').map((id) => `[id="${id}"]`).join(','),
+    })
+    expect(resumeTitleError).toBeInTheDocument()
     expect(createResume).not.toHaveBeenCalled()
   })
 })

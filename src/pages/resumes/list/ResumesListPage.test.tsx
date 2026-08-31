@@ -8,6 +8,8 @@ import type { Resume } from '@/db/db'
 import type { ResumeSection } from '@/db/types'
 import { useResumeTable } from '@/hooks/useResumeTable'
 import { ModalProvider } from '@/components/modal'
+import { useProcessedResume } from '@/pages/resumes/list/hooks/useProcessedResume'
+import { downloadJson } from '@/lib/download'
 
 vi.mock('@/hooks/useResumeTable', () => ({
   useResumeTable: vi.fn(),
@@ -19,9 +21,34 @@ vi.mock('@/db/resume', () => ({
   deleteResume: vi.fn(),
 }))
 
+vi.mock('@/pages/resumes/list/hooks/useProcessedResume', () => ({
+  useProcessedResume: vi.fn(),
+}))
+
+vi.mock('@/lib/download', () => ({
+  downloadJson: vi.fn(),
+  getExportFilename: vi.fn(
+    (_kind: string, _date: Date, label?: string) =>
+      `dossier-resume${label ? `-${label}` : ''}-export.json`,
+  ),
+}))
+
 const mockUseResumeTable = vi.mocked(useResumeTable)
+const mockUseProcessedResume = vi.mocked(useProcessedResume)
 
 type TableState = ReturnType<typeof useResumeTable>
+
+function makeProcessedState() {
+  return {
+    status: 'ready' as const,
+    // about:blank avoids happy-dom trying to fetch a blob: URL for the iframe.
+    url: 'about:blank',
+    processedAt: new Date(),
+    error: undefined,
+    isDownloading: false,
+    download: vi.fn().mockResolvedValue(undefined),
+  }
+}
 
 function makeTableState(overrides: Partial<TableState> = {}): TableState {
   return {
@@ -57,6 +84,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
 
 function renderPage(state: TableState) {
   mockUseResumeTable.mockReturnValue(state)
+  mockUseProcessedResume.mockReturnValue(makeProcessedState())
 
   render(
     <ModalProvider>
@@ -67,7 +95,10 @@ function renderPage(state: TableState) {
             path="/resumes/create"
             element={<div>Create resume page</div>}
           />
-          <Route path="/resumes/:id" element={<div>Resume detail page</div>} />
+          <Route
+            path="/resumes/:resumeId/edit"
+            element={<div>Edit resume page</div>}
+          />
         </Routes>
       </MemoryRouter>
     </ModalProvider>,
@@ -107,7 +138,7 @@ describe('ResumesListPage', () => {
     expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
   })
 
-  it('navigates to the resume detail when a row is clicked', async () => {
+  it('opens the preview modal when a row title is clicked', async () => {
     const user = userEvent.setup()
     renderPage(
       makeTableState({
@@ -118,7 +149,42 @@ describe('ResumesListPage', () => {
 
     await user.click(await screen.findByText('My Resume'))
 
-    expect(await screen.findByText('Resume detail page')).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('My Resume')
+    expect(screen.getByTitle('My Resume preview')).toBeInTheDocument()
+  })
+
+  it('opens the preview modal via the view quick action', async () => {
+    const user = userEvent.setup()
+    renderPage(
+      makeTableState({
+        totalCount: 1,
+        pageItems: [makeResume({ id: 'abc', title: 'My Resume' })],
+      }),
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'View' }))
+
+    expect(await screen.findByRole('dialog')).toHaveTextContent('My Resume')
+  })
+
+  it('exports a resume as JSON from its quick action', async () => {
+    const user = userEvent.setup()
+    const resume = makeResume({ id: 'exp-1', title: 'Export Me' })
+    renderPage(makeTableState({ totalCount: 1, pageItems: [resume] }))
+
+    await user.click(await screen.findByRole('button', { name: 'Export JSON' }))
+
+    await waitFor(() => {
+      expect(downloadJson).toHaveBeenCalledWith(
+        'dossier-resume-export-me-export.json',
+        {
+          title: 'Export Me',
+          contact: undefined,
+          sections: [],
+        },
+      )
+    })
   })
 
   it('navigates to create via the toolbar "New resume" link', async () => {
@@ -137,7 +203,9 @@ describe('ResumesListPage', () => {
 
   it('duplicates a resume with a copy title and its sections', async () => {
     const user = userEvent.setup()
-    const sections: ResumeSection[] = [{ type: 'paragraph', text: 'Hello' }]
+    const sections: ResumeSection[] = [
+      { type: 'paragraph', title: 'Hello', text: 'Hello' },
+    ]
     renderPage(
       makeTableState({
         totalCount: 1,
@@ -267,8 +335,8 @@ describe('ResumesListPage', () => {
 
     expect(await screen.findByText('Resume 0')).toBeInTheDocument()
     expect(screen.getByText('1 - 10 of 12')).toBeInTheDocument()
-    // Toolbar link + (title + view + edit) links per row
-    expect(screen.getAllByRole('link')).toHaveLength(31)
+    // Toolbar link + edit link per row
+    expect(screen.getAllByRole('link')).toHaveLength(11)
     expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled()
   })

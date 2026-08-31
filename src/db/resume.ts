@@ -1,4 +1,5 @@
 import { db, type Resume } from '@/db/db'
+import { clearProcessedResumeCache } from '@/db/resumeCache'
 import type { ResumeSection } from '@/db/types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -83,8 +84,21 @@ export async function updateResume(
     ...changes,
     updatedAt: new Date(),
   })
+  // Any change to the resume should invalidate its PDF cache immediately.
+  try {
+    await clearProcessedResumeCache(id)
+  } catch (error) {
+    // TODO: log this to a logging service in the future
+    console.error('Failed to clear resume cache:', error)
+  }
 }
 
 export async function deleteResume(id: string): Promise<void> {
   await RESUME_TABLE.delete(id)
+  try {
+    await clearProcessedResumeCache(id)
+  } catch (error) {
+    // TODO: log this to a logging service in the future
+    console.error('Failed to clear resume cache:', error)
+  }
 }

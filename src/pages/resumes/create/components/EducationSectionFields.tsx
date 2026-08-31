@@ -40,8 +40,9 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const institutionErrors = getSectionErrors(errors, sectionIndex)
-    ?.institutions?.[index]
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const institutionErrors =
+    sectionErrors?.type === 'education' ? sectionErrors.institutions?.[index] : undefined
 
   const update = (patch: Partial<EducationalInstitution>) =>
     onChange({ ...institution, ...patch })
@@ -183,8 +184,8 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionError = getSectionErrors(errors, sectionIndex)?.institutions
-    ?.message
+  const sectionErrors = getSectionErrors(errors, sectionIndex)
+  const sectionError = sectionErrors?.type === 'education' ? sectionErrors.institutions?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">

@@ -91,7 +91,9 @@ export const exportFileSchema = z.object({
         createdAt: z.iso.datetime(),
         updatedAt: z.iso.datetime(),
         syncProfile: z.boolean().optional(),
-        contact: contactSchema.optional(),
+        // Synced resumes persist contact: null (the live profile is the
+        // source of truth), so null must be accepted alongside omitted.
+        contact: contactSchema.nullish(),
       }),
     )
     .default([]),

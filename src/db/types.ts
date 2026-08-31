@@ -40,7 +40,7 @@ export interface ExperienceCompany {
 }
 
 export type ResumeSection =
-  | { type: 'paragraph'; text: string }
-  | { type: 'education'; institutions: EducationalInstitution[] }
-  | { type: 'skills'; groups: SkillGroup[] }
-  | { type: 'experience'; companies: ExperienceCompany[] }
+  | { type: 'paragraph'; title: string; text: string }
+  | { type: 'education'; title: string; institutions: EducationalInstitution[] }
+  | { type: 'skills'; title: string; groups: SkillGroup[] }
+  | { type: 'experience'; title: string; companies: ExperienceCompany[] }

@@ -100,7 +100,7 @@ describe('exportProfile', () => {
       {
         id: crypto.randomUUID(),
         title: 'Resume 2',
-        sections: [{ type: 'paragraph', text: 'Hello' }],
+        sections: [{ type: 'paragraph', title: 'Introduction', text: 'Hello' }],
         createdAt: new Date('2026-01-02T10:00:00Z'),
         updatedAt: new Date('2026-01-02T10:00:00Z'),
       },
@@ -174,9 +174,10 @@ describe('importProfile', () => {
         id: 'resume-1',
         title: 'My Resume',
         sections: [
-          { type: 'paragraph', text: 'Hello' },
+          { type: 'paragraph', title: 'Summary', text: 'Hello' },
           {
             type: 'experience',
+            title: 'Experience',
             companies: [
               {
                 company_name: 'Spotify',
@@ -200,10 +201,12 @@ describe('importProfile', () => {
           },
           {
             type: 'skills',
+            title: 'Skills',
             groups: [{ title: 'Frontend', items: ['React'] }],
           },
           {
             type: 'education',
+            title: 'Education',
             institutions: [
               {
                 name: 'Uni',
@@ -309,6 +312,34 @@ describe('importProfile', () => {
 
     const restored = await db.resumes.toArray()
     expect(restored.map((resume) => resume.id)).toEqual(['resume-1'])
+  })
+
+  it('round-trips through delete: synced resumes with null contact restore cleanly', async () => {
+    await upsertProfile({
+      ...baseProfile,
+      full_name: 'John Doe',
+      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+    })
+    // createResume defaults to syncProfile: true and contact: null.
+    await createResume('Production Resume', [
+      { type: 'paragraph', title: 'Summary', text: 'Summary' },
+    ])
+
+    const exported = JSON.stringify(await exportProfile())
+
+    await deleteProfile()
+    expect(await getProfile()).toBeNull()
+    expect(await getAllResumes()).toEqual([])
+
+    await importProfile(exported)
+
+    const profile = await getProfile()
+    expect(profile?.full_name).toBe('John Doe')
+
+    const resumes = await getAllResumes()
+    expect(resumes.map((resume) => resume.title)).toEqual(['Production Resume'])
+    expect(resumes[0]?.contact).toBeNull()
+    expect(resumes[0]?.syncProfile).toBe(true)
   })
 
   it('leaves the database untouched when validation fails', async () => {

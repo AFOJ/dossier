@@ -8,11 +8,14 @@ export interface ModalContentProps<TData = undefined> {
 export interface ModalOptions {
   closeOnBackdropClick?: boolean
   closeOnEscape?: boolean
+  /** Extra classes for the dialog surface, e.g. a wider max-width. */
+  contentClassName?: string
 }
 
 export interface ResolvedModalOptions {
   closeOnBackdropClick: boolean
   closeOnEscape: boolean
+  contentClassName: string
 }
 
 export type ModalComponent<TData> = ComponentType<ModalContentProps<TData>>

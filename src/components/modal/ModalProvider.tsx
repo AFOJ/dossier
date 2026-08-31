@@ -158,7 +158,7 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
         aria-modal="true"
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl outline-none"
+        className={`w-full rounded-xl bg-white shadow-xl outline-none p-4 sm:p-6 ${options.contentClassName}`}
       >
         {children}
       </div>

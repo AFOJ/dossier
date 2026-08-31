@@ -11,6 +11,7 @@ import { cn } from '@/utils'
 type SectionCardProps = {
   label: string
   title: string
+  titleError?: string
   onTitleChange: (title: string) => void
   isFirst: boolean
   isLast: boolean
@@ -24,6 +25,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
   const {
     label,
     title,
+    titleError,
     onTitleChange,
     isFirst,
     isLast,
@@ -75,6 +77,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
         </div>
       </div>
 
+      {titleError && <p className="text-red-700 text-sm">{titleError}</p>}
       {children}
     </div>
   )

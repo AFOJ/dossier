@@ -20,7 +20,6 @@ import CreateResumePage from '@/pages/resumes/create'
 import EditResumePage from '@/pages/resumes/edit'
 import ResumesListPage from '@/pages/resumes/list'
 import UploadResumePage from '@/pages/resumes/upload'
-import ViewResumePage from '@/pages/resumes/view'
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -99,7 +98,6 @@ const router = createBrowserRouter(
           <Route index element={<ResumesListPage />} />
           <Route path="create" element={<CreateResumePage />} />
           <Route path="upload" element={<UploadResumePage />} />
-          <Route path=":resumeId" element={<ViewResumePage />} />
           <Route
             id={resumeEditRouteId}
             path=":resumeId/edit"
