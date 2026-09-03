@@ -1,1 +1,6 @@
 export { default } from '@/pages/resumes/upload/UploadResumePage'
+export { DuplicateResumeDialog } from '@/pages/resumes/upload/components/DuplicateResumeDialog'
+export { parseResumeJsonFile } from '@/pages/resumes/upload/hooks/parseResumeJsonFile'
+export { UploadResumeJson } from '@/pages/resumes/upload/UploadResumeJson'
+export { useJsonUploader } from '@/pages/resumes/upload/hooks/useJsonUploader'
+export { useUploadResume } from '@/pages/resumes/upload/hooks/useUploadResume'
