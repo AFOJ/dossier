@@ -149,7 +149,8 @@ function formatMonthYear(date: string | undefined): string | undefined {
 
 function cleanOptional(value: string | null | undefined): string | undefined {
   const trimmed = value?.trim()
-  return trimmed ? trimmed : undefined
+  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return undefined
+  return trimmed
 }
 
 function toSectionPayload(section: ResumeSection): ResumePayloadSection {
