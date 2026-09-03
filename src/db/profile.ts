@@ -49,11 +49,13 @@ export async function exportProfile(): Promise<ExportFile> {
     links: profile.links,
   }
 
+  const resumes = await getAllResumes()
+
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
     profile: profileData,
-    resumes: await getAllResumes(),
+    resumes,
   }
 }
 

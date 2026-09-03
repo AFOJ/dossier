@@ -179,6 +179,7 @@ describe('ResumesListPage', () => {
       expect(downloadJson).toHaveBeenCalledWith(
         'dossier-resume-export-me-export.json',
         {
+          id: 'exp-1',
           title: 'Export Me',
           contact: undefined,
           sections: [],

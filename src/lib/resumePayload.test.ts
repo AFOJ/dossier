@@ -26,6 +26,7 @@ describe('toResumePayload', () => {
     const payload = await toResumePayload(makeResume())
 
     expect(payload).toEqual({
+      id: 'resume-1',
       title: 'Frontend Engineer',
       sections: [{ type: 'paragraph', title: 'Summary', text: 'Summary' }],
     })

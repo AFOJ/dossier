@@ -65,6 +65,7 @@ export type ResumePayloadSection =
     } & WithOptionalTitle)
 
 export interface ResumePayload {
+  id?: string
   title: string
   contact?: ResumePayloadContact
   sections: ResumePayloadSection[]
@@ -81,6 +82,7 @@ export async function toResumePayload(resume: Resume): Promise<ResumePayload> {
       : ((await getProfile()) ?? resume.contact)
 
   return {
+    id: resume.id,
     title: resume.title.trim(),
     contact: toContactPayload(contact),
     sections: resume.sections.map(toSectionPayload),
