@@ -6,7 +6,6 @@ import { ResumeListContent } from '@/pages/resumes/list/components/ResumeListCon
 import { ResumePreviewDialog } from '@/pages/resumes/list/components/ResumePreviewDialog'
 import { slugify } from '@/utils'
 import { Toolbar } from '@/pages/resumes/list/components/Toolbar'
-import { toResumePayload } from '@/lib/resumePayload'
 import { useModal } from '@/components/modal'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useResumeTable } from '@/hooks/useResumeTable'
@@ -35,7 +34,16 @@ export default function ResumesListPage() {
         new Date(),
         slugify(resume.title),
       )
-      downloadJson(filename, await toResumePayload(resume))
+      const exportPayload = {
+        id: resume.id,
+        title: resume.title.trim(),
+        sections: resume.sections,
+        createdAt: resume.createdAt.toISOString(),
+        updatedAt: resume.updatedAt.toISOString(),
+        syncProfile: resume.syncProfile,
+        contact: resume.contact,
+      }
+      downloadJson(filename, exportPayload)
       toast.success('Resume exported', `Saved ${filename}.`)
     } catch {
       toast.error('Could not export resume', 'Please try again.')
