@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/AFOJ/dossier/compare/dossier-v1.0.0...dossier-v1.0.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* deploy to Cloudflare from release workflow ([760dd14](https://github.com/AFOJ/dossier/commit/760dd14bdf6d8303153eca99c184787d9cc98a49))
+
 ## [1.0.0](https://github.com/AFOJ/dossier/compare/dossier-v0.2.0...dossier-v1.0.0) (2026-09-04)
 
 
