@@ -41,6 +41,7 @@ export async function queryResumes(
 }
 
 export interface CreateResumeOptions {
+  id?: string
   syncProfile?: boolean
   contact?: Resume['contact']
 }
@@ -50,7 +51,7 @@ export async function createResume(
   sections: ResumeSection[],
   options: CreateResumeOptions = {},
 ): Promise<string> {
-  const id = crypto.randomUUID()
+  const id = options.id ?? crypto.randomUUID()
   const now = new Date()
 
   await RESUME_TABLE.add({

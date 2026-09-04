@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { db, type Profile, type Resume } from '@/db/db'
-import { resumeSectionSchema } from '@/db/schemas'
+import { resumeSectionSchema, exportContactSchema } from '@/db/schemas'
 import { getAllResumes } from '@/db/resume'
 
 export async function upsertProfile(
@@ -49,39 +49,20 @@ export async function exportProfile(): Promise<ExportFile> {
     links: profile.links,
   }
 
+  const resumes = await getAllResumes()
+
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
     profile: profileData,
-    resumes: await getAllResumes(),
+    resumes,
   }
 }
-
-const linkSchema = z.object({
-  label: z.string(),
-  url: z.url(),
-})
-
-const contactSchema = z.object({
-  full_name: z.string().min(1),
-  role: z.string().nullable(),
-  email: z.string().nullable(),
-  phone: z.string().nullable(),
-  location: z.string().nullable(),
-  links: z.array(linkSchema),
-})
 
 export const exportFileSchema = z.object({
   version: z.literal(1),
   exportedAt: z.string(),
-  profile: z.object({
-    full_name: z.string().min(1),
-    role: z.string().nullable(),
-    email: z.string().nullable(),
-    phone: z.string().nullable(),
-    location: z.string().nullable(),
-    links: z.array(linkSchema),
-  }),
+  profile: exportContactSchema,
   resumes: z
     .array(
       z.object({
@@ -93,7 +74,7 @@ export const exportFileSchema = z.object({
         syncProfile: z.boolean().optional(),
         // Synced resumes persist contact: null (the live profile is the
         // source of truth), so null must be accepted alongside omitted.
-        contact: contactSchema.nullish(),
+        contact: exportContactSchema.nullish(),
       }),
     )
     .default([]),

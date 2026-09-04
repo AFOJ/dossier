@@ -78,6 +78,8 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     sections: [],
     createdAt: new Date(),
     updatedAt: new Date(),
+    syncProfile: true,
+    contact: null,
     ...overrides,
   }
 }
@@ -178,11 +180,12 @@ describe('ResumesListPage', () => {
     await waitFor(() => {
       expect(downloadJson).toHaveBeenCalledWith(
         'dossier-resume-export-me-export.json',
-        {
+        expect.objectContaining({
+          id: 'exp-1',
           title: 'Export Me',
-          contact: undefined,
           sections: [],
-        },
+          syncProfile: true,
+        }),
       )
     })
   })
