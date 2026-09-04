@@ -107,15 +107,18 @@ export async function importProfile(fileContent: string): Promise<void> {
   await db.transaction('rw', db.profiles, db.resumes, async () => {
     await upsertProfile(profile)
 
-    const restoredResumes: Resume[] = resumes.map((resume) => ({
-      id: resume.id ?? crypto.randomUUID(),
-      title: resume.title,
-      sections: resume.sections,
-      createdAt: new Date(resume.createdAt),
-      updatedAt: new Date(resume.updatedAt),
-      syncProfile: resume.syncProfile ?? true,
-      contact: resume.contact ?? null,
-    }))
+    const restoredResumes: Resume[] = resumes.map((resume) => {
+      const contact = resume.contact ?? null
+      return {
+        id: resume.id ?? crypto.randomUUID(),
+        title: resume.title,
+        sections: resume.sections,
+        createdAt: new Date(resume.createdAt),
+        updatedAt: new Date(resume.updatedAt),
+        syncProfile: resume.syncProfile ?? (contact ? false : true),
+        contact,
+      }
+    })
 
     await db.resumes.clear()
 

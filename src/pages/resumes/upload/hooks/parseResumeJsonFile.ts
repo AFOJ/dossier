@@ -9,41 +9,49 @@ interface ParsedResumeResult {
 
 function convertPayloadToResume(payload: z.infer<typeof resumePayloadSchema>, resumeId: string): Resume {
   const now = new Date()
+  const contact = payload.contact
+    ? {
+        full_name: payload.contact.full_name,
+        role: payload.contact.role ?? null,
+        email: payload.contact.email ?? null,
+        phone: payload.contact.phone ?? null,
+        location: payload.contact.location ?? null,
+        links: payload.contact.links ?? [],
+      }
+    : null
   return {
     id: resumeId,
     title: payload.title,
     sections: payload.sections as Resume['sections'],
     createdAt: now,
     updatedAt: now,
-    syncProfile: true,
-    contact: payload.contact
-      ? {
-          full_name: payload.contact.full_name,
-          role: payload.contact.role ?? null,
-          email: payload.contact.email ?? null,
-          phone: payload.contact.phone ?? null,
-          location: payload.contact.location ?? null,
-          links: payload.contact.links ?? [],
-        }
-      : null,
+    // Payloads carry no sync flag. Freeze an imported contact (unsynced)
+    // so it isn't silently replaced by the live profile on next export.
+    syncProfile: contact ? false : true,
+    contact,
   }
 }
 
 function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
+  const contact = validResume.contact
+    ? {
+        full_name: validResume.contact.full_name,
+        role: validResume.contact.role ?? null,
+        email: validResume.contact.email ?? null,
+        phone: validResume.contact.phone ?? null,
+        location: validResume.contact.location ?? null,
+        links: validResume.contact.links ?? [],
+      }
+    : null
   return {
     ...validResume,
     createdAt: validResume.createdAt ? new Date(validResume.createdAt) : new Date(),
     updatedAt: validResume.updatedAt ? new Date(validResume.updatedAt) : new Date(),
-    contact: validResume.contact
-      ? {
-          full_name: validResume.contact.full_name,
-          role: validResume.contact.role ?? null,
-          email: validResume.contact.email ?? null,
-          phone: validResume.contact.phone ?? null,
-          location: validResume.contact.location ?? null,
-          links: validResume.contact.links ?? [],
-        }
-      : null,
+    // Preserve an explicit sync flag. When the flag is missing (older
+    // exports), infer from contact so an unsynced contact isn't flipped
+    // to synced on upload.
+    syncProfile: validResume.syncProfile ?? (contact ? false : true),
+    contact,
   }
 }
 
