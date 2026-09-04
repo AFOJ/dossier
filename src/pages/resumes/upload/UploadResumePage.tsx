@@ -25,6 +25,7 @@ export default function UploadResumePage() {
 
     if (!existingResume) {
       await createResume(incomingResume.title, incomingResume.sections, {
+        id: incomingResumeId,
         syncProfile: incomingResume.syncProfile,
         contact: incomingResume.contact,
       })

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button, Heading3 } from '@/components/ui'
 import type { ModalContentProps } from '@/components/modal'
 import type { Resume } from '@/db/db'
@@ -6,8 +7,8 @@ interface DuplicateResumeDialogData {
   existingResume: Resume
   incomingResume: Resume
   incomingResumeId: string
-  onOverwrite: () => void
-  onCreateCopy: () => void
+  onOverwrite: () => Promise<void>
+  onCreateCopy: () => Promise<void>
 }
 
 export function DuplicateResumeDialog({
@@ -15,6 +16,28 @@ export function DuplicateResumeDialog({
   close,
 }: Readonly<ModalContentProps<DuplicateResumeDialogData>>) {
   const { existingResume, incomingResume, incomingResumeId, onOverwrite, onCreateCopy } = data
+  const [busyAction, setBusyAction] = useState<'overwrite' | 'copy' | null>(null)
+  const isBusy = busyAction !== null
+
+  const handleOverwrite = async () => {
+    setBusyAction('overwrite')
+    try {
+      await onOverwrite()
+      close()
+    } catch {
+      setBusyAction(null)
+    }
+  }
+
+  const handleCreateCopy = async () => {
+    setBusyAction('copy')
+    try {
+      await onCreateCopy()
+      close()
+    } catch {
+      setBusyAction(null)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -36,25 +59,22 @@ export function DuplicateResumeDialog({
           intent="secondary"
           onClick={close}
           autoFocus
+          disabled={isBusy}
         >
           Cancel
         </Button>
         <Button
           intent="secondary"
-          onClick={() => {
-            onCreateCopy()
-            close()
-          }}
+          onClick={handleCreateCopy}
+          disabled={isBusy}
         >
-          Create Copy
+          {busyAction === 'copy' ? 'Importing…' : 'Create Copy'}
         </Button>
         <Button
-          onClick={() => {
-            onOverwrite()
-            close()
-          }}
+          onClick={handleOverwrite}
+          disabled={isBusy}
         >
-          Overwrite
+          {busyAction === 'overwrite' ? 'Overwriting…' : 'Overwrite'}
         </Button>
       </div>
     </div>

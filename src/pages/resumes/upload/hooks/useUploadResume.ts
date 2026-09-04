@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { Resume } from '@/db/db'
 
 interface UseUploadResumeOptions {
-  onParsed: (resume: Resume, resumeId: string) => void
+  onParsed: (resume: Resume, resumeId: string) => Promise<void> | void
 }
 
 interface UseUploadResumeReturn {
@@ -65,7 +65,10 @@ export function useUploadResume({
     const droppedFiles = event.dataTransfer.files
     if (droppedFiles.length > 0) {
       const file = droppedFiles[0]
-      if (file.type === 'application/json' || file.name.endsWith('.json')) {
+      if (
+        file.type === 'application/json' ||
+        file.name.toLowerCase().endsWith('.json')
+      ) {
         setSelectedFile(file)
       }
     }
@@ -76,7 +79,10 @@ export function useUploadResume({
       const files = event.target.files
       if (files && files.length > 0) {
         const file = files[0]
-        if (file.type === 'application/json' || file.name.endsWith('.json')) {
+        if (
+          file.type === 'application/json' ||
+          file.name.toLowerCase().endsWith('.json')
+        ) {
           setSelectedFile(file)
         }
       }
@@ -110,7 +116,7 @@ export function useUploadResume({
       }
 
       const { resume: incomingResume, resumeId: incomingResumeId } = result
-      onParsed(incomingResume, incomingResumeId)
+      await onParsed(incomingResume, incomingResumeId)
     } catch {
       setParseError('Failed to process resume. Please try again.')
     } finally {

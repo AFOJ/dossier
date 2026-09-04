@@ -140,29 +140,6 @@ const MONTHS = [
   'December',
 ]
 
-function parseDateString(
-  value: string | null | undefined,
-): { year: number; month: number } | null {
-  if (!value) {
-    return null
-  }
-  const trimmed = value.trim()
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
-    return null
-  }
-
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})(?:-\d{2})?$/)
-  if (isoMatch) {
-    const year = parseInt(isoMatch[1], 10)
-    const month = parseInt(isoMatch[2], 10)
-    if (month >= 1 && month <= 12) {
-      return { year, month }
-    }
-  }
-
-  return null
-}
-
 function formatMonthYear(date: string | undefined): string | undefined {
   if (!date) {
     return undefined
@@ -196,21 +173,6 @@ function formatMonthYear(date: string | undefined): string | undefined {
   }
 
   return undefined
-}
-
-function cleanDate(value: string | null | undefined): string | undefined {
-  if (!value) {
-    return undefined
-  }
-  const trimmed = value.trim()
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
-    return undefined
-  }
-  const parsed = parseDateString(trimmed)
-  if (!parsed) {
-    return undefined
-  }
-  return `${parsed.year}-${String(parsed.month).padStart(2, '0')}`
 }
 
 function cleanOptional(value: string | null | undefined): string | undefined {
@@ -270,10 +232,6 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
             company.end_date === undefined && !!company.start_date
               ? 'Present'
               : (formatMonthYear(company.end_date) ?? null)
-          cleanDate(company.start_date)
-          if (company.end_date !== undefined) {
-            cleanDate(company.end_date)
-          }
           return {
             company_name: company.company_name.trim(),
             company_website: cleanOptional(company.company_website),

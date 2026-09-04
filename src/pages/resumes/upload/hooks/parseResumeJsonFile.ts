@@ -48,7 +48,7 @@ function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
 }
 
 export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResult | null> {
-  if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+  if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
     console.error('[parseResumeJsonFile] Not a JSON file', { fileName: file.name, fileType: file.type })
     return null
   }

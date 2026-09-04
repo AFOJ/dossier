@@ -5,7 +5,7 @@ import { useUploadResume } from './hooks/useUploadResume'
 import type { Resume } from '@/db/db'
 
 interface UploadResumeJsonProps {
-  onParsed: (resume: Resume, resumeId: string) => void
+  onParsed: (resume: Resume, resumeId: string) => Promise<void> | void
 }
 
 export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
