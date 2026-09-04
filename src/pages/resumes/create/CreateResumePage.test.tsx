@@ -160,16 +160,16 @@ describe('CreateResumePage', () => {
     })
     expect(switches).toHaveLength(2)
     expect(switches[0]).toBeChecked()
-    expect(switches[1]).toBeChecked()
+    expect(switches[1]).not.toBeChecked()
 
     const endInputs = screen.getAllByLabelText(/^End date/)
     expect(endInputs[0]).toBeDisabled()
-    expect(endInputs[1]).toBeDisabled()
+    expect(endInputs[1]).not.toBeDisabled()
 
     await user.click(switches[1])
 
-    expect(switches[1]).not.toBeChecked()
-    expect(endInputs[1]).not.toBeDisabled()
+    expect(switches[1]).toBeChecked()
+    expect(endInputs[1]).toBeDisabled()
   })
 
   it('blocks submission without a title', async () => {

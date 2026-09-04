@@ -52,7 +52,10 @@ export default function ResumesListPage() {
 
   const handleDuplicate = async (resume: Resume) => {
     try {
-      await createResume(`Copy of ${resume.title}`, resume.sections)
+      await createResume(`Copy of ${resume.title}`, resume.sections, {
+        syncProfile: resume.syncProfile ?? (resume.contact ? false : true),
+        contact: resume.contact ?? null,
+      })
       toast.success('Resume duplicated', `"${resume.title}" was duplicated.`)
     } catch {
       toast.error('Failed to duplicate resume', 'Please try again.')

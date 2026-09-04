@@ -224,6 +224,7 @@ describe('ResumesListPage', () => {
       expect(createResume).toHaveBeenCalledWith(
         'Copy of Frontend Engineer',
         sections,
+        { syncProfile: true, contact: null },
       )
     })
   })
