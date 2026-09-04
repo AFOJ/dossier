@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.0](https://github.com/AFOJ/dossier/compare/dossier-v0.1.0...dossier-v0.2.0) (2026-09-04)
+
+
+### Features
+
+* add JSON data export and update delete copy to recommend exporting ([c256549](https://github.com/AFOJ/dossier/commit/c25654953c0d707aa57978b7f0cdd907a41fbc97))
+* add profile page with editing, export stub, and delete flow ([590260a](https://github.com/AFOJ/dossier/commit/590260a94cd8d647f2ff147fbe015c86b7fabcf7))
+* add resume JSON upload functionality ([#12](https://github.com/AFOJ/dossier/issues/12)) ([26695eb](https://github.com/AFOJ/dossier/commit/26695eba14ee5f22752230ba47e1cbd59b3f606c))
+* add resume previews ([#11](https://github.com/AFOJ/dossier/issues/11)) ([42e1669](https://github.com/AFOJ/dossier/commit/42e16693c36936490ade22627c8309365641358f))
+* add toast system with stacked notifications ([590812d](https://github.com/AFOJ/dossier/commit/590812d35954292ef7e6b8f9412c253f9aa218f4))
+* add toast system with stacked notifications ([746ea9b](https://github.com/AFOJ/dossier/commit/746ea9bb4359baf3771c7d0fbd04ad8a2043fcac))
+* edit resume page with guardrails and builder polish ([#10](https://github.com/AFOJ/dossier/issues/10)) ([ffbffef](https://github.com/AFOJ/dossier/commit/ffbffef941878ea26fbaaa67bd64067d359ca2cb))
+* profile management with editing, data export/import, and deletion ([cb31ff8](https://github.com/AFOJ/dossier/commit/cb31ff842cb985458f1c75782f74b6e28f7323df))
+* resume creation page with section builders ([#8](https://github.com/AFOJ/dossier/issues/8)) ([f6da23e](https://github.com/AFOJ/dossier/commit/f6da23e8b002b5a3835385a37f89991374b44137))
+* show toast feedback on resume duplication and deletion ([31429b5](https://github.com/AFOJ/dossier/commit/31429b5f914639b2f59273dd348c899358dd00e9))
+
+
+### Bug Fixes
+
+* address review feedback on delete dialog and import restore behavior ([2e5944a](https://github.com/AFOJ/dossier/commit/2e5944a76f9647b961dbb76429eeaa75710cd06c))
+* render modal provider and toaster within router context ([3b1631b](https://github.com/AFOJ/dossier/commit/3b1631ba2fd56b2f0c2e20636a50e3cfefdd5ed9))
+* render spinner during initial loader hydration ([b86c78a](https://github.com/AFOJ/dossier/commit/b86c78a97e2bc6588a42e96b1e504636b629ecb8))
+* restore inline error message in delete dialog for persistent feedback ([caa82d6](https://github.com/AFOJ/dossier/commit/caa82d6002f1d258a8c48e6bcbcbe4062393226b))
+
 ## 0.1.0 (2026-08-21)
 
 
