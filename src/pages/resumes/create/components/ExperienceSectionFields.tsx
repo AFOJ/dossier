@@ -426,6 +426,9 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
     onChange({ ...company, ...patch })
 
   const roles = company.roles
+  const rolesError = (
+    companyErrors?.roles as { message?: string } | undefined
+  )?.message
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
@@ -505,6 +508,11 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
       </div>
 
       <div className="flex flex-col gap-3">
+        {rolesError && (
+          <p role="alert" className="text-sm text-red-700">
+            {rolesError}
+          </p>
+        )}
         {roles.map((role, roleIndex) => (
           <RoleEditor
             key={itemKey(role, roleIndex)}
@@ -548,7 +556,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
                   employment_type: undefined,
                   location: undefined,
                   start_date: undefined,
-                  end_date: undefined,
+                  end_date: '',
                   bullets: [],
                 }),
               ],

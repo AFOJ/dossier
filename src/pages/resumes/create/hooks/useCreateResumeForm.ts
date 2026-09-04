@@ -163,6 +163,14 @@ export const resumeFormSchema = z
               )
             }
 
+            if (company.roles.length === 0) {
+              addSectionIssue(
+                sectionIndex,
+                ['companies', companyIndex, 'roles'],
+                'Add at least one role to this company',
+              )
+            }
+
             if (company.start_date.trim() === '') {
               addSectionIssue(
                 sectionIndex,
