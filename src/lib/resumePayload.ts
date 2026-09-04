@@ -47,7 +47,6 @@ export interface ResumePayloadExperienceCompany {
   company_name: string
   company_website?: string
   start_date?: string
-  /** null means "no end date" per the backend contract. */
   end_date: string | null
   roles: ResumePayloadExperienceRole[]
 }
@@ -70,10 +69,6 @@ export interface ResumePayload {
   sections: ResumePayloadSection[]
 }
 
-/**
- * Maps a locally stored resume to the backend process contract
- *
- */
 export async function toResumePayload(resume: Resume): Promise<ResumePayload> {
   const contact =
     resume.syncProfile === false
@@ -106,10 +101,18 @@ function toContactPayload(
   const phone = cleanOptional(contact.phone)
   const location = cleanOptional(contact.location)
 
-  if (role) payload.role = role
-  if (email) payload.email = email
-  if (phone) payload.phone = phone
-  if (location) payload.location = location
+  if (role) {
+    payload.role = role
+  }
+  if (email) {
+    payload.email = email
+  }
+  if (phone) {
+    payload.phone = phone
+  }
+  if (location) {
+    payload.location = location
+  }
 
   const links = (contact.links ?? [])
     .map((link) => ({ label: link.label.trim(), url: link.url.trim() }))
@@ -137,19 +140,87 @@ const MONTHS = [
   'December',
 ]
 
+function parseDateString(
+  value: string | null | undefined,
+): { year: number; month: number } | null {
+  if (!value) {
+    return null
+  }
+  const trimmed = value.trim()
+  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
+    return null
+  }
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})(?:-\d{2})?$/)
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10)
+    const month = parseInt(isoMatch[2], 10)
+    if (month >= 1 && month <= 12) {
+      return { year, month }
+    }
+  }
+
+  return null
+}
+
 function formatMonthYear(date: string | undefined): string | undefined {
-  if (!date) return undefined
-  const [year, month] = date.split('-')
-  const monthIndex = parseInt(month, 10) - 1
-  if (!year || monthIndex < 0 || monthIndex >= MONTHS.length) {
+  if (!date) {
     return undefined
   }
-  return `${MONTHS[monthIndex]} ${year}`
+  const trimmed = date.trim()
+  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
+    return undefined
+  }
+
+  // Try ISO format first (YYYY-MM or YYYY-MM-DD)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})(?:-\d{2})?$/)
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10)
+    const month = parseInt(isoMatch[2], 10)
+    if (month >= 1 && month <= 12) {
+      return `${MONTHS[month - 1]} ${year}`
+    }
+  }
+
+  // Try "Month YYYY" format (pass through if already formatted)
+  const monthMatch = trimmed.match(/^([A-Za-z]+)\s+(\d{4})$/)
+  if (monthMatch) {
+    const monthName = monthMatch[1]
+    const year = monthMatch[2]
+    const monthIndex = MONTHS.findIndex(
+      (m) => m.toLowerCase() === monthName.toLowerCase(),
+    )
+    if (monthIndex >= 0) {
+      return `${MONTHS[monthIndex]} ${year}`
+    }
+  }
+
+  return undefined
+}
+
+function cleanDate(value: string | null | undefined): string | undefined {
+  if (!value) {
+    return undefined
+  }
+  const trimmed = value.trim()
+  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
+    return undefined
+  }
+  const parsed = parseDateString(trimmed)
+  if (!parsed) {
+    return undefined
+  }
+  return `${parsed.year}-${String(parsed.month).padStart(2, '0')}`
 }
 
 function cleanOptional(value: string | null | undefined): string | undefined {
-  const trimmed = value?.trim()
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return undefined
+  if (!value) {
+    return undefined
+  }
+  const trimmed = value.trim()
+  if (trimmed.length < 1) {
+    return undefined
+  }
   return trimmed
 }
 
@@ -194,11 +265,15 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
         ...cleanTitle(section),
         type: 'experience',
         companies: section.companies.map((company) => {
-          const startDate = formatMonthYear(cleanOptional(company.start_date))
+          const startDate = formatMonthYear(company.start_date)
           const companyEndDate =
             company.end_date === undefined && !!company.start_date
               ? 'Present'
-              : (formatMonthYear(cleanOptional(company.end_date)) ?? null)
+              : (formatMonthYear(company.end_date) ?? null)
+          cleanDate(company.start_date)
+          if (company.end_date !== undefined) {
+            cleanDate(company.end_date)
+          }
           return {
             company_name: company.company_name.trim(),
             company_website: cleanOptional(company.company_website),
@@ -208,11 +283,11 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
               job_title: role.job_title.trim(),
               employment_type: cleanOptional(role.employment_type),
               location: cleanOptional(role.location),
-              start_date: formatMonthYear(cleanOptional(role.start_date)),
+              start_date: formatMonthYear(role.start_date),
               end_date:
                 role.end_date === undefined && !!role.start_date
                   ? 'Present'
-                  : formatMonthYear(cleanOptional(role.end_date)),
+                  : formatMonthYear(role.end_date),
               bullets: role.bullets.map((bullet) =>
                 bullet.type === 'text'
                   ? { type: bullet.type, text: bullet.text }
