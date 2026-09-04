@@ -92,7 +92,9 @@ export const exportContactSchema = z.object({
 export const resumeSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, 'Title is required'),
-  sections: z.array(resumeSectionSchema).min(1, 'At least one section is required'),
+  // The builder allows section-less resumes, and exports must round-trip,
+  // so imports accept an empty sections array.
+  sections: z.array(resumeSectionSchema),
   createdAt: z.iso.datetime().optional(),
   updatedAt: z.iso.datetime().optional(),
   syncProfile: z.boolean().optional(),
@@ -105,7 +107,8 @@ export const resumePayloadSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, 'Title is required'),
   contact: contactSchema.optional(),
-  sections: z.array(resumeSectionSchema).min(1, 'At least one section is required'),
+  // Keep in sync with resumeSchema: section-less payloads must round-trip.
+  sections: z.array(resumeSectionSchema),
 })
 
 export type ResumePayloadData = z.infer<typeof resumePayloadSchema>
