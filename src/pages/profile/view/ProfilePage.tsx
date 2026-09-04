@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
       toast.success(
         'Profile data exported',
-        'Your profile and resumes were downloaded as JSON.',
+        'Your profile and documents were downloaded as JSON.',
       )
     } catch (error) {
       toast.error('Failed to export data', 'Please try again.')
@@ -51,7 +51,7 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-1">
             <Heading1>Profile</Heading1>
             <Subheading>
-              This information is reused across all your resumes.
+              This information is reused across all your career documents.
             </Subheading>
           </div>
 

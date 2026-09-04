@@ -18,7 +18,7 @@ export default function CreateProfilePage() {
           <Heading1 className="text-center">Get started with Dossier</Heading1>
           <Subheading className="text-center">
             Let's set up your profile first. This information will be reused
-            across all your resumes.
+            across all your career documents.
           </Subheading>
         </div>
 

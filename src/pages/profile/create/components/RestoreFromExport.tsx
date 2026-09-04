@@ -28,7 +28,7 @@ export function RestoreFromExport() {
       await importProfile(await file.text())
       toast.success(
         'Data imported',
-        'Your profile and resumes have been restored.',
+        'Your profile and documents have been restored.',
       )
       navigate('/profile')
     } catch (error) {
@@ -49,7 +49,7 @@ export function RestoreFromExport() {
             Already have a Dossier profile export?
           </p>
           <p className="mt-0.5 text-sm text-gray-500">
-            Restore your profile and resumes from an exported file instead of
+            Restore your profile and documents from an exported file instead of
             starting fresh.
           </p>
           {error && (
