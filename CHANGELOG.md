@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0](https://github.com/AFOJ/dossier/compare/dossier-v0.2.0...dossier-v1.0.0) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* dossier is now live; pushes to main no longer suffice for publishing, releases trigger production deploys.
+
+### Features
+
+* go live with Cloudflare Workers deploys on release ([5abb425](https://github.com/AFOJ/dossier/commit/5abb425c60e08c8c036ff632610e42c153a54360))
+
+
+### Bug Fixes
+
+* accept explicit null contact in resume payload schema ([67192aa](https://github.com/AFOJ/dossier/commit/67192aa756a71c4d7571298bff0bc5652a2916d0))
+* allow section-less resumes to round-trip through export and upload ([6a96d17](https://github.com/AFOJ/dossier/commit/6a96d17c38cc765e0276cfaf75a34cc2c493474a))
+* preserve unsynced contact on resume upload, import and duplicate ([6b0ed8a](https://github.com/AFOJ/dossier/commit/6b0ed8aa8441df54a078e07ccde736fbd02d61fd))
+* require a role per company and default new roles to not present ([4017005](https://github.com/AFOJ/dossier/commit/4017005e589ad6a500f3a3675eec3551bfc0b10f))
+* resume upload round-trip, role defaults and company guardrails ([8c74144](https://github.com/AFOJ/dossier/commit/8c741443fba034282439b9760f71a985d0209613))
+
 ## [0.2.0](https://github.com/AFOJ/dossier/compare/dossier-v0.1.0...dossier-v0.2.0) (2026-09-04)
 
 
