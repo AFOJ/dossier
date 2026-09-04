@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/AFOJ/dossier/compare/dossier-v1.0.1...dossier-v1.0.2) (2026-09-04)
+
+
+### Bug Fixes
+
+* run wrangler directly to avoid Node 20 action deprecation ([252d818](https://github.com/AFOJ/dossier/commit/252d81883d03782c5fc769192fe3e6a759f2ebe6))
+* use career documents wording in profile copy ([6847130](https://github.com/AFOJ/dossier/commit/6847130b9c27ac8e57b7891435cc59b55ec973ef))
+
 ## [1.0.1](https://github.com/AFOJ/dossier/compare/dossier-v1.0.0...dossier-v1.0.1) (2026-09-04)
 
 
