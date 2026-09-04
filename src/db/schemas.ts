@@ -106,7 +106,8 @@ export type ResumeData = z.infer<typeof resumeSchema>
 export const resumePayloadSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, 'Title is required'),
-  contact: contactSchema.optional(),
+  // Match resumeSchema: an explicit null contact (synced resume) must round-trip.
+  contact: contactSchema.nullable().optional(),
   // Keep in sync with resumeSchema: section-less payloads must round-trip.
   sections: z.array(resumeSectionSchema),
 })
