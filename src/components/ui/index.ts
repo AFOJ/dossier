@@ -1,4 +1,5 @@
 export * from '@/components/ui/Button'
+export * from '@/components/ui/Card'
 export * from '@/components/ui/Divider'
 export * from '@/components/ui/Field'
 export * from '@/components/ui/Icon'

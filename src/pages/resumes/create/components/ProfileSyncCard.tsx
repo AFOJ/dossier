@@ -1,4 +1,5 @@
 import { useWatch, type Control } from 'react-hook-form'
+import { Card } from '@/components/ui'
 import { SyncSwitch } from '@/pages/resumes/create/components/SyncSwitch'
 import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
 import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
@@ -15,7 +16,7 @@ export function ProfileSyncCard(props: Readonly<ProfileSyncCardProps>) {
   const syncProfile = useWatch({ control, name: 'syncProfile' })
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+    <Card>
       <div className="flex items-center gap-3">
         <SyncSwitch
           checked={syncProfile}
@@ -33,11 +34,11 @@ export function ProfileSyncCard(props: Readonly<ProfileSyncCardProps>) {
       </p>
 
       {!syncProfile && (
-        <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white p-4">
+        <Card tone="plain" className="gap-6">
           <PersonalInfoFields />
           <SocialLinksFields />
-        </div>
+        </Card>
       )}
-    </div>
+    </Card>
   )
 }
