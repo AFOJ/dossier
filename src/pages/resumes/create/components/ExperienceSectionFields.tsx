@@ -426,9 +426,9 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
     onChange({ ...company, ...patch })
 
   const roles = company.roles
-  const rolesError = (
-    companyErrors?.roles as { message?: string } | undefined
-  )?.message
+  const rolesError =
+    (errors as { sections?: { companies?: { roles?: { message?: string } }[] }[] })?.sections?.[sectionIndex]?.companies?.[index]?.roles?.message
+      ?? companyErrors?.roles?.message
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
