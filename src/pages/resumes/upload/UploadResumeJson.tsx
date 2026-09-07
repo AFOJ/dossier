@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button'
+import { Button, Heading3, Subheading } from '@/components/ui'
 import { cn } from '@/utils'
 import { IsometricFileOpen } from '@/components/illustrations'
 import { useUploadResume } from './hooks/useUploadResume'
@@ -27,8 +27,6 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
     fileInputRef,
   } = useUploadResume({ onParsed })
 
-  const isActive = isDragActive || isParsing
-
   return (
     <div className="relative">
       <input
@@ -44,11 +42,8 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
       <div
         className={cn(
           'relative flex flex-col items-center justify-center',
-          'border-2 border-dashed rounded-xl p-8',
-          'transition-colors duration-200',
-          isActive
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-gray-400',
+          'rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center',
+          isDragActive && 'border-primary-500 bg-primary-50',
         )}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
@@ -69,9 +64,8 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
           </div>
         ) : selectedFile ? (
           <>
-            <p className="mt-4 text-center text-gray-600 text-base">
-              Drag and drop to replace
-            </p>
+            <Heading3 className="mt-4">Replace resume file</Heading3>
+            <Subheading className="mt-1">Drag and drop a new JSON file to replace the current selection.</Subheading>
             <div className="w-full max-w-md mt-6">
               <p className="text-center font-medium text-gray-900 mb-2">
                 {selectedFile.name}
@@ -111,11 +105,10 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
           </>
         ) : (
           <>
-            <p className="mt-4 text-center text-gray-600 text-base">
-              Drag and drop a valid JSON file
-            </p>
+            <Heading3 className="mt-4">Upload Resume</Heading3>
+            <Subheading className="mt-1">Import an existing resume from a JSON file.</Subheading>
             <Button
-              intent="secondary"
+              intent="primary"
               type="button"
               onClick={(event) => {
                 event.preventDefault()
@@ -128,7 +121,7 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
               Browse files
             </Button>
             <p className="mt-2 text-center text-sm text-gray-400">
-              This only accepts JSONs
+              This only accepts JSON files
             </p>
           </>
         )}
