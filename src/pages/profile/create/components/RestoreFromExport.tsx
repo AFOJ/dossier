@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Divider } from '@/components/ui'
+import { Button, Card, Divider } from '@/components/ui'
 import { useToast } from '@/components/toast'
 import { importProfile } from '@/db/profile'
 
@@ -43,7 +43,7 @@ export function RestoreFromExport() {
 
   return (
     <>
-      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">
             Already have a Dossier profile export?
@@ -78,7 +78,7 @@ export function RestoreFromExport() {
         >
           {isImporting ? 'Importing...' : 'Import from export file'}
         </Button>
-      </div>
+      </Card>
 
       <Divider className="border-gray-300" />
     </>
