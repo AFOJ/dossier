@@ -4,6 +4,8 @@ import type {
   EducationSectionErrors,
   SkillsSectionErrors,
   ExperienceSectionErrors,
+  ListSectionErrors,
+  ListItemErrors,
   EducationInstitutionErrors,
   SkillGroupErrors,
   BulletErrors,
@@ -427,6 +429,25 @@ function buildSectionErrors(
         companies: companiesArr,
       }
     }
+
+    case 'items': {
+      const itemIndex = parseInt(rest[0], 10)
+      const subField = rest[1]
+      if (isNaN(itemIndex) || !subField) return {}
+
+      const itemErrors: ListItemErrors = {}
+      itemErrors[subField as keyof ListItemErrors] = { message }
+
+      const arr = Array.from({ length: itemIndex + 1 }, (_, i) =>
+        i === itemIndex ? { ...itemErrors } : {},
+      ) as ListItemErrors[]
+      ;(arr as ListItemErrors[] & { message?: string }).message = undefined
+
+      return {
+        type: 'list',
+        items: arr,
+      }
+    }
   }
 
   return {}
@@ -522,6 +543,23 @@ function mergeSectionErrors(
             | (Record<string, unknown> & { message?: string })[]
             | undefined,
         ) as ExperienceCompanyErrors[] & { message?: string },
+      }
+    }
+
+    case 'list': {
+      const e = existing as ListSectionErrors
+      const inc = incoming as Partial<ListSectionErrors>
+      return {
+        type: 'list',
+        title: inc.title ?? e.title,
+        items: mergeArray(
+          e.items as
+            | (Record<string, unknown> & { message?: string })[]
+            | undefined,
+          inc.items as
+            | (Record<string, unknown> & { message?: string })[]
+            | undefined,
+        ) as ListItemErrors[] & { message?: string },
       }
     }
   }

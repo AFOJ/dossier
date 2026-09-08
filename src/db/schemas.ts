@@ -62,6 +62,40 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
       }),
     ),
   }),
+  z.object({
+    type: z.literal('list'),
+    title: z.string().min(1, 'Title is required'),
+    items: z
+      .array(
+        z.object({
+          title: z.string().optional(),
+          url: z.string().optional().refine((val) => !val || z.url().safeParse(val).success, {
+            message: 'Must be a valid URL',
+          }),
+          description: z.string().min(1, 'Description is required'),
+          date: z.string().optional(),
+        }),
+      )
+      .min(1, 'Add at least one item to this section')
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (item.url && (!item.title || item.title.trim() === '')) {
+            ctx.addIssue({
+              code: 'custom',
+              path: [index, 'title'],
+              message: 'Title is required when URL is provided',
+            })
+          }
+          if (!item.description || item.description.trim() === '') {
+            ctx.addIssue({
+              code: 'custom',
+              path: [index, 'description'],
+              message: 'Description is required',
+            })
+          }
+        })
+      }),
+  }),
 ])
 
 export type ResumeSectionData = z.infer<typeof resumeSectionSchema>

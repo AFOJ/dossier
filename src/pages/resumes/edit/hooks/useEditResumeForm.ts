@@ -196,6 +196,14 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
           })),
         })),
       }
+    case 'list':
+      return {
+        ...section,
+        items: section.items.map((item) => ({
+          ...item,
+          _key: crypto.randomUUID(),
+        })),
+      }
   }
 }
 
