@@ -51,6 +51,13 @@ export interface ResumePayloadExperienceCompany {
   roles: ResumePayloadExperienceRole[]
 }
 
+export interface ResumePayloadListItem {
+  title?: string
+  url?: string
+  description: string
+  date?: string
+}
+
 export type ResumePayloadSection =
   | ({ type: 'paragraph'; text: string } & WithOptionalTitle)
   | ({
@@ -61,6 +68,10 @@ export type ResumePayloadSection =
   | ({
       type: 'experience'
       companies: ResumePayloadExperienceCompany[]
+    } & WithOptionalTitle)
+  | ({
+      type: 'list'
+      items: ResumePayloadListItem[]
     } & WithOptionalTitle)
 
 export interface ResumePayload {
@@ -258,6 +269,18 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
             })),
           }
         }),
+      }
+    }
+    case 'list': {
+      return {
+        ...cleanTitle(section),
+        type: 'list',
+        items: section.items.map((item) => ({
+          title: cleanOptional(item.title),
+          url: cleanOptional(item.url),
+          description: item.description.trim(),
+          date: cleanOptional(item.date),
+        })),
       }
     }
   }

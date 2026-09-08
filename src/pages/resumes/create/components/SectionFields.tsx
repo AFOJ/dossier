@@ -4,6 +4,7 @@ import type { ResumeSectionData } from '@/db/schemas'
 import { CompaniesEditor } from '@/pages/resumes/create/components/ExperienceSectionFields'
 import { InstitutionsEditor } from '@/pages/resumes/create/components/EducationSectionFields'
 import { GroupsEditor } from '@/pages/resumes/create/components/SkillsSectionFields'
+import { ListItemsEditor } from '@/pages/resumes/create/components/ListSectionFields'
 import {
   getSectionErrors,
   useResumeFieldContext,
@@ -73,6 +74,14 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           onChange={(companies) =>
             onChange({ ...section, type: 'experience', companies })
           }
+        />
+      )
+    case 'list':
+      return (
+        <ListItemsEditor
+          sectionIndex={index}
+          items={section.items}
+          onChange={(items) => onChange({ ...section, type: 'list', items })}
         />
       )
   }

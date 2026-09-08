@@ -9,6 +9,7 @@ const SECTION_DESCRIPTIONS: Record<SectionType, string> = {
   education: 'Schools, degrees and grades',
   skills: 'Grouped skill lists',
   experience: 'Companies, roles and bullets',
+  list: 'Projects, talks, awards',
 }
 
 type SectionAddMenuProps = {

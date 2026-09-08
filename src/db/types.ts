@@ -39,8 +39,16 @@ export interface ExperienceCompany {
   roles: ExperienceCompanyRole[]
 }
 
+export interface ListItem {
+  title?: string
+  url?: string
+  description: string
+  date?: string
+}
+
 export type ResumeSection =
   | { type: 'paragraph'; title: string; text: string }
   | { type: 'education'; title: string; institutions: EducationalInstitution[] }
   | { type: 'skills'; title: string; groups: SkillGroup[] }
   | { type: 'experience'; title: string; companies: ExperienceCompany[] }
+  | { type: 'list'; title: string; items: ListItem[] }

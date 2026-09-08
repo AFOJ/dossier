@@ -287,6 +287,41 @@ export const resumeFormSchema = z
           })
           break
         }
+
+        case 'list': {
+          if (section.items.length === 0) {
+            addSectionIssue(
+              sectionIndex,
+              ['items'],
+              'Add at least one item to this section',
+            )
+          }
+
+          section.items.forEach((item, itemIndex) => {
+            if (item.url && (!item.title || item.title.trim() === '')) {
+              addSectionIssue(
+                sectionIndex,
+                ['items', itemIndex, 'title'],
+                'Title is required when URL is provided',
+              )
+            }
+            if (!item.description || item.description.trim() === '') {
+              addSectionIssue(
+                sectionIndex,
+                ['items', itemIndex, 'description'],
+                'Description is required',
+              )
+            }
+            if (item.url && !z.url().safeParse(item.url).success) {
+              addSectionIssue(
+                sectionIndex,
+                ['items', itemIndex, 'url'],
+                'Must be a valid URL',
+              )
+            }
+          })
+          break
+        }
       }
     })
   })
@@ -358,11 +393,25 @@ export interface ExperienceSectionErrors {
   companies?: ExperienceCompanyErrors[] & { message?: string }
 }
 
+export interface ListItemErrors {
+  title?: { message: string }
+  url?: { message: string }
+  description?: { message: string }
+  date?: { message: string }
+}
+
+export interface ListSectionErrors {
+  type: 'list'
+  title?: { message: string }
+  items?: ListItemErrors[] & { message?: string }
+}
+
 export type SectionErrors =
   | ParagraphSectionErrors
   | EducationSectionErrors
   | SkillsSectionErrors
   | ExperienceSectionErrors
+  | ListSectionErrors
 
 export function getSectionErrors(
   errors: unknown,
@@ -450,6 +499,12 @@ const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
           roles: [],
         }),
       ],
+    }),
+  list: () =>
+    withKey({
+      type: 'list',
+      title: '',
+      items: [withKey({ title: '', url: '', description: '', date: '' })],
     }),
 }
 
