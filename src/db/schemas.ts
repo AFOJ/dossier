@@ -79,7 +79,7 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
       .min(1, 'Add at least one item to this section')
       .superRefine((items, ctx) => {
         items.forEach((item, index) => {
-          if (item.url && !item.title) {
+          if (item.url && (!item.title || item.title.trim() === '')) {
             ctx.addIssue({
               code: 'custom',
               path: [index, 'title'],
