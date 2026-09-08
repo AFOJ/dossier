@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/AFOJ/dossier/compare/dossier-v1.0.1...dossier-v1.1.0) (2026-09-08)
+
+
+### Features
+
+* add support for flexible list section for resumes ([#18](https://github.com/AFOJ/dossier/issues/18)) ([2374ef3](https://github.com/AFOJ/dossier/commit/2374ef323bcc35018d99ce0009d2448a47d5d647))
+
+
+### Bug Fixes
+
+* address minor UI inconsistencies ([fb58a18](https://github.com/AFOJ/dossier/commit/fb58a1859efccc3639de476af27f7133a1af7c96))
+* run wrangler directly to avoid Node 20 action deprecation ([252d818](https://github.com/AFOJ/dossier/commit/252d81883d03782c5fc769192fe3e6a759f2ebe6))
+* show validation error when experience section has no roles ([d8ecfed](https://github.com/AFOJ/dossier/commit/d8ecfeda6605e48af378eabc7f1c384d79703c15))
+* standardise card appearances across the app ([e0a8797](https://github.com/AFOJ/dossier/commit/e0a87974bcc9d5111b11b79efbb1967233df592e))
+* standardise upload drop zone with empty state style ([76a2ed9](https://github.com/AFOJ/dossier/commit/76a2ed9a779b02eb2a5b254949543d9d03b29287))
+* use career documents wording in profile copy ([6847130](https://github.com/AFOJ/dossier/commit/6847130b9c27ac8e57b7891435cc59b55ec973ef))
+
 ## [1.0.1](https://github.com/AFOJ/dossier/compare/dossier-v1.0.0...dossier-v1.0.1) (2026-09-04)
 
 
