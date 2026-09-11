@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/AFOJ/dossier/compare/dossier-v1.1.0...dossier-v1.2.0) (2026-09-11)
+
+
+### Features
+
+* add bulk operations for resume management ([#20](https://github.com/AFOJ/dossier/issues/20)) ([f3a7c2c](https://github.com/AFOJ/dossier/commit/f3a7c2cf6c2dd684784800de70cba37a77204286))
+
 ## [1.1.0](https://github.com/AFOJ/dossier/compare/dossier-v1.0.1...dossier-v1.1.0) (2026-09-08)
 
 ### Features
