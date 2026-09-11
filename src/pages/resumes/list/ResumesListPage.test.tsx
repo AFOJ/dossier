@@ -7,6 +7,7 @@ import { createResume, deleteResume } from "@/db/resume"
 import type { Resume } from "@/db/db"
 import type { ResumeSection } from "@/db/types"
 import { useResumeTable } from "@/hooks/useResumeTable"
+import { useBulkResumeActions } from "@/hooks/useBulkResumeActions"
 import { ModalProvider } from "@/components/modal"
 import { useProcessedResume } from "@/pages/resumes/list/hooks/useProcessedResume"
 import { downloadJson } from "@/lib/download"
@@ -14,6 +15,10 @@ import { downloadJson } from "@/lib/download"
 vi.mock("@/hooks/useResumeTable", () => ({
   useResumeTable: vi.fn(),
   PAGE_SIZE_OPTIONS: [2, 5, 10, 25],
+}))
+
+vi.mock("@/hooks/useBulkResumeActions", () => ({
+  useBulkResumeActions: vi.fn(),
 }))
 
 vi.mock("@/db/resume", () => ({
@@ -34,6 +39,7 @@ vi.mock("@/lib/download", () => ({
 }))
 
 const mockUseResumeTable = vi.mocked(useResumeTable)
+const mockUseBulkResumeActions = vi.mocked(useBulkResumeActions)
 const mockUseProcessedResume = vi.mocked(useProcessedResume)
 
 type TableState = ReturnType<typeof useResumeTable>
@@ -67,6 +73,12 @@ function makeTableState(overrides: Partial<TableState> = {}): TableState {
     totalPages: 1,
     pageItems: [],
     isLoading: false,
+    selectedIds: new Set<string>(),
+    selectedCount: 0,
+    isAllSelected: false,
+    toggleSelect: vi.fn(),
+    selectAll: vi.fn(),
+    clearSelection: vi.fn(),
     ...overrides,
   }
 }
@@ -86,6 +98,10 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
 
 function renderPage(state: TableState) {
   mockUseResumeTable.mockReturnValue(state)
+  mockUseBulkResumeActions.mockReturnValue({
+    exportSelected: vi.fn(),
+    isExporting: false,
+  })
   mockUseProcessedResume.mockReturnValue(makeProcessedState())
 
   render(
@@ -238,6 +254,101 @@ describe("ResumesListPage", () => {
     await waitFor(() => {
       expect(deleteResume).toHaveBeenCalledWith("delete-me")
     })
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("disables bulk actions when nothing is selected", async () => {
+    renderPage(
+      makeTableState({
+        totalCount: 1,
+        pageItems: [makeResume({ id: "1", title: "Frontend Engineer" })],
+      }),
+    )
+
+    await screen.findByText("Frontend Engineer")
+
+    expect(screen.getByRole("button", { name: "Export selected" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Delete selected" })).toBeDisabled()
+  })
+
+  it("toggles row selection via checkboxes", async () => {
+    const user = userEvent.setup()
+    const toggleSelect = vi.fn()
+    const selectAll = vi.fn()
+    renderPage(
+      makeTableState({
+        totalCount: 2,
+        pageItems: [
+          makeResume({ id: "1", title: "Frontend Engineer" }),
+          makeResume({ id: "2", title: "Backend Engineer" }),
+        ],
+        toggleSelect,
+        selectAll,
+      }),
+    )
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select Frontend Engineer" }))
+    expect(toggleSelect).toHaveBeenCalledWith("1")
+
+    await user.click(screen.getByRole("checkbox", { name: "Select all resumes on this page" }))
+    expect(selectAll).toHaveBeenCalledWith(["1", "2"])
+  })
+
+  it("exports selected resumes via the toolbar action", async () => {
+    const user = userEvent.setup()
+    const resumes = [
+      makeResume({ id: "1", title: "Frontend Engineer" }),
+      makeResume({ id: "2", title: "Backend Engineer" }),
+    ]
+    renderPage(
+      makeTableState({
+        totalCount: 2,
+        pageItems: resumes,
+        selectedIds: new Set(["1", "2"]),
+        selectedCount: 2,
+        isAllSelected: true,
+      }),
+    )
+
+    await user.click(await screen.findByRole("button", { name: "Export selected" }))
+
+    const { exportSelected } = mockUseBulkResumeActions.mock.results[0]!.value
+    await waitFor(() => {
+      expect(exportSelected).toHaveBeenCalledWith(resumes)
+    })
+  })
+
+  it("confirms before bulk deleting selected resumes", async () => {
+    const user = userEvent.setup()
+    const clearSelection = vi.fn()
+    renderPage(
+      makeTableState({
+        totalCount: 2,
+        pageItems: [
+          makeResume({ id: "1", title: "Frontend Engineer" }),
+          makeResume({ id: "2", title: "Backend Engineer" }),
+        ],
+        selectedIds: new Set(["1", "2"]),
+        selectedCount: 2,
+        isAllSelected: true,
+        clearSelection,
+      }),
+    )
+
+    await user.click(await screen.findByRole("button", { name: "Delete selected" }))
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Delete 2 resumes?")
+    expect(screen.getByRole("dialog")).toHaveTextContent("Frontend Engineer")
+    expect(screen.getByRole("dialog")).toHaveTextContent("Backend Engineer")
+    expect(deleteResume).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole("button", { name: "Delete 2 resumes" }))
+
+    await waitFor(() => {
+      expect(deleteResume).toHaveBeenCalledWith("1")
+      expect(deleteResume).toHaveBeenCalledWith("2")
+    })
+    expect(clearSelection).toHaveBeenCalled()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 

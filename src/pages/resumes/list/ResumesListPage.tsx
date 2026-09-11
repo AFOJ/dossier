@@ -1,6 +1,8 @@
 import { createResume } from "@/db/resume"
 import { DeleteResumeDialog } from "@/pages/resumes/list/components/DeleteResumeDialog"
+import { BulkDeleteDialog } from "@/pages/resumes/list/components/BulkDeleteDialog"
 import { downloadJson, getExportFilename } from "@/lib/download"
+import { toResumeExportPayload } from "@/lib/resumeExport"
 import { Heading1, Subheading } from "@/components/ui"
 import { ResumeListContent } from "@/pages/resumes/list/components/ResumeListContent"
 import { ResumePreviewDialog } from "@/pages/resumes/list/components/ResumePreviewDialog"
@@ -9,12 +11,18 @@ import { Toolbar } from "@/pages/resumes/list/components/Toolbar"
 import { useModal } from "@/components/modal"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useResumeTable } from "@/hooks/useResumeTable"
+import { useBulkResumeActions } from "@/hooks/useBulkResumeActions"
 import { useToast } from "@/components/toast"
 import type { Resume } from "@/db/db"
 
 export default function ResumesListPage() {
   const table = useResumeTable()
+  const { exportSelected, isExporting } = useBulkResumeActions()
   const deleteModal = useModal(DeleteResumeDialog, {
+    closeOnBackdropClick: false,
+    closeOnEscape: true,
+  })
+  const bulkDeleteModal = useModal(BulkDeleteDialog, {
     closeOnBackdropClick: false,
     closeOnEscape: true,
   })
@@ -30,16 +38,7 @@ export default function ResumesListPage() {
   const handleExport = async (resume: Resume) => {
     try {
       const filename = getExportFilename("resume", new Date(), slugify(resume.title))
-      const exportPayload = {
-        id: resume.id,
-        title: resume.title.trim(),
-        sections: resume.sections,
-        createdAt: resume.createdAt.toISOString(),
-        updatedAt: resume.updatedAt.toISOString(),
-        syncProfile: resume.syncProfile,
-        contact: resume.contact,
-      }
-      downloadJson(filename, exportPayload)
+      downloadJson(filename, toResumeExportPayload(resume))
       toast.success("Resume exported", `Saved ${filename}.`)
     } catch {
       toast.error("Could not export resume", "Please try again.")
@@ -58,6 +57,19 @@ export default function ResumesListPage() {
     }
   }
 
+  const selectedResumes = table.pageItems?.filter((r) => table.selectedIds.has(r.id!)) ?? []
+
+  const handleBulkExport = () => {
+    exportSelected(selectedResumes)
+  }
+
+  const handleBulkDelete = () => {
+    bulkDeleteModal.open({
+      resumes: selectedResumes,
+      onComplete: () => table.clearSelection(),
+    })
+  }
+
   return (
     <section className="flex flex-col gap-6">
       <header>
@@ -67,7 +79,14 @@ export default function ResumesListPage() {
         </div>
       </header>
 
-      <Toolbar query={table.query} onQueryChange={table.setQuery} />
+      <Toolbar
+        query={table.query}
+        onQueryChange={table.setQuery}
+        selectedCount={table.selectedCount}
+        onBulkExport={handleBulkExport}
+        onBulkDelete={handleBulkDelete}
+        isBulkExporting={isExporting}
+      />
 
       <ResumeListContent
         table={table}

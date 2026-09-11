@@ -35,6 +35,9 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
     return <NoResults query={table.query} />
   }
 
+  const isAllSelected = table.isAllSelected
+  const isIndeterminate = table.selectedCount > 0 && !isAllSelected
+
   return (
     <ResumesTable
       resumes={table.pageItems ?? []}
@@ -48,6 +51,12 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
       onExport={onExport}
       onDuplicate={onDuplicate}
       onDelete={onDelete}
+      selectedIds={table.selectedIds}
+      isAllSelected={isAllSelected}
+      isIndeterminate={isIndeterminate}
+      onToggleSelect={table.toggleSelect}
+      onSelectAll={table.selectAll}
+      onClearSelection={table.clearSelection}
     />
   )
 }
