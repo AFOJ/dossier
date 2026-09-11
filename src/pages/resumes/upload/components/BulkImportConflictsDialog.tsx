@@ -213,7 +213,7 @@ export function BulkImportConflictsDialog(
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+      <div className="flex flex-col gap-2 text-sm text-gray-600">
         <span id="apply-all-remaining">Apply to all remaining:</span>
         <div className="flex flex-wrap gap-2" role="group" aria-labelledby="apply-all-remaining">
           <Button
