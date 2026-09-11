@@ -128,24 +128,25 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
   }
 
   const modal = (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-gray-950/40 p-4"
-      style={{ zIndex }}
-      onMouseDown={(event) => {
-        if (isTopmost && options.closeOnBackdropClick && event.target === event.currentTarget) {
-          onClose()
-        }
-      }}
-    >
+    <div className="fixed inset-0 overflow-y-auto bg-gray-950/40" style={{ zIndex }}>
       <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className={`w-full rounded-xl bg-white shadow-xl outline-none p-4 sm:p-6 ${options.contentClassName}`}
+        className="flex min-h-full p-4"
+        onMouseDown={(event) => {
+          if (isTopmost && options.closeOnBackdropClick && event.target === event.currentTarget) {
+            onClose()
+          }
+        }}
       >
-        {children}
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          onKeyDown={handleKeyDown}
+          className={`m-auto w-full max-h-[calc(100dvh-2rem)] overflow-y-auto no-scrollbar rounded-xl bg-white shadow-xl outline-none p-4 sm:p-6 ${options.contentClassName}`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

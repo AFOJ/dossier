@@ -1,38 +1,212 @@
-import { parseResumeJsonFile } from "./parseResumeJsonFile"
+import { extractResumeJsonFiles } from "@/lib/zipImport"
+import { parseResumeJsonText } from "./parseResumeJsonFile"
 import { useCallback, useRef, useState } from "react"
+import { useToast } from "@/components/toast"
 import type { Resume } from "@/db/db"
 
+export type StagedFileStatus = "parsing" | "valid" | "invalid"
+
+export interface StagedFile {
+  key: string
+  name: string
+  size: number
+  status: StagedFileStatus
+  error?: string
+  resume?: Resume
+  resumeId?: string
+}
+
+export interface BatchParsedItem {
+  resume: Resume
+  resumeId: string
+  sourceName: string
+}
+
 interface UseUploadResumeOptions {
-  onParsed: (resume: Resume, resumeId: string) => Promise<void> | void
+  onBatchParsed: (items: BatchParsedItem[]) => Promise<void> | void
 }
 
 interface UseUploadResumeReturn {
   isDragActive: boolean
-  selectedFile: File | null
+  stagedFiles: StagedFile[]
+  validCount: number
   isParsing: boolean
-  parseError: string | null
   onDragEnter: (event: React.DragEvent<HTMLDivElement>) => void
   onDragLeave: (event: React.DragEvent<HTMLDivElement>) => void
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void
   onDrop: (event: React.DragEvent<HTMLDivElement>) => void
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void
-  clearSelection: () => void
-  handleUpload: () => Promise<void>
+  removeFile: (key: string) => void
+  clearAll: () => void
+  importValid: () => Promise<void>
   openFileDialog: () => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
 }
 
+const MAX_STAGED_FILES = 50
+
+function isZipFile(file: File): boolean {
+  const name = file.name.toLowerCase()
+  return (
+    name.endsWith(".zip") ||
+    file.type === "application/zip" ||
+    file.type === "application/x-zip-compressed"
+  )
+}
+
+function isJsonFile(file: File): boolean {
+  return file.type === "application/json" || file.name.toLowerCase().endsWith(".json")
+}
+
 export function useUploadResume({
-  onParsed,
+  onBatchParsed,
 }: Readonly<UseUploadResumeOptions>): UseUploadResumeReturn {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const toast = useToast()
 
   const [isDragActive, setIsDragActive] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isParsing, setIsParsing] = useState(false)
-  const [parseError, setParseError] = useState<string | null>(null)
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([])
+  const [pendingCount, setPendingCount] = useState(0)
 
   const dropZoneRef = useRef<HTMLDivElement | null>(null)
+
+  const updateStagedFile = useCallback((key: string, changes: Partial<StagedFile>) => {
+    setStagedFiles((previous) =>
+      previous.map((staged) => (staged.key === key ? { ...staged, ...changes } : staged)),
+    )
+  }, [])
+
+  const parseJsonText = useCallback(
+    (key: string, name: string, text: string) => {
+      const result = parseResumeJsonText(text, name)
+      if (result.success) {
+        updateStagedFile(key, {
+          status: "valid",
+          resume: result.resume,
+          resumeId: result.resumeId,
+        })
+      } else {
+        updateStagedFile(key, { status: "invalid", error: result.error })
+      }
+    },
+    [updateStagedFile],
+  )
+
+  const stageJsonFile = useCallback(
+    async (file: File) => {
+      const key = crypto.randomUUID()
+      setStagedFiles((previous) => [
+        ...previous,
+        { key, name: file.name, size: file.size, status: "parsing" },
+      ])
+      setPendingCount((count) => count + 1)
+      try {
+        parseJsonText(key, file.name, await file.text())
+      } catch {
+        updateStagedFile(key, { status: "invalid", error: "Could not read file." })
+      } finally {
+        setPendingCount((count) => count - 1)
+      }
+    },
+    [parseJsonText, updateStagedFile],
+  )
+
+  const stageZipFile = useCallback(
+    async (file: File, room: number): Promise<{ remaining: number; truncated: boolean }> => {
+      setPendingCount((count) => count + 1)
+      try {
+        const { entries, skipped } = await extractResumeJsonFiles(file)
+        const rows: { row: StagedFile; text?: string }[] = [
+          ...skipped.map((skippedEntry) => ({
+            row: {
+              key: crypto.randomUUID(),
+              name: `${file.name} / ${skippedEntry.name}`,
+              size: 0,
+              status: "invalid" as const,
+              error: skippedEntry.reason,
+            },
+          })),
+          ...entries.map((entry) => ({
+            row: {
+              key: crypto.randomUUID(),
+              name: `${file.name} / ${entry.name}`,
+              size: 0,
+              status: "parsing" as const,
+            },
+            text: entry.text,
+          })),
+        ]
+        const accepted = rows.slice(0, room)
+        setStagedFiles((previous) => [...previous, ...accepted.map((candidate) => candidate.row)])
+        for (const acceptedRow of accepted) {
+          if (acceptedRow.text !== undefined) {
+            parseJsonText(acceptedRow.row.key, acceptedRow.row.name, acceptedRow.text)
+          }
+        }
+        return { remaining: room - accepted.length, truncated: rows.length > accepted.length }
+      } catch (error) {
+        if (room > 0) {
+          const key = crypto.randomUUID()
+          setStagedFiles((previous) => [
+            ...previous,
+            {
+              key,
+              name: file.name,
+              size: file.size,
+              status: "invalid",
+              error: error instanceof Error ? error.message : "Could not read ZIP file.",
+            },
+          ])
+          return { remaining: room - 1, truncated: false }
+        }
+        return { remaining: room, truncated: true }
+      } finally {
+        setPendingCount((count) => count - 1)
+      }
+    },
+    [parseJsonText],
+  )
+
+  const addFiles = useCallback(
+    async (files: File[]) => {
+      let remaining = Math.max(0, MAX_STAGED_FILES - stagedFiles.length)
+      let truncated = false
+      for (const file of files) {
+        if (remaining <= 0) {
+          truncated = true
+          break
+        }
+        if (isZipFile(file)) {
+          const result = await stageZipFile(file, remaining)
+          remaining = result.remaining
+          truncated = truncated || result.truncated
+        } else if (isJsonFile(file)) {
+          await stageJsonFile(file)
+          remaining -= 1
+        } else {
+          const key = crypto.randomUUID()
+          setStagedFiles((previous) => [
+            ...previous,
+            {
+              key,
+              name: file.name,
+              size: file.size,
+              status: "invalid",
+              error: "Unsupported file type. Only JSON and ZIP files are accepted.",
+            },
+          ])
+          remaining -= 1
+        }
+      }
+      if (truncated) {
+        toast.error(
+          "Too many files",
+          `Only the first ${MAX_STAGED_FILES} files were added. Remove some to add more.`,
+        )
+      }
+    },
+    [stagedFiles.length, stageJsonFile, stageZipFile, toast],
+  )
 
   const onDragEnter = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -56,75 +230,68 @@ export function useUploadResume({
     event.stopPropagation()
   }, [])
 
-  const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-    setIsDragActive(false)
-    dropZoneRef.current = null
+  const onDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault()
+      event.stopPropagation()
+      setIsDragActive(false)
+      dropZoneRef.current = null
+      void addFiles(Array.from(event.dataTransfer.files))
+    },
+    [addFiles],
+  )
 
-    const droppedFiles = event.dataTransfer.files
-    if (droppedFiles.length > 0) {
-      const file = droppedFiles[0]
-      if (file.type === "application/json" || file.name.toLowerCase().endsWith(".json")) {
-        setSelectedFile(file)
+  const onFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files
+      if (files && files.length > 0) {
+        void addFiles(Array.from(files))
       }
-    }
+      event.target.value = ""
+    },
+    [addFiles],
+  )
+
+  const removeFile = useCallback((key: string) => {
+    setStagedFiles((previous) => previous.filter((staged) => staged.key !== key))
   }, [])
 
-  const onFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files && files.length > 0) {
-      const file = files[0]
-      if (file.type === "application/json" || file.name.toLowerCase().endsWith(".json")) {
-        setSelectedFile(file)
-      }
-    }
-    event.target.value = ""
-  }, [])
-
-  const clearSelection = useCallback(() => {
-    setSelectedFile(null)
-    setParseError(null)
+  const clearAll = useCallback(() => {
+    setStagedFiles([])
   }, [])
 
   const openFileDialog = useCallback(() => {
     fileInputRef.current?.click()
   }, [])
 
-  const handleUpload = useCallback(async () => {
-    if (!selectedFile) return
-
-    setIsParsing(true)
-    setParseError(null)
-
-    try {
-      const result = await parseResumeJsonFile(selectedFile)
-      if (!result) {
-        setParseError("Failed to parse resume file. Please check the file and try again.")
-        return
+  const importValid = useCallback(async () => {
+    const items: BatchParsedItem[] = []
+    for (const staged of stagedFiles) {
+      if (staged.status === "valid" && staged.resume && staged.resumeId) {
+        items.push({ resume: staged.resume, resumeId: staged.resumeId, sourceName: staged.name })
       }
-
-      const { resume: incomingResume, resumeId: incomingResumeId } = result
-      await onParsed(incomingResume, incomingResumeId)
-    } catch {
-      setParseError("Failed to process resume. Please try again.")
-    } finally {
-      setIsParsing(false)
     }
-  }, [selectedFile, onParsed])
+    if (items.length === 0) {
+      return
+    }
+    await onBatchParsed(items)
+  }, [stagedFiles, onBatchParsed])
+
+  const validCount = stagedFiles.filter((staged) => staged.status === "valid").length
 
   return {
     isDragActive,
-    selectedFile,
-    isParsing,
-    parseError,
+    stagedFiles,
+    validCount,
+    isParsing: pendingCount > 0,
     onDragEnter,
     onDragLeave,
     onDragOver,
     onDrop,
     onFileSelect,
-    clearSelection,
-    handleUpload,
+    removeFile,
+    clearAll,
+    importValid,
     openFileDialog,
     fileInputRef,
   }

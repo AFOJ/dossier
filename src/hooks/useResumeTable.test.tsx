@@ -76,6 +76,78 @@ describe("useResumeTable", () => {
     expect(result.current.pageItems).toHaveLength(1)
   })
 
+  it("toggles selection and derives the selected count", async () => {
+    await seedResumes(["Resume 0", "Resume 1"])
+
+    const { result } = renderHook(() => useResumeTable())
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.selectedCount).toBe(0)
+    expect(result.current.isAllSelected).toBe(false)
+
+    const [first, second] = result.current.pageItems ?? []
+    const firstId = first.id!
+    const secondId = second.id!
+
+    act(() => result.current.toggleSelect(firstId))
+    expect(result.current.selectedIds.has(firstId)).toBe(true)
+    expect(result.current.selectedCount).toBe(1)
+    expect(result.current.isAllSelected).toBe(false)
+
+    act(() => result.current.toggleSelect(secondId))
+    expect(result.current.selectedCount).toBe(2)
+    expect(result.current.isAllSelected).toBe(true)
+
+    act(() => result.current.toggleSelect(firstId))
+    expect(result.current.selectedIds.has(firstId)).toBe(false)
+    expect(result.current.selectedCount).toBe(1)
+    expect(result.current.isAllSelected).toBe(false)
+  })
+
+  it("selects all page items and clears the selection", async () => {
+    await seedResumes(["Resume 0", "Resume 1"])
+
+    const { result } = renderHook(() => useResumeTable())
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    const ids = (result.current.pageItems ?? []).map((r) => r.id!)
+
+    act(() => result.current.selectAll(ids))
+    expect(result.current.selectedCount).toBe(2)
+    expect(result.current.isAllSelected).toBe(true)
+
+    act(() => result.current.clearSelection())
+    expect(result.current.selectedCount).toBe(0)
+    expect(result.current.selectedIds.size).toBe(0)
+  })
+
+  it("clears the selection when the page, page size, or query changes", async () => {
+    await seedResumes(["Resume 0", "Resume 1", "Resume 2"])
+
+    const { result } = renderHook(() => useResumeTable())
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    const ids = (result.current.pageItems ?? []).map((r) => r.id!)
+
+    act(() => result.current.selectAll(ids))
+    expect(result.current.selectedCount).toBe(3)
+
+    act(() => result.current.setPerPage(2))
+    await waitFor(() => expect(result.current.selectedCount).toBe(0))
+
+    act(() => result.current.selectAll(ids.slice(0, 2)))
+    expect(result.current.selectedCount).toBe(2)
+
+    act(() => result.current.setPage(2))
+    expect(result.current.selectedCount).toBe(0)
+
+    act(() => result.current.selectAll(ids.slice(0, 1)))
+    expect(result.current.selectedCount).toBe(1)
+
+    act(() => result.current.setQuery("Resume"))
+    expect(result.current.selectedCount).toBe(0)
+  })
+
   it("debounces clearing the query until the unfiltered results are ready", async () => {
     await seedResumes(["Resume 0"])
 

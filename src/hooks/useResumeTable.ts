@@ -29,6 +29,7 @@ export function useResumeTable() {
   const [query, setInputQuery] = useState("")
   const [page, setPageState] = useState(DEFAULT_PAGE)
   const [perPage, setPerPageState] = useState(DEFAULT_PAGE_SIZE)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
 
@@ -55,19 +56,56 @@ export function useResumeTable() {
   const isSearching = query !== debouncedQuery
   const isInitialLoading = isLoading || totalDbCount === undefined
 
-  const setQuery = useCallback((value: string) => {
-    setInputQuery(value)
-    setPageState(DEFAULT_PAGE)
+  const pageItems = result?.items ?? []
+
+  const selectedCount = selectedIds.size
+  const isAllSelected = pageItems.length > 0 && pageItems.every((r) => selectedIds.has(r.id!))
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }, [])
 
-  const setPage = useCallback((value: number) => {
-    setPageState(toPositiveInteger(value, DEFAULT_PAGE))
+  const selectAll = useCallback((ids: string[]) => {
+    setSelectedIds(new Set(ids))
   }, [])
 
-  const setPerPage = useCallback((value: number) => {
-    setPerPageState(toPositiveInteger(value, DEFAULT_PAGE_SIZE))
-    setPageState(DEFAULT_PAGE)
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set())
   }, [])
+
+  const setQuery = useCallback(
+    (value: string) => {
+      setInputQuery(value)
+      setPageState(DEFAULT_PAGE)
+      clearSelection()
+    },
+    [clearSelection],
+  )
+
+  const setPage = useCallback(
+    (value: number) => {
+      setPageState(toPositiveInteger(value, DEFAULT_PAGE))
+      clearSelection()
+    },
+    [clearSelection],
+  )
+
+  const setPerPage = useCallback(
+    (value: number) => {
+      setPerPageState(toPositiveInteger(value, DEFAULT_PAGE_SIZE))
+      setPageState(DEFAULT_PAGE)
+      clearSelection()
+    },
+    [clearSelection],
+  )
 
   return {
     query,
@@ -83,7 +121,13 @@ export function useResumeTable() {
     setPerPage,
     totalCount: pagination.totalCount,
     totalPages: pagination.totalPages,
-    pageItems: result?.items,
+    pageItems,
     isLoading,
+    selectedIds,
+    selectedCount,
+    isAllSelected,
+    toggleSelect,
+    selectAll,
+    clearSelection,
   }
 }
