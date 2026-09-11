@@ -1,22 +1,19 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useRevalidator } from 'react-router-dom'
-import { zodResolver } from '@hookform/resolvers/zod'
-import type { Profile } from '@/db/db'
-import { upsertProfile } from '@/db/profile'
-import {
-  profileSchema,
-  type ProfileFormData,
-} from '@/pages/profile/schema'
-import { useToast } from '@/components/toast'
+import { useCallback, useMemo, useState } from "react"
+import { useForm } from "react-hook-form"
+import { useRevalidator } from "react-router-dom"
+import { zodResolver } from "@hookform/resolvers/zod"
+import type { Profile } from "@/db/db"
+import { upsertProfile } from "@/db/profile"
+import { profileSchema, type ProfileFormData } from "@/pages/profile/schema"
+import { useToast } from "@/components/toast"
 
 export function toProfileFormData(profile: Profile): ProfileFormData {
   return {
     fullName: profile.full_name,
-    jobTitle: profile.role ?? '',
-    location: profile.location ?? '',
-    phone: profile.phone ?? '',
-    email: profile.email ?? '',
+    jobTitle: profile.role ?? "",
+    location: profile.location ?? "",
+    phone: profile.phone ?? "",
+    email: profile.email ?? "",
     socials: profile.links.map((link) => ({
       label: link.label,
       url: link.url,
@@ -45,7 +42,7 @@ export function useEditProfileForm(profile: Profile) {
   const save = form.handleSubmit(async (data) => {
     try {
       setIsSubmitting(true)
-      form.clearErrors('root')
+      form.clearErrors("root")
 
       await upsertProfile({
         full_name: data.fullName,
@@ -57,16 +54,16 @@ export function useEditProfileForm(profile: Profile) {
       })
 
       form.reset(data)
-      toast.success('Profile saved', 'Your changes have been saved.')
+      toast.success("Profile saved", "Your changes have been saved.")
       revalidator.revalidate()
     } catch (error) {
-      form.setError('root', {
-        type: 'manual',
-        message: 'Failed to save profile. Please try again.',
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to save profile. Please try again.",
       })
-      toast.error('Failed to save profile', 'Please try again.')
+      toast.error("Failed to save profile", "Please try again.")
 
-      console.error('Failed to save profile:', error)
+      console.error("Failed to save profile:", error)
     } finally {
       setIsSubmitting(false)
     }

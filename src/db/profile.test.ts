@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import 'fake-indexeddb/auto'
-import { db, type Profile } from '@/db/db'
+import { describe, it, expect, beforeEach } from "vitest"
+import "fake-indexeddb/auto"
+import { db, type Profile } from "@/db/db"
 import {
   upsertProfile,
   getProfile,
@@ -8,8 +8,8 @@ import {
   exportProfile,
   importProfile,
   InvalidExportFileError,
-} from '@/db/profile'
-import { createResume, getAllResumes } from '@/db/resume'
+} from "@/db/profile"
+import { createResume, getAllResumes } from "@/db/resume"
 
 beforeEach(async () => {
   await db.profiles.clear()
@@ -17,54 +17,54 @@ beforeEach(async () => {
 })
 
 const baseProfile: Profile = {
-  full_name: 'John Doe',
-  role: 'Teacher',
-  phone: '123',
+  full_name: "John Doe",
+  role: "Teacher",
+  phone: "123",
   location: null,
   email: null,
   links: [],
 }
 
-describe('Profile Service', () => {
-  it('manages single-profile lifecycle (upsert and fetch)', async () => {
+describe("Profile Service", () => {
+  it("manages single-profile lifecycle (upsert and fetch)", async () => {
     expect(await getProfile()).toBeNull()
 
     // Create a new profile
     const id1 = await upsertProfile({
       ...baseProfile,
-      full_name: 'John',
-      phone: '123',
+      full_name: "John",
+      phone: "123",
       links: [],
     })
     expect(await getProfile()).toMatchObject({
-      full_name: 'John',
+      full_name: "John",
       links: [],
     })
 
     // Update the created profile
     const id2 = await upsertProfile({
       ...baseProfile,
-      full_name: 'Jack',
-      phone: '123',
-      location: 'Remote',
-      links: [{ label: 'portfolio', url: 'https://test.com' }],
+      full_name: "Jack",
+      phone: "123",
+      location: "Remote",
+      links: [{ label: "portfolio", url: "https://test.com" }],
     })
     expect(id1).toBe(id2)
     expect(await getProfile()).toMatchObject({
-      full_name: 'Jack',
-      location: 'Remote',
-      links: [{ label: 'portfolio', url: 'https://test.com' }],
+      full_name: "Jack",
+      location: "Remote",
+      links: [{ label: "portfolio", url: "https://test.com" }],
     })
   })
 
-  it('cascades deletion to resumes', async () => {
+  it("cascades deletion to resumes", async () => {
     await upsertProfile({
       ...baseProfile,
-      full_name: 'John',
-      phone: '123',
+      full_name: "John",
+      phone: "123",
       links: [],
     })
-    await createResume('Resume 1', [])
+    await createResume("Resume 1", [])
 
     await deleteProfile()
 
@@ -73,36 +73,36 @@ describe('Profile Service', () => {
   })
 })
 
-describe('exportProfile', () => {
+describe("exportProfile", () => {
   beforeEach(async () => {
     await db.profiles.clear()
     await db.resumes.clear()
   })
 
-  it('includes the profile without its id and all resumes', async () => {
+  it("includes the profile without its id and all resumes", async () => {
     await db.profiles.add({
-      full_name: 'John Doe',
-      role: 'Engineer',
-      email: 'john@doe.com',
+      full_name: "John Doe",
+      role: "Engineer",
+      email: "john@doe.com",
       phone: null,
       location: null,
-      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+      links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     })
 
     await db.resumes.bulkAdd([
       {
         id: crypto.randomUUID(),
-        title: 'Resume 1',
+        title: "Resume 1",
         sections: [],
-        createdAt: new Date('2026-01-01T10:00:00Z'),
-        updatedAt: new Date('2026-01-01T10:00:00Z'),
+        createdAt: new Date("2026-01-01T10:00:00Z"),
+        updatedAt: new Date("2026-01-01T10:00:00Z"),
       },
       {
         id: crypto.randomUUID(),
-        title: 'Resume 2',
-        sections: [{ type: 'paragraph', title: 'Introduction', text: 'Hello' }],
-        createdAt: new Date('2026-01-02T10:00:00Z'),
-        updatedAt: new Date('2026-01-02T10:00:00Z'),
+        title: "Resume 2",
+        sections: [{ type: "paragraph", title: "Introduction", text: "Hello" }],
+        createdAt: new Date("2026-01-02T10:00:00Z"),
+        updatedAt: new Date("2026-01-02T10:00:00Z"),
       },
     ])
 
@@ -111,22 +111,19 @@ describe('exportProfile', () => {
     expect(data.version).toBe(1)
     expect(data.exportedAt).toEqual(expect.any(String))
     expect(data.profile).toEqual({
-      full_name: 'John Doe',
-      role: 'Engineer',
-      email: 'john@doe.com',
+      full_name: "John Doe",
+      role: "Engineer",
+      email: "john@doe.com",
       phone: null,
       location: null,
-      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+      links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     })
-    expect(data.resumes.map((resume) => resume.title)).toEqual([
-      'Resume 2',
-      'Resume 1',
-    ])
+    expect(data.resumes.map((resume) => resume.title)).toEqual(["Resume 2", "Resume 1"])
   })
 
-  it('serializes to JSON with dates as ISO strings', async () => {
+  it("serializes to JSON with dates as ISO strings", async () => {
     await upsertProfile({
-      full_name: 'John Doe',
+      full_name: "John Doe",
       role: null,
       email: null,
       phone: null,
@@ -134,25 +131,25 @@ describe('exportProfile', () => {
       links: [],
     })
 
-    const resume = await createResume('My Resume', [])
+    const resume = await createResume("My Resume", [])
     await db.resumes.update(resume, {
-      createdAt: new Date('2026-03-04T05:06:07.000Z'),
-      updatedAt: new Date('2026-03-04T05:06:07.000Z'),
+      createdAt: new Date("2026-03-04T05:06:07.000Z"),
+      updatedAt: new Date("2026-03-04T05:06:07.000Z"),
     })
 
     const data = await exportProfile()
     const parsed = JSON.parse(JSON.stringify(data))
 
-    expect(parsed.resumes[0].createdAt).toBe('2026-03-04T05:06:07.000Z')
-    expect(typeof parsed.exportedAt).toBe('string')
+    expect(parsed.resumes[0].createdAt).toBe("2026-03-04T05:06:07.000Z")
+    expect(typeof parsed.exportedAt).toBe("string")
   })
 
-  it('throws when there is no profile', async () => {
-    await expect(exportProfile()).rejects.toThrow('No profile found to export.')
+  it("throws when there is no profile", async () => {
+    await expect(exportProfile()).rejects.toThrow("No profile found to export.")
   })
 })
 
-describe('importProfile', () => {
+describe("importProfile", () => {
   beforeEach(async () => {
     await db.profiles.clear()
     await db.resumes.clear()
@@ -160,38 +157,38 @@ describe('importProfile', () => {
 
   const validExport = {
     version: 1,
-    exportedAt: '2026-08-23T00:00:00.000Z',
+    exportedAt: "2026-08-23T00:00:00.000Z",
     profile: {
-      full_name: 'John Doe',
-      role: 'Engineer',
-      email: 'john@doe.com',
+      full_name: "John Doe",
+      role: "Engineer",
+      email: "john@doe.com",
       phone: null,
       location: null,
-      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+      links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     },
     resumes: [
       {
-        id: 'resume-1',
-        title: 'My Resume',
+        id: "resume-1",
+        title: "My Resume",
         sections: [
-          { type: 'paragraph', title: 'Summary', text: 'Hello' },
+          { type: "paragraph", title: "Summary", text: "Hello" },
           {
-            type: 'experience',
-            title: 'Experience',
+            type: "experience",
+            title: "Experience",
             companies: [
               {
-                company_name: 'Spotify',
-                start_date: '2020-01',
-                end_date: '2022-01',
+                company_name: "Spotify",
+                start_date: "2020-01",
+                end_date: "2022-01",
                 roles: [
                   {
-                    job_title: 'Dev',
+                    job_title: "Dev",
                     bullets: [
-                      { type: 'text', text: 'Did things' },
+                      { type: "text", text: "Did things" },
                       {
-                        type: 'text-with-title',
-                        title: 'Stack',
-                        text: 'React',
+                        type: "text-with-title",
+                        title: "Stack",
+                        text: "React",
                       },
                     ],
                   },
@@ -200,50 +197,48 @@ describe('importProfile', () => {
             ],
           },
           {
-            type: 'skills',
-            title: 'Skills',
-            groups: [{ title: 'Frontend', items: ['React'] }],
+            type: "skills",
+            title: "Skills",
+            groups: [{ title: "Frontend", items: ["React"] }],
           },
           {
-            type: 'education',
-            title: 'Education',
+            type: "education",
+            title: "Education",
             institutions: [
               {
-                name: 'Uni',
-                degree: 'BSc',
-                start_date: '2015',
-                end_date: '2019',
-                location: 'London',
+                name: "Uni",
+                degree: "BSc",
+                start_date: "2015",
+                end_date: "2019",
+                location: "London",
               },
             ],
           },
         ],
-        createdAt: '2026-01-01T10:00:00.000Z',
-        updatedAt: '2026-01-02T10:00:00.000Z',
+        createdAt: "2026-01-01T10:00:00.000Z",
+        updatedAt: "2026-01-02T10:00:00.000Z",
       },
     ],
   }
 
-  it('restores the profile and resumes from a valid export', async () => {
+  it("restores the profile and resumes from a valid export", async () => {
     await importProfile(JSON.stringify(validExport))
 
     const profile = await getProfile()
-    expect(profile?.full_name).toBe('John Doe')
-    expect(profile?.links).toEqual([
-      { label: 'GitHub', url: 'https://github.com/johndoe' },
-    ])
+    expect(profile?.full_name).toBe("John Doe")
+    expect(profile?.links).toEqual([{ label: "GitHub", url: "https://github.com/johndoe" }])
 
     const resumes = await db.resumes.toArray()
     expect(resumes).toHaveLength(1)
 
     const resume = resumes[0]
-    expect(resume?.title).toBe('My Resume')
-    expect(resume?.id).toBe('resume-1')
-    expect(resume?.createdAt).toEqual(new Date('2026-01-01T10:00:00.000Z'))
-    expect(resume?.updatedAt).toEqual(new Date('2026-01-02T10:00:00.000Z'))
+    expect(resume?.title).toBe("My Resume")
+    expect(resume?.id).toBe("resume-1")
+    expect(resume?.createdAt).toEqual(new Date("2026-01-01T10:00:00.000Z"))
+    expect(resume?.updatedAt).toEqual(new Date("2026-01-02T10:00:00.000Z"))
   })
 
-  it('generates ids for resumes missing one', async () => {
+  it("generates ids for resumes missing one", async () => {
     const { resumes, ...rest } = validExport
     await importProfile(
       JSON.stringify({
@@ -257,37 +252,33 @@ describe('importProfile', () => {
     expect(restored[0]?.id).toEqual(expect.any(String))
   })
 
-  it('rejects invalid JSON', async () => {
-    await expect(importProfile('not json')).rejects.toThrow(
+  it("rejects invalid JSON", async () => {
+    await expect(importProfile("not json")).rejects.toThrow(InvalidExportFileError)
+  })
+
+  it("rejects JSON that does not match the export schema", async () => {
+    await expect(importProfile(JSON.stringify({ version: 1, nope: true }))).rejects.toThrow(
       InvalidExportFileError,
     )
   })
 
-  it('rejects JSON that does not match the export schema', async () => {
-    await expect(
-      importProfile(JSON.stringify({ version: 1, nope: true })),
-    ).rejects.toThrow(InvalidExportFileError)
-  })
-
-  it('rejects exports with unknown resume section types', async () => {
+  it("rejects exports with unknown resume section types", async () => {
     const bad = {
       ...validExport,
       resumes: [
         {
           ...validExport.resumes[0],
-          sections: [{ type: 'gallery', items: [] }],
+          sections: [{ type: "gallery", items: [] }],
         },
       ],
     }
 
-    await expect(importProfile(JSON.stringify(bad))).rejects.toThrow(
-      InvalidExportFileError,
-    )
+    await expect(importProfile(JSON.stringify(bad))).rejects.toThrow(InvalidExportFileError)
   })
 
-  it('replaces existing resumes instead of merging with them', async () => {
+  it("replaces existing resumes instead of merging with them", async () => {
     await db.profiles.add({
-      full_name: 'Existing User',
+      full_name: "Existing User",
       role: null,
       email: null,
       phone: null,
@@ -295,8 +286,8 @@ describe('importProfile', () => {
       links: [],
     })
     await db.resumes.add({
-      id: 'stale-resume',
-      title: 'Old Resume',
+      id: "stale-resume",
+      title: "Old Resume",
       sections: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -306,23 +297,23 @@ describe('importProfile', () => {
     await importProfile(
       JSON.stringify({
         ...rest,
-        resumes: resumes.filter((resume) => resume.id === 'resume-1'),
+        resumes: resumes.filter((resume) => resume.id === "resume-1"),
       }),
     )
 
     const restored = await db.resumes.toArray()
-    expect(restored.map((resume) => resume.id)).toEqual(['resume-1'])
+    expect(restored.map((resume) => resume.id)).toEqual(["resume-1"])
   })
 
-  it('round-trips through delete: synced resumes with null contact restore cleanly', async () => {
+  it("round-trips through delete: synced resumes with null contact restore cleanly", async () => {
     await upsertProfile({
       ...baseProfile,
-      full_name: 'John Doe',
-      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+      full_name: "John Doe",
+      links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     })
     // createResume defaults to syncProfile: true and contact: null.
-    await createResume('Production Resume', [
-      { type: 'paragraph', title: 'Summary', text: 'Summary' },
+    await createResume("Production Resume", [
+      { type: "paragraph", title: "Summary", text: "Summary" },
     ])
 
     const exported = JSON.stringify(await exportProfile())
@@ -334,15 +325,15 @@ describe('importProfile', () => {
     await importProfile(exported)
 
     const profile = await getProfile()
-    expect(profile?.full_name).toBe('John Doe')
+    expect(profile?.full_name).toBe("John Doe")
 
     const resumes = await getAllResumes()
-    expect(resumes.map((resume) => resume.title)).toEqual(['Production Resume'])
+    expect(resumes.map((resume) => resume.title)).toEqual(["Production Resume"])
     expect(resumes[0]?.contact).toBeNull()
     expect(resumes[0]?.syncProfile).toBe(true)
   })
 
-  it('leaves the database untouched when validation fails', async () => {
+  it("leaves the database untouched when validation fails", async () => {
     try {
       await importProfile(JSON.stringify({ version: 999 }))
     } catch {

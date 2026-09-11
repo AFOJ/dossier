@@ -1,18 +1,18 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import CreateResumePage from '@/pages/resumes/create/CreateResumePage'
-import useProtectedRouteData from '@/hooks/useProtectedRouteData'
-import { createResume } from '@/db/resume'
-import type { Profile } from '@/db/db'
-import { ModalProvider } from '@/components/modal'
+import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import CreateResumePage from "@/pages/resumes/create/CreateResumePage"
+import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { createResume } from "@/db/resume"
+import type { Profile } from "@/db/db"
+import { ModalProvider } from "@/components/modal"
 
-vi.mock('@/db/resume', () => ({
+vi.mock("@/db/resume", () => ({
   createResume: vi.fn(),
 }))
 
-vi.mock('@/hooks/useProtectedRouteData', () => ({
+vi.mock("@/hooks/useProtectedRouteData", () => ({
   default: vi.fn(),
 }))
 
@@ -23,13 +23,13 @@ const mockToast = {
   error: vi.fn(),
 }
 
-vi.mock('@/components/toast', () => ({
+vi.mock("@/components/toast", () => ({
   useToast: () => mockToast,
 }))
 
 const profile: Profile = {
   id: 1,
-  full_name: 'John Doe',
+  full_name: "John Doe",
   role: null,
   email: null,
   phone: null,
@@ -41,50 +41,45 @@ function renderPage() {
   const router = createMemoryRouter(
     [
       {
-        path: '/resumes/create',
+        path: "/resumes/create",
         element: (
           <ModalProvider>
             <CreateResumePage />
           </ModalProvider>
         ),
       },
-      { path: '/resumes', element: <div>Resumes list</div> },
+      { path: "/resumes", element: <div>Resumes list</div> },
     ],
-    { initialEntries: ['/resumes/create'] },
+    { initialEntries: ["/resumes/create"] },
   )
 
   return render(<RouterProvider router={router} />)
 }
 
-async function addSectionViaMenu(
-  user: ReturnType<typeof userEvent.setup>,
-  label: string,
-) {
-  await user.click(screen.getByRole('button', { name: /Add section/i }))
-  await user.click(
-    await screen.findByRole('menuitem', { name: new RegExp(`^${label}`) }),
-  )
+async function addSectionViaMenu(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await user.click(screen.getByRole("button", { name: /Add section/i }))
+  await user.click(await screen.findByRole("menuitem", { name: new RegExp(`^${label}`) }))
 }
 
-describe('CreateResumePage', () => {
+describe("CreateResumePage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseProtectedRouteData.mockReturnValue({ profile })
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it('shows the empty state before any section is added', () => {
+  it("shows the empty state before any section is added", () => {
     renderPage()
 
     expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
   })
 
-  it('prefills contact details from the profile and reveals them when unsynced', async () => {
+  it("prefills contact details from the profile and reveals them when unsynced", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    const syncSwitch = screen.getByRole('switch', {
-      name: 'Use my profile information',
+    const syncSwitch = screen.getByRole("switch", {
+      name: "Use my profile information",
     })
     expect(syncSwitch).toBeChecked()
 
@@ -92,44 +87,44 @@ describe('CreateResumePage', () => {
 
     expect(syncSwitch).not.toBeChecked()
     const fullName = screen.getByLabelText(/Full name/i)
-    expect(fullName).toHaveValue('John Doe')
-    expect(screen.getByPlaceholderText('Farmer')).toBeInTheDocument()
+    expect(fullName).toHaveValue("John Doe")
+    expect(screen.getByPlaceholderText("Farmer")).toBeInTheDocument()
   })
 
-  it('adds and edits a paragraph section via the add-section menu, then creates the resume', async () => {
+  it("adds and edits a paragraph section via the add-section menu, then creates the resume", async () => {
     const user = userEvent.setup()
-    vi.mocked(createResume).mockResolvedValueOnce('resume-1')
+    vi.mocked(createResume).mockResolvedValueOnce("resume-1")
     renderPage()
 
-    await addSectionViaMenu(user, 'Paragraph')
+    await addSectionViaMenu(user, "Paragraph")
 
-    const sectionTitle = screen.getByLabelText('Section title')
-    await user.type(sectionTitle, 'Summary')
+    const sectionTitle = screen.getByLabelText("Section title")
+    await user.type(sectionTitle, "Summary")
 
-    const paragraph = screen.getByRole('textbox', { name: 'Summary text' })
-    await user.type(paragraph, 'Seasoned engineer.')
+    const paragraph = screen.getByRole("textbox", { name: "Summary text" })
+    await user.type(paragraph, "Seasoned engineer.")
 
-    await user.type(screen.getByLabelText(/^Title/), 'My Resume')
-    await user.click(screen.getByRole('button', { name: 'Create resume' }))
+    await user.type(screen.getByLabelText(/^Title/), "My Resume")
+    await user.click(screen.getByRole("button", { name: "Create resume" }))
 
     await waitFor(() => {
       expect(createResume).toHaveBeenCalledWith(
-        'My Resume',
-        [{ type: 'paragraph', text: 'Seasoned engineer.', title: 'Summary' }],
+        "My Resume",
+        [{ type: "paragraph", text: "Seasoned engineer.", title: "Summary" }],
         { syncProfile: true, contact: null },
       )
     })
-    expect(await screen.findByText('Resumes list')).toBeInTheDocument()
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
   })
 
-  it('lets the company switch be toggled off and back on beside the end date', async () => {
+  it("lets the company switch be toggled off and back on beside the end date", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    await addSectionViaMenu(user, 'Experience')
+    await addSectionViaMenu(user, "Experience")
 
-    const currentSwitch = screen.getByRole('switch', {
-      name: 'I currently work here',
+    const currentSwitch = screen.getByRole("switch", {
+      name: "I currently work here",
     })
     expect(currentSwitch).toBeChecked()
 
@@ -140,7 +135,7 @@ describe('CreateResumePage', () => {
 
     expect(currentSwitch).not.toBeChecked()
     expect(endInput).not.toBeDisabled()
-    expect(endInput).toHaveValue('')
+    expect(endInput).toHaveValue("")
 
     await user.click(currentSwitch)
 
@@ -148,15 +143,15 @@ describe('CreateResumePage', () => {
     expect(endInput).toBeDisabled()
   })
 
-  it('gives each role its own current-work switch', async () => {
+  it("gives each role its own current-work switch", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    await addSectionViaMenu(user, 'Experience')
-    await user.click(screen.getByRole('button', { name: /Add role/i }))
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: /Add role/i }))
 
-    const switches = screen.getAllByRole('switch', {
-      name: 'I currently work here',
+    const switches = screen.getAllByRole("switch", {
+      name: "I currently work here",
     })
     expect(switches).toHaveLength(2)
     expect(switches[0]).toBeChecked()
@@ -172,21 +167,24 @@ describe('CreateResumePage', () => {
     expect(endInputs[1]).toBeDisabled()
   })
 
-  it('blocks submission without a title', async () => {
+  it("blocks submission without a title", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    await addSectionViaMenu(user, 'Paragraph')
-    const paragraph = screen.getByRole('textbox', { name: 'Paragraph text' })
-    await user.type(paragraph, 'Some text')
+    await addSectionViaMenu(user, "Paragraph")
+    const paragraph = screen.getByRole("textbox", { name: "Paragraph text" })
+    await user.type(paragraph, "Some text")
 
-    await user.click(screen.getByRole('button', { name: 'Create resume' }))
+    await user.click(screen.getByRole("button", { name: "Create resume" }))
 
     // Find the error message for the resume title (inputId="resume-title"), not the section title
-    const resumeTitleInput = screen.getByRole('textbox', { name: 'Title *' })
-    const describedBy = resumeTitleInput.getAttribute('aria-describedby') || ''
-    const resumeTitleError = await screen.findByText('Title is required', {
-      selector: describedBy.split(' ').map((id) => `[id="${id}"]`).join(','),
+    const resumeTitleInput = screen.getByRole("textbox", { name: "Title *" })
+    const describedBy = resumeTitleInput.getAttribute("aria-describedby") || ""
+    const resumeTitleError = await screen.findByText("Title is required", {
+      selector: describedBy
+        .split(" ")
+        .map((id) => `[id="${id}"]`)
+        .join(","),
     })
     expect(resumeTitleError).toBeInTheDocument()
     expect(createResume).not.toHaveBeenCalled()

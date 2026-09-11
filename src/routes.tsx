@@ -6,26 +6,26 @@ import {
   redirect,
   Outlet,
   Navigate,
-} from 'react-router-dom'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { ModalProvider } from '@/components/modal'
-import { Toaster } from '@/components/toast'
-import { getProfile } from '@/db/profile'
-import { getResume } from '@/db/resume'
-import type { ProtectedRouteData } from '@/hooks/useProtectedRouteData'
-import ProtectedLayout from '@/layouts/ProtectedLayout'
-import CreateProfilePage from '@/pages/profile/create'
-import ProfilePage from '@/pages/profile/view'
-import CreateResumePage from '@/pages/resumes/create'
-import EditResumePage from '@/pages/resumes/edit'
-import ResumesListPage from '@/pages/resumes/list'
-import UploadResumePage from '@/pages/resumes/upload'
+} from "react-router-dom"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { ModalProvider } from "@/components/modal"
+import { Toaster } from "@/components/toast"
+import { getProfile } from "@/db/profile"
+import { getResume } from "@/db/resume"
+import type { ProtectedRouteData } from "@/hooks/useProtectedRouteData"
+import ProtectedLayout from "@/layouts/ProtectedLayout"
+import CreateProfilePage from "@/pages/profile/create"
+import ProfilePage from "@/pages/profile/view"
+import CreateResumePage from "@/pages/resumes/create"
+import EditResumePage from "@/pages/resumes/edit"
+import ResumesListPage from "@/pages/resumes/list"
+import UploadResumePage from "@/pages/resumes/upload"
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
 
   if (!profile) {
-    return redirect('/setup')
+    return redirect("/setup")
   }
 
   return { profile } satisfies ProtectedRouteData
@@ -35,23 +35,19 @@ const publicOnlyRouteLoader = async () => {
   const profile = await getProfile()
 
   if (profile) {
-    return redirect('/resumes')
+    return redirect("/resumes")
   }
 
   return null
 }
 
-const resumeEditRouteId = 'resume-edit'
+const resumeEditRouteId = "resume-edit"
 
-const resumeEditRouteLoader = async ({
-  params,
-}: {
-  params: { resumeId?: string },
-}) => {
-  const resume = await getResume(params.resumeId ?? '')
+const resumeEditRouteLoader = async ({ params }: { params: { resumeId?: string } }) => {
+  const resume = await getResume(params.resumeId ?? "")
 
   if (!resume) {
-    return redirect('/resumes')
+    return redirect("/resumes")
   }
 
   return { resume }
@@ -112,10 +108,10 @@ const router = createBrowserRouter(
         path="*"
         element={<div />}
         loader={() => {
-          throw new Response(
-            "The page you are looking for doesn't exist or has been moved.",
-            { status: 404, statusText: 'Page not found' },
-          )
+          throw new Response("The page you are looking for doesn't exist or has been moved.", {
+            status: 404,
+            statusText: "Page not found",
+          })
         }}
       />
     </Route>,

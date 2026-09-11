@@ -1,6 +1,6 @@
-import { parseResumeJsonFile } from './parseResumeJsonFile'
-import { useCallback, useRef, useState } from 'react'
-import type { Resume } from '@/db/db'
+import { parseResumeJsonFile } from "./parseResumeJsonFile"
+import { useCallback, useRef, useState } from "react"
+import type { Resume } from "@/db/db"
 
 interface UseUploadResumeOptions {
   onParsed: (resume: Resume, resumeId: string) => Promise<void> | void
@@ -65,31 +65,22 @@ export function useUploadResume({
     const droppedFiles = event.dataTransfer.files
     if (droppedFiles.length > 0) {
       const file = droppedFiles[0]
-      if (
-        file.type === 'application/json' ||
-        file.name.toLowerCase().endsWith('.json')
-      ) {
+      if (file.type === "application/json" || file.name.toLowerCase().endsWith(".json")) {
         setSelectedFile(file)
       }
     }
   }, [])
 
-  const onFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files
-      if (files && files.length > 0) {
-        const file = files[0]
-        if (
-          file.type === 'application/json' ||
-          file.name.toLowerCase().endsWith('.json')
-        ) {
-          setSelectedFile(file)
-        }
+  const onFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      if (file.type === "application/json" || file.name.toLowerCase().endsWith(".json")) {
+        setSelectedFile(file)
       }
-      event.target.value = ''
-    },
-    [],
-  )
+    }
+    event.target.value = ""
+  }, [])
 
   const clearSelection = useCallback(() => {
     setSelectedFile(null)
@@ -109,16 +100,14 @@ export function useUploadResume({
     try {
       const result = await parseResumeJsonFile(selectedFile)
       if (!result) {
-        setParseError(
-          'Failed to parse resume file. Please check the file and try again.',
-        )
+        setParseError("Failed to parse resume file. Please check the file and try again.")
         return
       }
 
       const { resume: incomingResume, resumeId: incomingResumeId } = result
       await onParsed(incomingResume, incomingResumeId)
     } catch {
-      setParseError('Failed to process resume. Please try again.')
+      setParseError("Failed to process resume. Please try again.")
     } finally {
       setIsParsing(false)
     }

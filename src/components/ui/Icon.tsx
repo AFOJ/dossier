@@ -1,4 +1,4 @@
-import { HugeiconsIcon, type HugeiconsIconProps } from '@hugeicons/react'
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react"
 
 export type IconProps = HugeiconsIconProps
 

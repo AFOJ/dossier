@@ -1,15 +1,12 @@
-import type { EducationalInstitution } from '@/db/types'
-import { Field, Input, Textarea } from '@/components/ui'
-import {
-  AddItemButton,
-  ItemControls,
-} from '@/pages/resumes/create/components/SectionCard'
+import type { EducationalInstitution } from "@/db/types"
+import { Field, Input, Textarea } from "@/components/ui"
+import { AddItemButton, ItemControls } from "@/pages/resumes/create/components/SectionCard"
 import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
   withKey,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type InstitutionItem = EducationalInstitution
 
@@ -25,16 +22,7 @@ type InstitutionRowProps = {
 }
 
 export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
-  const {
-    sectionIndex,
-    institution,
-    index,
-    isFirst,
-    isLast,
-    onChange,
-    onMove,
-    onRemove,
-  } = props
+  const { sectionIndex, institution, index, isFirst, isLast, onChange, onMove, onRemove } = props
 
   const {
     formState: { errors },
@@ -42,10 +30,9 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
   const institutionErrors =
-    sectionErrors?.type === 'education' ? sectionErrors.institutions?.[index] : undefined
+    sectionErrors?.type === "education" ? sectionErrors.institutions?.[index] : undefined
 
-  const update = (patch: Partial<EducationalInstitution>) =>
-    onChange({ ...institution, ...patch })
+  const update = (patch: Partial<EducationalInstitution>) => onChange({ ...institution, ...patch })
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
@@ -81,29 +68,20 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
             />
           </Field>
 
-          <Field
-            label="Grade"
-            inputId={`section-${sectionIndex}-grade-${index}`}
-          >
+          <Field label="Grade" inputId={`section-${sectionIndex}-grade-${index}`}>
             <Input
               id={`section-${sectionIndex}-grade-${index}`}
               placeholder="First Class Honours"
-              value={institution.grade ?? ''}
+              value={institution.grade ?? ""}
               onChange={(event) =>
                 update({
-                  grade:
-                    event.target.value.trim() === ''
-                      ? undefined
-                      : event.target.value,
+                  grade: event.target.value.trim() === "" ? undefined : event.target.value,
                 })
               }
             />
           </Field>
 
-          <Field
-            label="Location"
-            inputId={`section-${sectionIndex}-education-location-${index}`}
-          >
+          <Field label="Location" inputId={`section-${sectionIndex}-education-location-${index}`}>
             <Input
               id={`section-${sectionIndex}-education-location-${index}`}
               placeholder="London, UK"
@@ -112,10 +90,7 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
             />
           </Field>
 
-          <Field
-            label="Start date"
-            inputId={`section-${sectionIndex}-education-start-${index}`}
-          >
+          <Field label="Start date" inputId={`section-${sectionIndex}-education-start-${index}`}>
             <Input
               id={`section-${sectionIndex}-education-start-${index}`}
               placeholder="2015"
@@ -124,10 +99,7 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
             />
           </Field>
 
-          <Field
-            label="End date"
-            inputId={`section-${sectionIndex}-education-end-${index}`}
-          >
+          <Field label="End date" inputId={`section-${sectionIndex}-education-end-${index}`}>
             <Input
               id={`section-${sectionIndex}-education-end-${index}`}
               placeholder="2019"
@@ -156,13 +128,10 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
         <Textarea
           id={`section-${sectionIndex}-education-paragraph-${index}`}
           rows={3}
-          value={institution.paragraph ?? ''}
+          value={institution.paragraph ?? ""}
           onChange={(event) =>
             update({
-              paragraph:
-                event.target.value.trim() === ''
-                  ? undefined
-                  : event.target.value,
+              paragraph: event.target.value.trim() === "" ? undefined : event.target.value,
             })
           }
         />
@@ -185,7 +154,8 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError = sectionErrors?.type === 'education' ? sectionErrors.institutions?.message : undefined
+  const sectionError =
+    sectionErrors?.type === "education" ? sectionErrors.institutions?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">
@@ -204,9 +174,7 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
           isFirst={index === 0}
           isLast={index === institutions.length - 1}
           onChange={(next) =>
-            onChange(
-              institutions.map((current, i) => (i === index ? next : current)),
-            )
+            onChange(institutions.map((current, i) => (i === index ? next : current)))
           }
           onMove={(from, to) => {
             const next = [...institutions]
@@ -223,11 +191,11 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
           onChange([
             ...institutions,
             withKey({
-              name: '',
-              degree: '',
-              start_date: '',
-              end_date: '',
-              location: '',
+              name: "",
+              degree: "",
+              start_date: "",
+              end_date: "",
+              location: "",
             }),
           ])
         }

@@ -1,26 +1,23 @@
-import { DuplicateResumeDialog } from './components/DuplicateResumeDialog'
-import { getResume, createResume, updateResume } from '@/db/resume'
-import { Heading1, Subheading } from '@/components/ui'
-import { UploadResumeJson } from './UploadResumeJson'
-import { useModal } from '@/components/modal'
-import { useNavigate } from 'react-router-dom'
-import { usePageTitle } from '@/hooks/usePageTitle'
-import { useToast } from '@/components/toast'
-import type { Resume } from '@/db/db'
+import { DuplicateResumeDialog } from "./components/DuplicateResumeDialog"
+import { getResume, createResume, updateResume } from "@/db/resume"
+import { Heading1, Subheading } from "@/components/ui"
+import { UploadResumeJson } from "./UploadResumeJson"
+import { useModal } from "@/components/modal"
+import { useNavigate } from "react-router-dom"
+import { usePageTitle } from "@/hooks/usePageTitle"
+import { useToast } from "@/components/toast"
+import type { Resume } from "@/db/db"
 
 export default function UploadResumePage() {
-  usePageTitle('Upload resume')
+  usePageTitle("Upload resume")
   const navigate = useNavigate()
   const toast = useToast()
 
   const { open: openConflictModal } = useModal(DuplicateResumeDialog, {
-    contentClassName: 'max-w-lg',
+    contentClassName: "max-w-lg",
   })
 
-  const handleParsed = async (
-    incomingResume: Resume,
-    incomingResumeId: string,
-  ) => {
+  const handleParsed = async (incomingResume: Resume, incomingResumeId: string) => {
     const existingResume = await getResume(incomingResumeId)
 
     if (!existingResume) {
@@ -29,11 +26,8 @@ export default function UploadResumePage() {
         syncProfile: incomingResume.syncProfile,
         contact: incomingResume.contact,
       })
-      toast.success(
-        'Resume imported',
-        `"${incomingResume.title}" was imported successfully.`,
-      )
-      navigate('/resumes')
+      toast.success("Resume imported", `"${incomingResume.title}" was imported successfully.`)
+      navigate("/resumes")
       return
     }
 
@@ -48,26 +42,19 @@ export default function UploadResumePage() {
           syncProfile: incomingResume.syncProfile,
           contact: incomingResume.contact,
         })
-        toast.success(
-          'Resume updated',
-          `"${incomingResume.title}" was overwritten.`,
-        )
-        navigate('/resumes')
+        toast.success("Resume updated", `"${incomingResume.title}" was overwritten.`)
+        navigate("/resumes")
       },
       onCreateCopy: async () => {
-        await createResume(
-          `Copy of ${incomingResume.title}`,
-          incomingResume.sections,
-          {
-            syncProfile: incomingResume.syncProfile,
-            contact: incomingResume.contact,
-          },
-        )
+        await createResume(`Copy of ${incomingResume.title}`, incomingResume.sections, {
+          syncProfile: incomingResume.syncProfile,
+          contact: incomingResume.contact,
+        })
         toast.success(
-          'Resume imported',
+          "Resume imported",
           `"Copy of ${incomingResume.title}" was imported as a copy.`,
         )
-        navigate('/resumes')
+        navigate("/resumes")
       },
     })
   }

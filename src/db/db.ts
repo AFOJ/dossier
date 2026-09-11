@@ -1,5 +1,5 @@
-import Dexie, { type Table } from 'dexie'
-import type { Link, ResumeSection } from '@/db/types'
+import Dexie, { type Table } from "dexie"
+import type { Link, ResumeSection } from "@/db/types"
 
 // --- SCHEMA ---
 export interface Profile {
@@ -19,7 +19,7 @@ export interface Resume {
   createdAt: Date
   updatedAt: Date
   syncProfile?: boolean
-  contact?: Omit<Profile, 'id'> | null
+  contact?: Omit<Profile, "id"> | null
 }
 
 export interface ResumeCacheEntry {
@@ -36,17 +36,17 @@ export class DossierDatabase extends Dexie {
   resumeCache!: Table<ResumeCacheEntry, string>
 
   constructor() {
-    super('DossierDatabase')
+    super("DossierDatabase")
 
     this.version(1).stores({
-      profiles: '++id',
-      resumes: 'id, updatedAt',
+      profiles: "++id",
+      resumes: "id, updatedAt",
     })
 
     this.version(2).stores({
-      profiles: '++id',
-      resumes: 'id, updatedAt',
-      resumeCache: 'resumeId',
+      profiles: "++id",
+      resumes: "id, updatedAt",
+      resumeCache: "resumeId",
     })
   }
 }

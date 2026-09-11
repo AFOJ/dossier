@@ -1,13 +1,16 @@
-import { z } from 'zod'
-import type { Resume } from '@/db/db'
-import { resumeSchema, resumePayloadSchema } from '@/db/schemas'
+import { z } from "zod"
+import type { Resume } from "@/db/db"
+import { resumeSchema, resumePayloadSchema } from "@/db/schemas"
 
 interface ParsedResumeResult {
   resume: Resume
   resumeId: string
 }
 
-function convertPayloadToResume(payload: z.infer<typeof resumePayloadSchema>, resumeId: string): Resume {
+function convertPayloadToResume(
+  payload: z.infer<typeof resumePayloadSchema>,
+  resumeId: string,
+): Resume {
   const now = new Date()
   const contact = payload.contact
     ? {
@@ -22,7 +25,7 @@ function convertPayloadToResume(payload: z.infer<typeof resumePayloadSchema>, re
   return {
     id: resumeId,
     title: payload.title,
-    sections: payload.sections as Resume['sections'],
+    sections: payload.sections as Resume["sections"],
     createdAt: now,
     updatedAt: now,
     // Payloads carry no sync flag. Freeze an imported contact (unsynced)
@@ -56,8 +59,11 @@ function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
 }
 
 export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResult | null> {
-  if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
-    console.error('[parseResumeJsonFile] Not a JSON file', { fileName: file.name, fileType: file.type })
+  if (!file.name.toLowerCase().endsWith(".json") && file.type !== "application/json") {
+    console.error("[parseResumeJsonFile] Not a JSON file", {
+      fileName: file.name,
+      fileType: file.type,
+    })
     return null
   }
 
@@ -65,16 +71,16 @@ export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResul
   try {
     parsedData = JSON.parse(await file.text())
   } catch (error) {
-    console.error('[parseResumeJsonFile] JSON parse error', { fileName: file.name, error })
+    console.error("[parseResumeJsonFile] JSON parse error", { fileName: file.name, error })
     return null
   }
 
-  if (!parsedData || typeof parsedData !== 'object') {
-    console.error('[parseResumeJsonFile] Root is not an object', { fileName: file.name })
+  if (!parsedData || typeof parsedData !== "object") {
+    console.error("[parseResumeJsonFile] Root is not an object", { fileName: file.name })
     return null
   }
 
-  const hasId = 'id' in parsedData && typeof (parsedData as Record<string, unknown>).id === 'string'
+  const hasId = "id" in parsedData && typeof (parsedData as Record<string, unknown>).id === "string"
 
   let resume: Resume
   let resumeId: string
@@ -82,7 +88,7 @@ export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResul
   if (hasId) {
     const validationResult = resumeSchema.safeParse(parsedData)
     if (!validationResult.success) {
-      console.error('[parseResumeJsonFile] Resume validation failed', {
+      console.error("[parseResumeJsonFile] Resume validation failed", {
         fileName: file.name,
         error: validationResult.error.flatten(),
       })
@@ -95,7 +101,7 @@ export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResul
   } else {
     const validationResult = resumePayloadSchema.safeParse(parsedData)
     if (!validationResult.success) {
-      console.error('[parseResumeJsonFile] ResumePayload validation failed', {
+      console.error("[parseResumeJsonFile] ResumePayload validation failed", {
         fileName: file.name,
         error: validationResult.error.flatten(),
       })

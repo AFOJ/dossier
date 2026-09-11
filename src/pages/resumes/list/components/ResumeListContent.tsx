@@ -1,13 +1,10 @@
-import { FileAddIcon } from '@hugeicons/core-free-icons'
-import {
-  IsometricCircleX,
-  IsometricLibraryAdd,
-} from '@/components/illustrations'
-import { ButtonLink, Heading3, Subheading } from '@/components/ui'
-import type { Resume } from '@/db/db'
-import { type useResumeTable } from '@/hooks/useResumeTable'
-import { ResumesTable } from '@/pages/resumes/list/components/ResumesTable'
-import { ResumesTableSkeleton } from '@/pages/resumes/list/components/ResumesTableSkeleton'
+import { FileAddIcon } from "@hugeicons/core-free-icons"
+import { IsometricCircleX, IsometricLibraryAdd } from "@/components/illustrations"
+import { ButtonLink, Heading3, Subheading } from "@/components/ui"
+import type { Resume } from "@/db/db"
+import { type useResumeTable } from "@/hooks/useResumeTable"
+import { ResumesTable } from "@/pages/resumes/list/components/ResumesTable"
+import { ResumesTableSkeleton } from "@/pages/resumes/list/components/ResumesTableSkeleton"
 
 type ResumeTableState = ReturnType<typeof useResumeTable>
 
@@ -22,11 +19,7 @@ type ResumeListContentProps = {
 export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
   const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
-  if (
-    table.isLoading ||
-    table.isSearchPending ||
-    table.totalDbCount === undefined
-  ) {
+  if (table.isLoading || table.isSearchPending || table.totalDbCount === undefined) {
     return <ResumesTableSkeleton />
   }
 
@@ -38,7 +31,7 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
     return <EmptyState />
   }
 
-  if (table.totalCount === 0 && trimmedQuery !== '') {
+  if (table.totalCount === 0 && trimmedQuery !== "") {
     return <NoResults query={table.query} />
   }
 

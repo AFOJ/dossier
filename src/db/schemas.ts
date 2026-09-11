@@ -1,23 +1,23 @@
-import { z } from 'zod'
+import { z } from "zod"
 
-export const resumeBulletSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('text'), text: z.string() }),
+export const resumeBulletSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("text"), text: z.string() }),
   z.object({
-    type: z.literal('text-with-title'),
+    type: z.literal("text-with-title"),
     title: z.string(),
     text: z.string(),
   }),
 ])
 
-export const resumeSectionSchema = z.discriminatedUnion('type', [
+export const resumeSectionSchema = z.discriminatedUnion("type", [
   z.object({
-    type: z.literal('paragraph'),
-    title: z.string().min(1, 'Title is required'),
+    type: z.literal("paragraph"),
+    title: z.string().min(1, "Title is required"),
     text: z.string(),
   }),
   z.object({
-    type: z.literal('education'),
-    title: z.string().min(1, 'Title is required'),
+    type: z.literal("education"),
+    title: z.string().min(1, "Title is required"),
     institutions: z.array(
       z.object({
         name: z.string(),
@@ -31,8 +31,8 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
     ),
   }),
   z.object({
-    type: z.literal('skills'),
-    title: z.string().min(1, 'Title is required'),
+    type: z.literal("skills"),
+    title: z.string().min(1, "Title is required"),
     groups: z.array(
       z.object({
         title: z.string(),
@@ -41,8 +41,8 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
     ),
   }),
   z.object({
-    type: z.literal('experience'),
-    title: z.string().min(1, 'Title is required'),
+    type: z.literal("experience"),
+    title: z.string().min(1, "Title is required"),
     companies: z.array(
       z.object({
         company_name: z.string(),
@@ -63,34 +63,37 @@ export const resumeSectionSchema = z.discriminatedUnion('type', [
     ),
   }),
   z.object({
-    type: z.literal('list'),
-    title: z.string().min(1, 'Title is required'),
+    type: z.literal("list"),
+    title: z.string().min(1, "Title is required"),
     items: z
       .array(
         z.object({
           title: z.string().optional(),
-          url: z.string().optional().refine((val) => !val || z.url().safeParse(val).success, {
-            message: 'Must be a valid URL',
-          }),
-          description: z.string().min(1, 'Description is required'),
+          url: z
+            .string()
+            .optional()
+            .refine((val) => !val || z.url().safeParse(val).success, {
+              message: "Must be a valid URL",
+            }),
+          description: z.string().min(1, "Description is required"),
           date: z.string().optional(),
         }),
       )
-      .min(1, 'Add at least one item to this section')
+      .min(1, "Add at least one item to this section")
       .superRefine((items, ctx) => {
         items.forEach((item, index) => {
-          if (item.url && (!item.title || item.title.trim() === '')) {
+          if (item.url && (!item.title || item.title.trim() === "")) {
             ctx.addIssue({
-              code: 'custom',
-              path: [index, 'title'],
-              message: 'Title is required when URL is provided',
+              code: "custom",
+              path: [index, "title"],
+              message: "Title is required when URL is provided",
             })
           }
-          if (!item.description || item.description.trim() === '') {
+          if (!item.description || item.description.trim() === "") {
             ctx.addIssue({
-              code: 'custom',
-              path: [index, 'description'],
-              message: 'Description is required',
+              code: "custom",
+              path: [index, "description"],
+              message: "Description is required",
             })
           }
         })
@@ -106,7 +109,7 @@ export const linkSchema = z.object({
 })
 
 export const contactSchema = z.object({
-  full_name: z.string().min(1, 'Full name is required'),
+  full_name: z.string().min(1, "Full name is required"),
   role: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
@@ -125,7 +128,7 @@ export const exportContactSchema = z.object({
 
 export const resumeSchema = z.object({
   id: z.uuid().optional(),
-  title: z.string().min(1, 'Title is required'),
+  title: z.string().min(1, "Title is required"),
   // The builder allows section-less resumes, and exports must round-trip,
   // so imports accept an empty sections array.
   sections: z.array(resumeSectionSchema),
@@ -139,7 +142,7 @@ export type ResumeData = z.infer<typeof resumeSchema>
 
 export const resumePayloadSchema = z.object({
   id: z.uuid().optional(),
-  title: z.string().min(1, 'Title is required'),
+  title: z.string().min(1, "Title is required"),
   // Match resumeSchema: an explicit null contact (synced resume) must round-trip.
   contact: contactSchema.nullable().optional(),
   // Keep in sync with resumeSchema: section-less payloads must round-trip.

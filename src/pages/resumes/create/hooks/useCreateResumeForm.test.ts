@@ -1,14 +1,14 @@
-import { renderHook, act, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useCreateResumeForm } from '@/pages/resumes/create/hooks/useCreateResumeForm'
-import { createResume } from '@/db/resume'
+import { renderHook, act, waitFor } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { useCreateResumeForm } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import { createResume } from "@/db/resume"
 
-vi.mock('@/db/resume', () => ({
+vi.mock("@/db/resume", () => ({
   createResume: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
-vi.mock('react-router-dom', () => ({
+vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }))
 
@@ -17,123 +17,112 @@ const mockToast = {
   error: vi.fn(),
 }
 
-vi.mock('@/components/toast', () => ({
+vi.mock("@/components/toast", () => ({
   useToast: () => mockToast,
 }))
 
-function getSections(result: {
-  current: ReturnType<typeof useCreateResumeForm>
-}) {
-  return result.current.form.getValues('sections')
+function getSections(result: { current: ReturnType<typeof useCreateResumeForm> }) {
+  return result.current.form.getValues("sections")
 }
 
-describe('useCreateResumeForm', () => {
+describe("useCreateResumeForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it('starts with an empty title and no sections', () => {
+  it("starts with an empty title and no sections", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     expect(result.current.form.getValues()).toEqual({
-      title: '',
+      title: "",
       syncProfile: true,
-      fullName: '',
-      jobTitle: '',
-      location: '',
-      phone: '',
-      email: '',
+      fullName: "",
+      jobTitle: "",
+      location: "",
+      phone: "",
+      email: "",
       socials: [],
       sections: [],
     })
   })
 
-  it('adds default sections per type', () => {
+  it("adds default sections per type", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('paragraph')
-      result.current.addSection('experience')
+      result.current.addSection("paragraph")
+      result.current.addSection("experience")
     })
 
     const sections = getSections(result)
     expect(stripKeys(sections)).toEqual([
-      { type: 'paragraph', title: '', text: '' },
+      { type: "paragraph", title: "", text: "" },
       {
-        type: 'experience',
-        title: '',
-        companies: [
-          { company_name: '', start_date: '', end_date: undefined, roles: [] },
-        ],
+        type: "experience",
+        title: "",
+        companies: [{ company_name: "", start_date: "", end_date: undefined, roles: [] }],
       },
     ])
     expect((sections[0] as { _key?: string })._key).toEqual(expect.any(String))
   })
 
-  it('removes and reorders sections', () => {
+  it("removes and reorders sections", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('paragraph')
-      result.current.addSection('skills')
-      result.current.addSection('education')
+      result.current.addSection("paragraph")
+      result.current.addSection("skills")
+      result.current.addSection("education")
     })
 
     act(() => {
       result.current.moveSection(2, -1)
     })
 
-    expect(getSections(result).map((s) => s.type)).toEqual([
-      'paragraph',
-      'education',
-      'skills',
-    ])
+    expect(getSections(result).map((s) => s.type)).toEqual(["paragraph", "education", "skills"])
 
     act(() => {
       result.current.removeSection(0)
     })
 
-    expect(getSections(result).map((s) => s.type)).toEqual([
-      'education',
-      'skills',
-    ])
+    expect(getSections(result).map((s) => s.type)).toEqual(["education", "skills"])
   })
 
-  it('updates a section in place preserving position', () => {
+  it("updates a section in place preserving position", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.addSection('paragraph')
-      result.current.addSection('education')
+      result.current.addSection("paragraph")
+      result.current.addSection("education")
     })
 
     act(() => {
       result.current.updateSection(0, {
-        type: 'paragraph',
-        title: 'Section',
-        text: 'Hello',
+        type: "paragraph",
+        title: "Section",
+        text: "Hello",
       })
     })
 
     const sections = getSections(result)
-    expect((sections[0] as { text?: string }).text).toBe('Hello')
-    expect(sections[1]?.type).toBe('education')
+    expect((sections[0] as { text?: string }).text).toBe("Hello")
+    expect(sections[1]?.type).toBe("education")
   })
 
   function stripKeys<T>(value: T): T {
     if (Array.isArray(value)) return value.map(stripKeys) as T
-    if (value && typeof value === 'object') {
+    if (value && typeof value === "object") {
       const clone: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(value)) {
-        if (k !== '_key') clone[k] = stripKeys(v)
+        if (k !== "_key") clone[k] = stripKeys(v)
       }
       return clone as T
     }
     return value
   }
 
-  it('does not submit without a title', async () => {
+  it("does not submit without a title", async () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     await act(async () => {
@@ -142,23 +131,21 @@ describe('useCreateResumeForm', () => {
 
     expect(createResume).not.toHaveBeenCalled()
     expect(mockNavigate).not.toHaveBeenCalled()
-    expect(result.current.form.formState.errors.title?.message).toBe(
-      'Title is required',
-    )
+    expect(result.current.form.formState.errors.title?.message).toBe("Title is required")
   })
 
-  it('creates the resume with the entered data on submit', async () => {
-    vi.mocked(createResume).mockResolvedValueOnce('new-id')
+  it("creates the resume with the entered data on submit", async () => {
+    vi.mocked(createResume).mockResolvedValueOnce("new-id")
 
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.form.setValue('title', 'My Resume')
-      result.current.addSection('paragraph')
+      result.current.form.setValue("title", "My Resume")
+      result.current.addSection("paragraph")
       result.current.updateSection(0, {
-        type: 'paragraph',
-        text: 'Hello',
-        title: 'Summary',
+        type: "paragraph",
+        text: "Hello",
+        title: "Summary",
       })
     })
 
@@ -167,26 +154,26 @@ describe('useCreateResumeForm', () => {
     })
 
     expect(createResume).toHaveBeenCalledWith(
-      'My Resume',
-      [{ type: 'paragraph', text: 'Hello', title: 'Summary' }],
+      "My Resume",
+      [{ type: "paragraph", text: "Hello", title: "Summary" }],
       { syncProfile: true, contact: null },
     )
     expect(mockToast.success).toHaveBeenCalledWith(
-      'Resume created',
+      "Resume created",
       '"My Resume" has been created.',
     )
-    expect(mockNavigate).toHaveBeenCalledWith('/resumes')
+    expect(mockNavigate).toHaveBeenCalledWith("/resumes")
   })
 
-  it('shows an error toast when creation fails', async () => {
-    vi.mocked(createResume).mockRejectedValueOnce(new Error('Boom'))
+  it("shows an error toast when creation fails", async () => {
+    vi.mocked(createResume).mockRejectedValueOnce(new Error("Boom"))
 
     const { result } = renderHook(() => useCreateResumeForm())
 
     act(() => {
-      result.current.form.setValue('title', 'My Resume')
-      result.current.form.setValue('sections', [
-        { type: 'paragraph', text: 'Hi', title: 'Summary' },
+      result.current.form.setValue("title", "My Resume")
+      result.current.form.setValue("sections", [
+        { type: "paragraph", text: "Hi", title: "Summary" },
       ])
     })
 
@@ -195,35 +182,30 @@ describe('useCreateResumeForm', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.formError).toBe(
-        'Failed to create resume. Please try again.',
-      )
+      expect(result.current.formError).toBe("Failed to create resume. Please try again.")
     })
 
-    expect(mockToast.error).toHaveBeenCalledWith(
-      'Failed to create resume',
-      'Please try again.',
-    )
+    expect(mockToast.error).toHaveBeenCalledWith("Failed to create resume", "Please try again.")
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('passes contact details when profile sync is off', async () => {
-    vi.mocked(createResume).mockResolvedValueOnce('new-id')
+  it("passes contact details when profile sync is off", async () => {
+    vi.mocked(createResume).mockResolvedValueOnce("new-id")
 
     const profile = {
       id: 1,
-      full_name: 'John Doe',
-      role: 'Engineer',
-      email: 'john@doe.com',
+      full_name: "John Doe",
+      role: "Engineer",
+      email: "john@doe.com",
       phone: null,
       location: null,
-      links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+      links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     }
 
     const { result } = renderHook(() => useCreateResumeForm(profile))
 
     act(() => {
-      result.current.form.setValue('title', 'My Resume')
+      result.current.form.setValue("title", "My Resume")
       result.current.setSyncProfile(false)
     })
 
@@ -231,23 +213,23 @@ describe('useCreateResumeForm', () => {
       await result.current.onSubmit()
     })
 
-    expect(createResume).toHaveBeenCalledWith('My Resume', [], {
+    expect(createResume).toHaveBeenCalledWith("My Resume", [], {
       syncProfile: false,
       contact: {
-        full_name: 'John Doe',
-        email: 'john@doe.com',
+        full_name: "John Doe",
+        email: "john@doe.com",
         phone: null,
         location: null,
-        links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
-        role: 'Engineer',
+        links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
+        role: "Engineer",
       },
     })
   })
 
-  it('resets contact edits when sync is turned back on', () => {
+  it("resets contact edits when sync is turned back on", () => {
     const profile = {
       id: 1,
-      full_name: 'John Doe',
+      full_name: "John Doe",
       role: null,
       email: null,
       phone: null,
@@ -259,25 +241,25 @@ describe('useCreateResumeForm', () => {
 
     act(() => {
       result.current.setSyncProfile(false)
-      result.current.form.setValue('fullName', 'Locally Edited')
+      result.current.form.setValue("fullName", "Locally Edited")
       result.current.setSyncProfile(true)
     })
 
-    expect(result.current.form.getValues('syncProfile')).toBe(true)
-    expect(result.current.form.getValues('fullName')).toBe('John Doe')
+    expect(result.current.form.getValues("syncProfile")).toBe(true)
+    expect(result.current.form.getValues("fullName")).toBe("John Doe")
   })
 
-  describe('section guardrails', () => {
-    it('blocks an empty paragraph section', async () => {
+  describe("section guardrails", () => {
+    it("blocks an empty paragraph section", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('paragraph')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("paragraph")
         result.current.updateSection(0, {
-          type: 'paragraph',
-          text: '',
-          title: 'Summary',
+          type: "paragraph",
+          text: "",
+          title: "Summary",
         })
       })
 
@@ -287,23 +269,21 @@ describe('useCreateResumeForm', () => {
 
       expect(createResume).not.toHaveBeenCalled()
       expect(
-        result.current.form.getFieldState(
-          'sections.0.text',
-          result.current.form.formState,
-        ).error?.message,
-      ).toBe('Paragraph cannot be empty')
+        result.current.form.getFieldState("sections.0.text", result.current.form.formState).error
+          ?.message,
+      ).toBe("Paragraph cannot be empty")
     })
 
-    it('blocks an education section without institutions', async () => {
+    it("blocks an education section without institutions", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('education')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("education")
         result.current.updateSection(0, {
-          type: 'education',
+          type: "education",
           institutions: [],
-          title: 'Education',
+          title: "Education",
         })
       })
 
@@ -313,29 +293,27 @@ describe('useCreateResumeForm', () => {
 
       expect(createResume).not.toHaveBeenCalled()
       expect(
-        result.current.form.getFieldState(
-          'sections.0.institutions',
-          result.current.form.formState,
-        ).error?.message,
-      ).toBe('Add at least one school to this section')
+        result.current.form.getFieldState("sections.0.institutions", result.current.form.formState)
+          .error?.message,
+      ).toBe("Add at least one school to this section")
     })
 
-    it('requires school and degree on each institution', async () => {
+    it("requires school and degree on each institution", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('education')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("education")
         result.current.updateSection(0, {
-          type: 'education',
-          title: 'Education',
+          type: "education",
+          title: "Education",
           institutions: [
             {
-              name: '',
-              degree: '',
-              start_date: '',
-              end_date: '',
-              location: '',
+              name: "",
+              degree: "",
+              start_date: "",
+              end_date: "",
+              location: "",
             },
           ],
         })
@@ -349,29 +327,25 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.institutions.0.name',
-          formState,
-        ).error?.message,
-      ).toBe('School is required')
+        result.current.form.getFieldState("sections.0.institutions.0.name", formState).error
+          ?.message,
+      ).toBe("School is required")
       expect(
-        result.current.form.getFieldState(
-          'sections.0.institutions.0.degree',
-          formState,
-        ).error?.message,
-      ).toBe('Degree is required')
+        result.current.form.getFieldState("sections.0.institutions.0.degree", formState).error
+          ?.message,
+      ).toBe("Degree is required")
     })
 
-    it('requires a group title and at least one skill', async () => {
+    it("requires a group title and at least one skill", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('skills')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("skills")
         result.current.updateSection(0, {
-          type: 'skills',
-          title: 'Skills',
-          groups: [{ title: '', items: [] }],
+          type: "skills",
+          title: "Skills",
+          groups: [{ title: "", items: [] }],
         })
       })
 
@@ -383,38 +357,32 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.groups.0.title',
-          formState,
-        ).error?.message,
-      ).toBe('Group title is required')
+        result.current.form.getFieldState("sections.0.groups.0.title", formState).error?.message,
+      ).toBe("Group title is required")
       expect(
-        result.current.form.getFieldState(
-          'sections.0.groups.0.items',
-          formState,
-        ).error?.message,
-      ).toBe('Add at least one skill')
+        result.current.form.getFieldState("sections.0.groups.0.items", formState).error?.message,
+      ).toBe("Add at least one skill")
     })
 
-    it('requires added bullets to be filled', async () => {
+    it("requires added bullets to be filled", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '',
+              company_name: "Spotify",
+              start_date: "",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [
-                    { type: 'text', text: '' },
-                    { type: 'text-with-title', title: '', text: '' },
+                    { type: "text", text: "" },
+                    { type: "text-with-title", title: "", text: "" },
                   ],
                 },
               ],
@@ -432,42 +400,42 @@ describe('useCreateResumeForm', () => {
       const formState = result.current.form.formState
       expect(
         result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.bullets.0.text',
+          "sections.0.companies.0.roles.0.bullets.0.text",
           formState,
         ).error?.message,
-      ).toBe('Bullet cannot be empty')
+      ).toBe("Bullet cannot be empty")
       expect(
         result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.bullets.1.title',
+          "sections.0.companies.0.roles.0.bullets.1.title",
           formState,
         ).error?.message,
-      ).toBe('Bullet heading is required')
+      ).toBe("Bullet heading is required")
       expect(
         result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.bullets.1.text',
+          "sections.0.companies.0.roles.0.bullets.1.text",
           formState,
         ).error?.message,
-      ).toBe('Bullet text is required')
+      ).toBe("Bullet text is required")
     })
 
-    it('blocks a role end date without a start date', async () => {
+    it("blocks a role end date without a start date", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
+              company_name: "Spotify",
+              start_date: "2020-01",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [],
-                  end_date: '2021-01',
+                  end_date: "2021-01",
                 },
               ],
             },
@@ -483,27 +451,25 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.start_date',
-          formState,
-        ).error?.message,
-      ).toBe('Start date is required when an end date is set')
+        result.current.form.getFieldState("sections.0.companies.0.roles.0.start_date", formState)
+          .error?.message,
+      ).toBe("Start date is required when an end date is set")
     })
 
-    it('blocks a company end date before its start date', async () => {
+    it("blocks a company end date before its start date", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2022-01',
-              end_date: '2020-01',
+              company_name: "Spotify",
+              start_date: "2022-01",
+              end_date: "2020-01",
               roles: [],
             },
           ],
@@ -518,32 +484,30 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.companies.0.end_date',
-          formState,
-        ).error?.message,
-      ).toBe('End date cannot be before start date')
+        result.current.form.getFieldState("sections.0.companies.0.end_date", formState).error
+          ?.message,
+      ).toBe("End date cannot be before start date")
     })
 
-    it('blocks a role end date before its start date', async () => {
+    it("blocks a role end date before its start date", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
+              company_name: "Spotify",
+              start_date: "2020-01",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [],
-                  start_date: '2022-01',
-                  end_date: '2020-01',
+                  start_date: "2022-01",
+                  end_date: "2020-01",
                 },
               ],
             },
@@ -559,40 +523,38 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.end_date',
-          formState,
-        ).error?.message,
-      ).toBe('End date cannot be before start date')
+        result.current.form.getFieldState("sections.0.companies.0.roles.0.end_date", formState)
+          .error?.message,
+      ).toBe("End date cannot be before start date")
     })
 
-    it('allows an experience section with valid company and role dates', async () => {
-      vi.mocked(createResume).mockResolvedValueOnce('ok')
+    it("allows an experience section with valid company and role dates", async () => {
+      vi.mocked(createResume).mockResolvedValueOnce("ok")
 
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
-              end_date: '2024-06',
+              company_name: "Spotify",
+              start_date: "2020-01",
+              end_date: "2024-06",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [],
-                  start_date: '2020-01',
-                  end_date: '2022-05',
+                  start_date: "2020-01",
+                  end_date: "2022-05",
                 },
                 {
-                  job_title: 'Senior Dev',
+                  job_title: "Senior Dev",
                   bullets: [],
-                  start_date: '2022-06',
+                  start_date: "2022-06",
                 },
               ],
             },
@@ -608,24 +570,24 @@ describe('useCreateResumeForm', () => {
       expect(mockToast.success).toHaveBeenCalled()
     })
 
-    it('allows a fully valid resume through', async () => {
-      vi.mocked(createResume).mockResolvedValueOnce('ok')
+    it("allows a fully valid resume through", async () => {
+      vi.mocked(createResume).mockResolvedValueOnce("ok")
 
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('education')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("education")
         result.current.updateSection(0, {
-          type: 'education',
-          title: 'Education',
+          type: "education",
+          title: "Education",
           institutions: [
             {
-              name: 'Uni',
-              degree: 'BSc',
-              start_date: '',
-              end_date: '',
-              location: '',
+              name: "Uni",
+              degree: "BSc",
+              start_date: "",
+              end_date: "",
+              location: "",
             },
           ],
         })
@@ -639,23 +601,23 @@ describe('useCreateResumeForm', () => {
       expect(mockToast.success).toHaveBeenCalled()
     })
 
-    it('allows a role with no start or end date when currently working there', async () => {
-      vi.mocked(createResume).mockResolvedValueOnce('ok')
+    it("allows a role with no start or end date when currently working there", async () => {
+      vi.mocked(createResume).mockResolvedValueOnce("ok")
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
+              company_name: "Spotify",
+              start_date: "2020-01",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [],
                   end_date: undefined,
                 },
@@ -673,25 +635,25 @@ describe('useCreateResumeForm', () => {
       expect(mockToast.success).toHaveBeenCalled()
     })
 
-    it('requires a role end date when toggle is turned off', async () => {
+    it("requires a role end date when toggle is turned off", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
+              company_name: "Spotify",
+              start_date: "2020-01",
               roles: [
                 {
-                  job_title: 'Dev',
+                  job_title: "Dev",
                   bullets: [],
-                  start_date: '2020-01',
-                  end_date: '',
+                  start_date: "2020-01",
+                  end_date: "",
                 },
               ],
             },
@@ -707,27 +669,25 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.companies.0.roles.0.end_date',
-          formState,
-        ).error?.message,
-      ).toBe('End date is required')
+        result.current.form.getFieldState("sections.0.companies.0.roles.0.end_date", formState)
+          .error?.message,
+      ).toBe("End date is required")
     })
 
-    it('requires a company end date when toggle is turned off', async () => {
+    it("requires a company end date when toggle is turned off", async () => {
       const { result } = renderHook(() => useCreateResumeForm())
 
       act(() => {
-        result.current.form.setValue('title', 'My Resume')
-        result.current.addSection('experience')
+        result.current.form.setValue("title", "My Resume")
+        result.current.addSection("experience")
         result.current.updateSection(0, {
-          type: 'experience',
-          title: 'Experience',
+          type: "experience",
+          title: "Experience",
           companies: [
             {
-              company_name: 'Spotify',
-              start_date: '2020-01',
-              end_date: '',
+              company_name: "Spotify",
+              start_date: "2020-01",
+              end_date: "",
               roles: [],
             },
           ],
@@ -742,11 +702,9 @@ describe('useCreateResumeForm', () => {
 
       const formState = result.current.form.formState
       expect(
-        result.current.form.getFieldState(
-          'sections.0.companies.0.end_date',
-          formState,
-        ).error?.message,
-      ).toBe('End date is required')
+        result.current.form.getFieldState("sections.0.companies.0.end_date", formState).error
+          ?.message,
+      ).toBe("End date is required")
     })
   })
 })

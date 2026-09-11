@@ -1,9 +1,9 @@
-import { useWatch, type Control } from 'react-hook-form'
-import { Card } from '@/components/ui'
-import { SyncSwitch } from '@/pages/resumes/create/components/SyncSwitch'
-import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
-import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
-import type { ResumeFormData } from '@/pages/resumes/create/hooks/useCreateResumeForm'
+import { useWatch, type Control } from "react-hook-form"
+import { Card } from "@/components/ui"
+import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
+import { PersonalInfoFields } from "@/pages/profile/components/PersonalInfoFields"
+import { SocialLinksFields } from "@/pages/profile/components/SocialLinksFields"
+import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type ProfileSyncCardProps = {
   control: Control<ResumeFormData>
@@ -13,7 +13,7 @@ type ProfileSyncCardProps = {
 export function ProfileSyncCard(props: Readonly<ProfileSyncCardProps>) {
   const { control, onSyncChange } = props
 
-  const syncProfile = useWatch({ control, name: 'syncProfile' })
+  const syncProfile = useWatch({ control, name: "syncProfile" })
 
   return (
     <Card>
@@ -23,14 +23,12 @@ export function ProfileSyncCard(props: Readonly<ProfileSyncCardProps>) {
           onCheckedChange={onSyncChange}
           label="Use my profile information"
         />
-        <span className="text-sm font-medium text-gray-900">
-          Use my profile information
-        </span>
+        <span className="text-sm font-medium text-gray-900">Use my profile information</span>
       </div>
       <p className="text-sm text-gray-700">
         {syncProfile
-          ? 'This resume will always reflect your current profile details.'
-          : 'This resume uses its own contact details, independent of your profile.'}
+          ? "This resume will always reflect your current profile details."
+          : "This resume uses its own contact details, independent of your profile."}
       </p>
 
       {!syncProfile && (

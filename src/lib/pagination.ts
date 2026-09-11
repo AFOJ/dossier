@@ -17,14 +17,8 @@ export function toPositiveInteger(value: number, fallback: number) {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback
 }
 
-export function getPageMetadata(
-  totalCount: number,
-  pagination: PaginationInput,
-): PageMetadata {
-  const perPage = toPositiveInteger(
-    pagination.perPage ?? DEFAULT_PAGE_SIZE,
-    DEFAULT_PAGE_SIZE,
-  )
+export function getPageMetadata(totalCount: number, pagination: PaginationInput): PageMetadata {
+  const perPage = toPositiveInteger(pagination.perPage ?? DEFAULT_PAGE_SIZE, DEFAULT_PAGE_SIZE)
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage))
 
   return {
@@ -46,10 +40,7 @@ export function getPageRange(metadata: PageMetadata) {
   }
 }
 
-export function getVisiblePageNumbers(
-  current: number,
-  total: number,
-): (number | 'ellipsis')[] {
+export function getVisiblePageNumbers(current: number, total: number): (number | "ellipsis")[] {
   if (total <= 7) {
     return Array.from({ length: total }, (_, index) => index + 1)
   }
@@ -60,6 +51,6 @@ export function getVisiblePageNumbers(
 
   return pages.flatMap((page, index) => {
     const previous = pages[index - 1] ?? 0
-    return page - previous > 1 ? ['ellipsis', page] : [page]
+    return page - previous > 1 ? ["ellipsis", page] : [page]
   })
 }

@@ -1,11 +1,9 @@
-import { z } from 'zod'
-import { db, type Profile, type Resume } from '@/db/db'
-import { resumeSectionSchema, exportContactSchema } from '@/db/schemas'
-import { getAllResumes } from '@/db/resume'
+import { z } from "zod"
+import { db, type Profile, type Resume } from "@/db/db"
+import { resumeSectionSchema, exportContactSchema } from "@/db/schemas"
+import { getAllResumes } from "@/db/resume"
 
-export async function upsertProfile(
-  data: Omit<Profile, 'id'>,
-): Promise<number> {
+export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> {
   const existing = await db.profiles.toCollection().first()
   if (existing) {
     await db.profiles.update(existing.id!, data)
@@ -20,7 +18,7 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function deleteProfile(): Promise<void> {
-  await db.transaction('rw', db.profiles, db.resumes, async () => {
+  await db.transaction("rw", db.profiles, db.resumes, async () => {
     await db.resumes.clear()
     await db.profiles.clear()
   })
@@ -29,7 +27,7 @@ export async function deleteProfile(): Promise<void> {
 export interface ExportFile {
   version: 1
   exportedAt: string
-  profile: Omit<Profile, 'id'>
+  profile: Omit<Profile, "id">
   resumes: Resume[]
 }
 
@@ -37,10 +35,10 @@ export async function exportProfile(): Promise<ExportFile> {
   const profile = await getProfile()
 
   if (!profile) {
-    throw new Error('No profile found to export.')
+    throw new Error("No profile found to export.")
   }
 
-  const profileData: Omit<Profile, 'id'> = {
+  const profileData: Omit<Profile, "id"> = {
     full_name: profile.full_name,
     role: profile.role,
     email: profile.email,
@@ -82,8 +80,8 @@ export const exportFileSchema = z.object({
 
 export class InvalidExportFileError extends Error {
   constructor() {
-    super('This file is not a valid Dossier export.')
-    this.name = 'InvalidExportFileError'
+    super("This file is not a valid Dossier export.")
+    this.name = "InvalidExportFileError"
   }
 }
 
@@ -104,7 +102,7 @@ export async function importProfile(fileContent: string): Promise<void> {
 
   const { profile, resumes } = result.data
 
-  await db.transaction('rw', db.profiles, db.resumes, async () => {
+  await db.transaction("rw", db.profiles, db.resumes, async () => {
     await upsertProfile(profile)
 
     const restoredResumes: Resume[] = resumes.map((resume) => {

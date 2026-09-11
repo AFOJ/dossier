@@ -1,11 +1,7 @@
-import { db, type Resume } from '@/db/db'
-import { clearProcessedResumeCache } from '@/db/resumeCache'
-import type { ResumeSection } from '@/db/types'
-import {
-  DEFAULT_PAGE_SIZE,
-  getPageMetadata,
-  type PaginationInput,
-} from '@/lib/pagination'
+import { db, type Resume } from "@/db/db"
+import { clearProcessedResumeCache } from "@/db/resumeCache"
+import type { ResumeSection } from "@/db/types"
+import { DEFAULT_PAGE_SIZE, getPageMetadata, type PaginationInput } from "@/lib/pagination"
 
 const RESUME_TABLE = db.resumes
 
@@ -23,12 +19,12 @@ export async function queryResumes(
     perPage: options.perPage ?? DEFAULT_PAGE_SIZE,
   }
   const collection = q
-    ? RESUME_TABLE.orderBy('updatedAt')
+    ? RESUME_TABLE.orderBy("updatedAt")
         .reverse()
         .filter((r) => r.title.toLowerCase().includes(q))
-    : RESUME_TABLE.orderBy('updatedAt').reverse()
+    : RESUME_TABLE.orderBy("updatedAt").reverse()
 
-  return db.transaction('r', RESUME_TABLE, async () => {
+  return db.transaction("r", RESUME_TABLE, async () => {
     const totalCount = await collection.count()
     const pagination = getPageMetadata(totalCount, requestedPagination)
     const items = await collection
@@ -43,7 +39,7 @@ export async function queryResumes(
 export interface CreateResumeOptions {
   id?: string
   syncProfile?: boolean
-  contact?: Resume['contact']
+  contact?: Resume["contact"]
 }
 
 export async function createResume(
@@ -72,14 +68,12 @@ export async function getResume(id: string): Promise<Resume | undefined> {
 }
 
 export async function getAllResumes(): Promise<Resume[]> {
-  return RESUME_TABLE.orderBy('updatedAt').reverse().toArray()
+  return RESUME_TABLE.orderBy("updatedAt").reverse().toArray()
 }
 
 export async function updateResume(
   id: string,
-  changes: Partial<
-    Pick<Resume, 'title' | 'sections' | 'syncProfile' | 'contact'>
-  >,
+  changes: Partial<Pick<Resume, "title" | "sections" | "syncProfile" | "contact">>,
 ): Promise<void> {
   await RESUME_TABLE.update(id, {
     ...changes,
@@ -90,7 +84,7 @@ export async function updateResume(
     await clearProcessedResumeCache(id)
   } catch (error) {
     // TODO: log this to a logging service in the future
-    console.error('Failed to clear resume cache:', error)
+    console.error("Failed to clear resume cache:", error)
   }
 }
 
@@ -100,6 +94,6 @@ export async function deleteResume(id: string): Promise<void> {
     await clearProcessedResumeCache(id)
   } catch (error) {
     // TODO: log this to a logging service in the future
-    console.error('Failed to clear resume cache:', error)
+    console.error("Failed to clear resume cache:", error)
   }
 }

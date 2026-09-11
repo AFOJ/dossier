@@ -1,13 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Resume } from '@/db/db'
-import { ApiError } from '@/lib/api'
-import { downloadBlob } from '@/lib/download'
-import {
-  ensureProcessedResume,
-  getProcessedResumeFilename,
-} from '@/lib/processedResume'
+import { useCallback, useEffect, useRef, useState } from "react"
+import type { Resume } from "@/db/db"
+import { ApiError } from "@/lib/api"
+import { downloadBlob } from "@/lib/download"
+import { ensureProcessedResume, getProcessedResumeFilename } from "@/lib/processedResume"
 
-export type ProcessedResumeStatus = 'loading' | 'ready' | 'error'
+export type ProcessedResumeStatus = "loading" | "ready" | "error"
 
 export interface UseProcessedResumeResult {
   status: ProcessedResumeStatus
@@ -30,7 +27,7 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
   const resumeUpdatedAt = resume.updatedAt
   const resumeTitle = resume.title
 
-  const [status, setStatus] = useState<ProcessedResumeStatus>('loading')
+  const [status, setStatus] = useState<ProcessedResumeStatus>("loading")
   const [url, setUrl] = useState<string | undefined>(undefined)
   const [processedAt, setProcessedAt] = useState<Date | undefined>(undefined)
   const [error, setError] = useState<ApiError | undefined>(undefined)
@@ -55,9 +52,7 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
       try {
         setError(undefined)
 
-        const { blob, processedAt } = await ensureProcessedResume(
-          resumeRef.current,
-        )
+        const { blob, processedAt } = await ensureProcessedResume(resumeRef.current)
 
         if (urlRef.current) {
           URL.revokeObjectURL(urlRef.current)
@@ -67,17 +62,13 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
         urlRef.current = URL.createObjectURL(blob)
         setUrl(urlRef.current)
         setProcessedAt(processedAt)
-        setStatus('ready')
+        setStatus("ready")
       } catch (cause) {
-        setStatus('error')
+        setStatus("error")
         setError(
           cause instanceof ApiError
             ? cause
-            : new ApiError(
-                'NETWORK_ERROR',
-                'Something went wrong while preparing the resume.',
-                [],
-              ),
+            : new ApiError("NETWORK_ERROR", "Something went wrong while preparing the resume.", []),
         )
       } finally {
         inFlightRef.current = undefined
@@ -106,11 +97,7 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
       await load()
 
       if (!blobRef.current) {
-        throw new ApiError(
-          'INTERNAL_ERROR',
-          'The processed resume is not available yet.',
-          [],
-        )
+        throw new ApiError("INTERNAL_ERROR", "The processed resume is not available yet.", [])
       }
 
       downloadBlob(getProcessedResumeFilename(resumeTitle), blobRef.current)

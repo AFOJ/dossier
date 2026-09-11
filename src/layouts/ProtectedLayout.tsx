@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Drawer } from '@base-ui/react/drawer'
-import { Menu01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Sidebar } from '@/layouts/Sidebar'
+import { useState } from "react"
+import { Outlet } from "react-router-dom"
+import { Drawer } from "@base-ui/react/drawer"
+import { Menu01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Sidebar } from "@/layouts/Sidebar"
 
 export default function ProtectedLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -12,11 +12,7 @@ export default function ProtectedLayout() {
     <div className="min-h-dvh bg-white lg:pl-64">
       <Sidebar className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-gray-200 lg:flex" />
 
-      <Drawer.Root
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        swipeDirection="left"
-      >
+      <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} swipeDirection="left">
         <MobileHeader />
 
         <MobileDrawer onNavigate={() => setDrawerOpen(false)} />
@@ -38,9 +34,7 @@ function MobileHeader() {
       >
         <HugeiconsIcon icon={Menu01Icon} size={20} strokeWidth={2} />
       </Drawer.Trigger>
-      <span className="font-heading text-base font-bold text-gray-900">
-        Dossier
-      </span>
+      <span className="font-heading text-base font-bold text-gray-900">Dossier</span>
     </header>
   )
 }

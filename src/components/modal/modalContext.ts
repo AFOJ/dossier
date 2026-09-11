@@ -1,4 +1,4 @@
-import { createContext, type ComponentType } from 'react'
+import { createContext, type ComponentType } from "react"
 
 export interface ModalContentProps<TData = undefined> {
   data: TData

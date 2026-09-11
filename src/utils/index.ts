@@ -1,2 +1,2 @@
-export * from '@/utils/cn'
-export * from '@/utils/slugify'
+export * from "@/utils/cn"
+export * from "@/utils/slugify"

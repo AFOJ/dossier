@@ -1,15 +1,15 @@
-import { Button, Divider, Heading1, Subheading } from '@/components/ui'
-import { FormProvider } from 'react-hook-form'
-import { usePageTitle } from '@/hooks/usePageTitle'
-import { PersonalInfoFields } from '@/pages/profile/components/PersonalInfoFields'
-import { SocialLinksFields } from '@/pages/profile/components/SocialLinksFields'
-import { RestoreFromExport } from '@/pages/profile/create/components/RestoreFromExport'
-import { useCreateProfileForm } from '@/pages/profile/create/hooks/useCreateProfileForm'
+import { Button, Divider, Heading1, Subheading } from "@/components/ui"
+import { FormProvider } from "react-hook-form"
+import { usePageTitle } from "@/hooks/usePageTitle"
+import { PersonalInfoFields } from "@/pages/profile/components/PersonalInfoFields"
+import { SocialLinksFields } from "@/pages/profile/components/SocialLinksFields"
+import { RestoreFromExport } from "@/pages/profile/create/components/RestoreFromExport"
+import { useCreateProfileForm } from "@/pages/profile/create/hooks/useCreateProfileForm"
 
 export default function CreateProfilePage() {
   const { form, isSubmitting, onSubmit, formError } = useCreateProfileForm()
 
-  usePageTitle('Create Profile')
+  usePageTitle("Create Profile")
 
   return (
     <main className="w-full flex justify-center">
@@ -17,8 +17,8 @@ export default function CreateProfilePage() {
         <div className="flex flex-col items-center justify-center gap-1">
           <Heading1 className="text-center">Get started with Dossier</Heading1>
           <Subheading className="text-center">
-            Let's set up your profile first. This information will be reused
-            across all your career documents.
+            Let's set up your profile first. This information will be reused across all your career
+            documents.
           </Subheading>
         </div>
 

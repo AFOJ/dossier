@@ -1,28 +1,25 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useToast } from '@/components/toast'
-import type { Profile, Resume } from '@/db/db'
-import type { ResumeSection } from '@/db/types'
-import { updateResume } from '@/db/resume'
+import { useCallback, useMemo, useState } from "react"
+import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useToast } from "@/components/toast"
+import type { Profile, Resume } from "@/db/db"
+import type { ResumeSection } from "@/db/types"
+import { updateResume } from "@/db/resume"
 import {
   createSectionMutations,
   emptyContactValues,
   resumeFormSchema,
   type FormSection,
   type ResumeFormData,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const defaultValues = useMemo(
-    () => toEditValues(resume, profile),
-    [resume, profile],
-  )
+  const defaultValues = useMemo(() => toEditValues(resume, profile), [resume, profile])
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
@@ -38,7 +35,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       setIsSubmitting(true)
-      form.clearErrors('root')
+      form.clearErrors("root")
 
       await updateResume(resume.id!, {
         title: data.title,
@@ -47,7 +44,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
         contact: data.syncProfile
           ? null
           : {
-              full_name: data.fullName ?? '',
+              full_name: data.fullName ?? "",
               email: data.email || null,
               phone: data.phone || null,
               location: data.location || null,
@@ -59,16 +56,16 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
       // Reset to the raw (keyed) current values so the form is pristine
       // without losing the identity keys used for stable list rendering.
       form.reset(form.getValues())
-      toast.success('Resume saved', `"${data.title}" has been saved.`)
-      navigate('/resumes')
+      toast.success("Resume saved", `"${data.title}" has been saved.`)
+      navigate("/resumes")
     } catch (error) {
-      form.setError('root', {
-        type: 'manual',
-        message: 'Failed to save resume. Please try again.',
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to save resume. Please try again.",
       })
-      toast.error('Failed to save resume', 'Please try again.')
+      toast.error("Failed to save resume", "Please try again.")
 
-      console.error('Failed to save resume:', error)
+      console.error("Failed to save resume:", error)
     } finally {
       setIsSubmitting(false)
     }
@@ -83,19 +80,17 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {
-      setValue('syncProfile', sync, { shouldDirty: true })
+      setValue("syncProfile", sync, { shouldDirty: true })
 
       if (sync && profile) {
         // Turning sync back on discards local edits in favour of the profile.
-        Object.entries(profileToContactValues(profile)).forEach(
-          ([key, value]) => {
-            ;(
-              form as unknown as {
-                setValue: (name: string, value: unknown) => void
-              }
-            ).setValue(key, value)
-          },
-        )
+        Object.entries(profileToContactValues(profile)).forEach(([key, value]) => {
+          ;(
+            form as unknown as {
+              setValue: (name: string, value: unknown) => void
+            }
+          ).setValue(key, value)
+        })
       }
     },
     [form, profile, setValue],
@@ -132,10 +127,10 @@ function contactDefaults(resume: Resume, profile?: Profile) {
   if (resume.contact && !resume.syncProfile) {
     return {
       fullName: resume.contact.full_name,
-      jobTitle: resume.contact.role ?? '',
-      location: resume.contact.location ?? '',
-      phone: resume.contact.phone ?? '',
-      email: resume.contact.email ?? '',
+      jobTitle: resume.contact.role ?? "",
+      location: resume.contact.location ?? "",
+      phone: resume.contact.phone ?? "",
+      email: resume.contact.email ?? "",
       socials: resume.contact.links.map((link) => ({
         label: link.label,
         url: link.url,
@@ -149,10 +144,10 @@ function contactDefaults(resume: Resume, profile?: Profile) {
 function profileToContactValues(profile: Profile) {
   return {
     fullName: profile.full_name,
-    jobTitle: profile.role ?? '',
-    location: profile.location ?? '',
-    phone: profile.phone ?? '',
-    email: profile.email ?? '',
+    jobTitle: profile.role ?? "",
+    location: profile.location ?? "",
+    phone: profile.phone ?? "",
+    email: profile.email ?? "",
     socials: profile.links.map((link) => ({
       label: link.label,
       url: link.url,
@@ -162,9 +157,9 @@ function profileToContactValues(profile: Profile) {
 
 function withGeneratedKeys(section: ResumeSection): ResumeSection {
   switch (section.type) {
-    case 'paragraph':
+    case "paragraph":
       return section
-    case 'education':
+    case "education":
       return {
         ...section,
         institutions: section.institutions.map((institution) => ({
@@ -172,7 +167,7 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
           _key: crypto.randomUUID(),
         })),
       }
-    case 'skills':
+    case "skills":
       return {
         ...section,
         groups: section.groups.map((group) => ({
@@ -180,7 +175,7 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
           _key: crypto.randomUUID(),
         })),
       }
-    case 'experience':
+    case "experience":
       return {
         ...section,
         companies: section.companies.map((company) => ({
@@ -196,7 +191,7 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
           })),
         })),
       }
-    case 'list':
+    case "list":
       return {
         ...section,
         items: section.items.map((item) => ({
@@ -206,4 +201,3 @@ function withGeneratedKeys(section: ResumeSection): ResumeSection {
       }
   }
 }
-

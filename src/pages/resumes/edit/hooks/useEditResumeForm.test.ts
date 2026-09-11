@@ -1,15 +1,15 @@
-import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Profile, Resume } from '@/db/db'
-import { updateResume } from '@/db/resume'
-import { useEditResumeForm } from '@/pages/resumes/edit/hooks/useEditResumeForm'
+import { renderHook, act } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import type { Profile, Resume } from "@/db/db"
+import { updateResume } from "@/db/resume"
+import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
-vi.mock('@/db/resume', () => ({
+vi.mock("@/db/resume", () => ({
   updateResume: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
-vi.mock('react-router-dom', () => ({
+vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }))
 
@@ -18,25 +18,25 @@ const mockToast = {
   error: vi.fn(),
 }
 
-vi.mock('@/components/toast', () => ({
+vi.mock("@/components/toast", () => ({
   useToast: () => mockToast,
 }))
 
 const profile: Profile = {
   id: 1,
-  full_name: 'John Doe',
-  role: 'Engineer',
-  email: 'john@doe.com',
+  full_name: "John Doe",
+  role: "Engineer",
+  email: "john@doe.com",
   phone: null,
   location: null,
-  links: [{ label: 'GitHub', url: 'https://github.com/johndoe' }],
+  links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
 }
 
 function makeResume(overrides: Partial<Resume> = {}): Resume {
   return {
-    id: 'resume-1',
-    title: 'My Resume',
-    sections: [{ type: 'paragraph', text: 'Intro', title: 'Summary' }],
+    id: "resume-1",
+    title: "My Resume",
+    sections: [{ type: "paragraph", text: "Intro", title: "Summary" }],
     createdAt: new Date(),
     updatedAt: new Date(),
     syncProfile: true,
@@ -45,29 +45,27 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
   }
 }
 
-const defaultSections = [
-  { type: 'paragraph' as const, text: 'Intro', title: 'Summary' },
-]
+const defaultSections = [{ type: "paragraph" as const, text: "Intro", title: "Summary" }]
 
-describe('useEditResumeForm', () => {
+describe("useEditResumeForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it('prefills from the resume and generates identity keys for nested items', () => {
+  it("prefills from the resume and generates identity keys for nested items", () => {
     const resume = makeResume({
       sections: [
         {
-          type: 'education',
-          title: 'Education',
+          type: "education",
+          title: "Education",
           institutions: [
             {
-              name: 'Uni',
-              degree: 'BSc',
-              start_date: '',
-              end_date: '',
-              location: '',
+              name: "Uni",
+              degree: "BSc",
+              start_date: "",
+              end_date: "",
+              location: "",
             },
           ],
         },
@@ -77,12 +75,10 @@ describe('useEditResumeForm', () => {
     const { result } = renderHook(() => useEditResumeForm(resume, profile))
 
     const values = result.current.form.getValues()
-    expect(values.title).toBe('My Resume')
-    expect(values.fullName).toBe('John Doe') // synced → live profile
+    expect(values.title).toBe("My Resume")
+    expect(values.fullName).toBe("John Doe") // synced → live profile
 
-    const [section] = result.current.form.getValues(
-      'sections',
-    ) as unknown as Array<{
+    const [section] = result.current.form.getValues("sections") as unknown as Array<{
       _key?: string
       institutions: Array<{ _key?: string }>
     }>
@@ -91,11 +87,11 @@ describe('useEditResumeForm', () => {
     expect(result.current.isDirty).toBe(false)
   })
 
-  it('uses the stored contact snapshot when the resume is unsynced', () => {
+  it("uses the stored contact snapshot when the resume is unsynced", () => {
     const resume = makeResume({
       syncProfile: false,
       contact: {
-        full_name: 'Snapshot Person',
+        full_name: "Snapshot Person",
         role: null,
         email: null,
         phone: null,
@@ -106,14 +102,14 @@ describe('useEditResumeForm', () => {
 
     const { result } = renderHook(() => useEditResumeForm(resume, profile))
 
-    expect(result.current.form.getValues('fullName')).toBe('Snapshot Person')
+    expect(result.current.form.getValues("fullName")).toBe("Snapshot Person")
   })
 
-  it('tracks dirty state and reverts to the saved values', () => {
+  it("tracks dirty state and reverts to the saved values", () => {
     const { result } = renderHook(() => useEditResumeForm(makeResume()))
 
     act(() => {
-      result.current.form.setValue('title', 'Renamed', { shouldDirty: true })
+      result.current.form.setValue("title", "Renamed", { shouldDirty: true })
     })
 
     expect(result.current.isDirty).toBe(true)
@@ -122,18 +118,18 @@ describe('useEditResumeForm', () => {
       result.current.revert()
     })
 
-    expect(result.current.form.getValues('title')).toBe('My Resume')
+    expect(result.current.form.getValues("title")).toBe("My Resume")
     expect(result.current.isDirty).toBe(false)
   })
 
-  it('saves all fields including sync metadata on submit', async () => {
+  it("saves all fields including sync metadata on submit", async () => {
     vi.mocked(updateResume).mockResolvedValueOnce(undefined)
     const { result } = renderHook(() =>
       useEditResumeForm(
         makeResume({
           syncProfile: false,
           contact: {
-            full_name: 'Snapshot Person',
+            full_name: "Snapshot Person",
             role: null,
             email: null,
             phone: null,
@@ -146,8 +142,8 @@ describe('useEditResumeForm', () => {
     )
 
     act(() => {
-      result.current.form.setValue('title', 'Updated Title')
-      result.current.form.setValue('syncProfile', false, {
+      result.current.form.setValue("title", "Updated Title")
+      result.current.form.setValue("syncProfile", false, {
         shouldDirty: true,
       })
     })
@@ -156,12 +152,12 @@ describe('useEditResumeForm', () => {
       await result.current.onSubmit()
     })
 
-    expect(updateResume).toHaveBeenCalledWith('resume-1', {
-      title: 'Updated Title',
+    expect(updateResume).toHaveBeenCalledWith("resume-1", {
+      title: "Updated Title",
       sections: defaultSections,
       syncProfile: false,
       contact: {
-        full_name: 'Snapshot Person',
+        full_name: "Snapshot Person",
         email: null,
         phone: null,
         location: null,
@@ -170,7 +166,7 @@ describe('useEditResumeForm', () => {
       },
     })
     expect(mockToast.success).toHaveBeenCalled()
-    expect(mockNavigate).toHaveBeenCalledWith('/resumes')
+    expect(mockNavigate).toHaveBeenCalledWith("/resumes")
 
     // After a successful save the form is pristine again.
     expect(result.current.isDirty).toBe(false)

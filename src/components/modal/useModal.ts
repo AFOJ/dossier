@@ -3,18 +3,15 @@ import {
   type ModalComponent,
   type ModalOptions,
   type ResolvedModalOptions,
-} from '@/components/modal/modalContext'
-import { useCallback, useContext, useEffect, useState } from 'react'
+} from "@/components/modal/modalContext"
+import { useCallback, useContext, useEffect, useState } from "react"
 
-export {
-  type ModalContentProps,
-  type ModalOptions,
-} from '@/components/modal/modalContext'
+export { type ModalContentProps, type ModalOptions } from "@/components/modal/modalContext"
 
 const defaultOptions: ResolvedModalOptions = {
   closeOnBackdropClick: true,
   closeOnEscape: true,
-  contentClassName: 'max-w-md',
+  contentClassName: "max-w-md",
 }
 
 export function useModal<TData = undefined>(
@@ -25,7 +22,7 @@ export function useModal<TData = undefined>(
   const [id] = useState(() => `modal-${crypto.randomUUID()}`)
 
   if (!context) {
-    throw new Error('useModal must be used within a ModalProvider.')
+    throw new Error("useModal must be used within a ModalProvider.")
   }
 
   const { openModal, closeModal, isOpen } = context

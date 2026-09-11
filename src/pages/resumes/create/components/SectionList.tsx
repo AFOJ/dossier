@@ -1,14 +1,14 @@
-import { memo } from 'react'
-import { useWatch, type Control } from 'react-hook-form'
-import type { ResumeSectionData } from '@/db/schemas'
-import { SectionCard } from '@/pages/resumes/create/components/SectionCard'
-import { SectionFields } from '@/pages/resumes/create/components/SectionFields'
+import { memo } from "react"
+import { useWatch, type Control } from "react-hook-form"
+import type { ResumeSectionData } from "@/db/schemas"
+import { SectionCard } from "@/pages/resumes/create/components/SectionCard"
+import { SectionFields } from "@/pages/resumes/create/components/SectionFields"
 import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
   type ResumeFormData,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type SectionRowProps = {
   section: ResumeSectionData
@@ -21,15 +21,7 @@ type SectionRowProps = {
 }
 
 function SectionRowImpl(props: Readonly<SectionRowProps>) {
-  const {
-    section,
-    index,
-    isFirst,
-    isLast,
-    updateSection,
-    moveSection,
-    removeSection,
-  } = props
+  const { section, index, isFirst, isLast, updateSection, moveSection, removeSection } = props
 
   const {
     formState: { errors },
@@ -39,13 +31,12 @@ function SectionRowImpl(props: Readonly<SectionRowProps>) {
   const titleError = sectionErrors?.title?.message
 
   const label =
-    section.title?.trim() ||
-    section.type.charAt(0).toUpperCase() + section.type.slice(1)
+    section.title?.trim() || section.type.charAt(0).toUpperCase() + section.type.slice(1)
 
   return (
     <SectionCard
       label={label}
-      title={section.title ?? ''}
+      title={section.title ?? ""}
       titleError={titleError}
       onTitleChange={(title) => updateSection(index, { ...section, title })}
       isFirst={isFirst}
@@ -76,7 +67,7 @@ type SectionListProps = {
 export function SectionList(props: Readonly<SectionListProps>) {
   const { control, updateSection, moveSection, removeSection } = props
 
-  const sections = useWatch({ control, name: 'sections' })
+  const sections = useWatch({ control, name: "sections" })
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,10 +1,6 @@
-import type { Resume } from '@/db/db'
-import { getProfile } from '@/db/profile'
-import type {
-  ExperienceCompanyRoleBullet,
-  ResumeSection,
-  SkillGroup,
-} from '@/db/types'
+import type { Resume } from "@/db/db"
+import { getProfile } from "@/db/profile"
+import type { ExperienceCompanyRoleBullet, ResumeSection, SkillGroup } from "@/db/types"
 
 export interface ResumePayloadLink {
   label: string
@@ -59,18 +55,18 @@ export interface ResumePayloadListItem {
 }
 
 export type ResumePayloadSection =
-  | ({ type: 'paragraph'; text: string } & WithOptionalTitle)
+  | ({ type: "paragraph"; text: string } & WithOptionalTitle)
   | ({
-      type: 'education'
+      type: "education"
       institutions: ResumePayloadInstitution[]
     } & WithOptionalTitle)
-  | ({ type: 'skills'; groups: SkillGroup[] } & WithOptionalTitle)
+  | ({ type: "skills"; groups: SkillGroup[] } & WithOptionalTitle)
   | ({
-      type: 'experience'
+      type: "experience"
       companies: ResumePayloadExperienceCompany[]
     } & WithOptionalTitle)
   | ({
-      type: 'list'
+      type: "list"
       items: ResumePayloadListItem[]
     } & WithOptionalTitle)
 
@@ -82,9 +78,7 @@ export interface ResumePayload {
 
 export async function toResumePayload(resume: Resume): Promise<ResumePayload> {
   const contact =
-    resume.syncProfile === false
-      ? resume.contact
-      : ((await getProfile()) ?? resume.contact)
+    resume.syncProfile === false ? resume.contact : ((await getProfile()) ?? resume.contact)
 
   return {
     title: resume.title.trim(),
@@ -93,9 +87,7 @@ export async function toResumePayload(resume: Resume): Promise<ResumePayload> {
   }
 }
 
-function toContactPayload(
-  contact: Resume['contact'],
-): ResumePayloadContact | undefined {
+function toContactPayload(contact: Resume["contact"]): ResumePayloadContact | undefined {
   if (!contact) {
     return undefined
   }
@@ -137,18 +129,18 @@ function toContactPayload(
 }
 
 const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ]
 
 function formatMonthYear(date: string | undefined): string | undefined {
@@ -156,7 +148,7 @@ function formatMonthYear(date: string | undefined): string | undefined {
     return undefined
   }
   const trimmed = date.trim()
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {
+  if (!trimmed || trimmed === "undefined" || trimmed === "null") {
     return undefined
   }
 
@@ -175,9 +167,7 @@ function formatMonthYear(date: string | undefined): string | undefined {
   if (monthMatch) {
     const monthName = monthMatch[1]
     const year = monthMatch[2]
-    const monthIndex = MONTHS.findIndex(
-      (m) => m.toLowerCase() === monthName.toLowerCase(),
-    )
+    const monthIndex = MONTHS.findIndex((m) => m.toLowerCase() === monthName.toLowerCase())
     if (monthIndex >= 0) {
       return `${MONTHS[monthIndex]} ${year}`
     }
@@ -199,17 +189,17 @@ function cleanOptional(value: string | null | undefined): string | undefined {
 
 function toSectionPayload(section: ResumeSection): ResumePayloadSection {
   switch (section.type) {
-    case 'paragraph': {
+    case "paragraph": {
       return {
         ...cleanTitle(section),
-        type: 'paragraph',
+        type: "paragraph",
         text: section.text,
       }
     }
-    case 'education': {
+    case "education": {
       return {
         ...cleanTitle(section),
-        type: 'education',
+        type: "education",
         institutions: section.institutions.map((inst) => ({
           name: inst.name.trim(),
           degree: inst.degree.trim(),
@@ -221,10 +211,10 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
         })),
       }
     }
-    case 'skills': {
+    case "skills": {
       return {
         ...cleanTitle(section),
-        type: 'skills',
+        type: "skills",
         groups: section.groups
           .map((group) => ({
             title: group.title.trim(),
@@ -233,15 +223,15 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
           .filter((group) => group.items.length > 0),
       }
     }
-    case 'experience': {
+    case "experience": {
       return {
         ...cleanTitle(section),
-        type: 'experience',
+        type: "experience",
         companies: section.companies.map((company) => {
           const startDate = formatMonthYear(company.start_date)
           const companyEndDate =
             company.end_date === undefined && !!company.start_date
-              ? 'Present'
+              ? "Present"
               : (formatMonthYear(company.end_date) ?? null)
           return {
             company_name: company.company_name.trim(),
@@ -255,10 +245,10 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
               start_date: formatMonthYear(role.start_date),
               end_date:
                 role.end_date === undefined && !!role.start_date
-                  ? 'Present'
+                  ? "Present"
                   : formatMonthYear(role.end_date),
               bullets: role.bullets.map((bullet) =>
-                bullet.type === 'text'
+                bullet.type === "text"
                   ? { type: bullet.type, text: bullet.text }
                   : {
                       type: bullet.type,
@@ -271,10 +261,10 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
         }),
       }
     }
-    case 'list': {
+    case "list": {
       return {
         ...cleanTitle(section),
-        type: 'list',
+        type: "list",
         items: section.items.map((item) => ({
           title: cleanOptional(item.title),
           url: cleanOptional(item.url),
@@ -287,9 +277,9 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
 }
 
 function cleanTitle(section: ResumeSection): WithOptionalTitle {
-  const title = 'title' in section ? section.title : undefined
+  const title = "title" in section ? section.title : undefined
 
-  if (typeof title === 'string') {
+  if (typeof title === "string") {
     const cleaned = cleanOptional(title)
     if (cleaned) {
       return { title: cleaned }

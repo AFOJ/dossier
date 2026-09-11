@@ -1,6 +1,6 @@
-import { Select as BaseSelect } from '@base-ui/react/select'
-import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
-import { Icon } from '@/components/ui/Icon'
+import { Select as BaseSelect } from "@base-ui/react/select"
+import { CheckmarkCircle01Icon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/Icon"
 
 type SelectOption<T extends string | number> = {
   label: string
@@ -8,14 +8,14 @@ type SelectOption<T extends string | number> = {
 }
 
 type SelectProps<T extends string | number> = {
-  'aria-label': string
+  "aria-label": string
   options: readonly SelectOption<T>[]
   value: T
   onValueChange: (value: T) => void
 }
 
 export function Select<T extends string | number>(props: Readonly<SelectProps<T>>) {
-  const { 'aria-label': ariaLabel, options, value, onValueChange } = props
+  const { "aria-label": ariaLabel, options, value, onValueChange } = props
 
   return (
     <BaseSelect.Root

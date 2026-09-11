@@ -1,1 +1,1 @@
-export { default } from '@/pages/resumes/create/CreateResumePage'
+export { default } from "@/pages/resumes/create/CreateResumePage"

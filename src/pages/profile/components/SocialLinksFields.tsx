@@ -1,18 +1,13 @@
-import {
-  Add01Icon,
-  ArrowUp01Icon,
-  ArrowDown01Icon,
-  Trash,
-} from '@hugeicons/core-free-icons'
-import { Button, Field, Heading2, Input } from '@/components/ui'
-import { useFieldArray } from 'react-hook-form'
-import { useProfileFieldContext } from '@/pages/profile/schema'
+import { Add01Icon, ArrowUp01Icon, ArrowDown01Icon, Trash } from "@hugeicons/core-free-icons"
+import { Button, Field, Heading2, Input } from "@/components/ui"
+import { useFieldArray } from "react-hook-form"
+import { useProfileFieldContext } from "@/pages/profile/schema"
 
 export function SocialLinksFields() {
   const { control } = useProfileFieldContext()
   const { fields, append, remove, move } = useFieldArray({
     control,
-    name: 'socials',
+    name: "socials",
   })
 
   return (
@@ -35,7 +30,7 @@ export function SocialLinksFields() {
         icon={Add01Icon}
         intent="secondary"
         iconClassname="text-gray-400"
-        onClick={() => append({ label: '', url: '' })}
+        onClick={() => append({ label: "", url: "" })}
       >
         Add social link
       </Button>
@@ -58,12 +53,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
     <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:gap-4 sm:items-start sm:border-none sm:p-0">
       <div className="flex items-center justify-between sm:contents">
         <div className="flex items-center gap-1 sm:pt-1">
-          <ReorderControls
-            index={index}
-            isFirst={isFirst}
-            isLast={isLast}
-            onMove={onMove}
-          />
+          <ReorderControls index={index} isFirst={isFirst} isLast={isLast} onMove={onMove} />
         </div>
         <div className="sm:order-last sm:pt-1">
           <RemoveButton index={index} onRemove={onRemove} />
@@ -123,10 +113,7 @@ function SocialLinkInputs(props: Readonly<SocialLinkInputsProps>) {
   return (
     <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-start">
       <div className="grow">
-        <Field
-          inputId={`socials.${index}.label`}
-          error={fieldErrors?.label?.message}
-        >
+        <Field inputId={`socials.${index}.label`} error={fieldErrors?.label?.message}>
           <Input
             id={`socials.${index}.label`}
             placeholder="Label (e.g. GitHub)"
@@ -136,10 +123,7 @@ function SocialLinkInputs(props: Readonly<SocialLinkInputsProps>) {
       </div>
 
       <div className="grow">
-        <Field
-          inputId={`socials.${index}.url`}
-          error={fieldErrors?.url?.message}
-        >
+        <Field inputId={`socials.${index}.url`} error={fieldErrors?.url?.message}>
           <Input
             id={`socials.${index}.url`}
             placeholder="URL"

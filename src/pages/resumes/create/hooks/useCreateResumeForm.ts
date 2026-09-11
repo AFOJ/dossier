@@ -1,18 +1,18 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useForm, useFormContext } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useToast } from '@/components/toast'
-import type { Profile } from '@/db/db'
-import { createResume } from '@/db/resume'
-import { resumeSectionSchema, type ResumeSectionData } from '@/db/schemas'
+import { useCallback, useMemo, useState } from "react"
+import { useForm, useFormContext } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useToast } from "@/components/toast"
+import type { Profile } from "@/db/db"
+import { createResume } from "@/db/resume"
+import { resumeSectionSchema, type ResumeSectionData } from "@/db/schemas"
 
 const isMonthValue = (value: string) => /^\d{4}-\d{2}$/.test(value)
 
 export const resumeFormSchema = z
   .object({
-    title: z.string().min(1, 'Title is required'),
+    title: z.string().min(1, "Title is required"),
     syncProfile: z.boolean(),
     fullName: z.string().optional(),
     jobTitle: z.string().optional(),
@@ -32,161 +32,150 @@ export const resumeFormSchema = z
       return
     }
 
-    if ((data.fullName ?? '').trim() === '') {
+    if ((data.fullName ?? "").trim() === "") {
       ctx.addIssue({
-        code: 'custom',
-        path: ['fullName'],
-        message: 'Full name is required',
+        code: "custom",
+        path: ["fullName"],
+        message: "Full name is required",
       })
     }
 
-    const email = data.email ?? ''
-    if (email !== '' && !z.email().safeParse(email).success) {
+    const email = data.email ?? ""
+    if (email !== "" && !z.email().safeParse(email).success) {
       ctx.addIssue({
-        code: 'custom',
-        path: ['email'],
-        message: 'Invalid email address',
+        code: "custom",
+        path: ["email"],
+        message: "Invalid email address",
       })
     }
 
     data.socials.forEach((social, index) => {
-      if (social.label.trim() === '') {
+      if (social.label.trim() === "") {
         ctx.addIssue({
-          code: 'custom',
-          path: ['socials', index, 'label'],
-          message: 'Label is required',
+          code: "custom",
+          path: ["socials", index, "label"],
+          message: "Label is required",
         })
       }
 
       if (!z.url().safeParse(social.url).success) {
         ctx.addIssue({
-          code: 'custom',
-          path: ['socials', index, 'url'],
-          message: 'Must be a valid URL',
+          code: "custom",
+          path: ["socials", index, "url"],
+          message: "Must be a valid URL",
         })
       }
     })
   })
   .superRefine((data, ctx) => {
-    const addSectionIssue = (
-      sectionIndex: number,
-      path: (string | number)[],
-      message: string,
-    ) => {
+    const addSectionIssue = (sectionIndex: number, path: (string | number)[], message: string) => {
       ctx.addIssue({
-        code: 'custom',
-        path: ['sections', sectionIndex, ...path],
+        code: "custom",
+        path: ["sections", sectionIndex, ...path],
         message,
       })
     }
 
     data.sections.forEach((section, sectionIndex) => {
       switch (section.type) {
-        case 'paragraph': {
-          if (section.text.trim() === '') {
-            addSectionIssue(sectionIndex, ['text'], 'Paragraph cannot be empty')
+        case "paragraph": {
+          if (section.text.trim() === "") {
+            addSectionIssue(sectionIndex, ["text"], "Paragraph cannot be empty")
           }
           break
         }
 
-        case 'education': {
+        case "education": {
           if (section.institutions.length === 0) {
             addSectionIssue(
               sectionIndex,
-              ['institutions'],
-              'Add at least one school to this section',
+              ["institutions"],
+              "Add at least one school to this section",
             )
           }
 
           section.institutions.forEach((institution, institutionIndex) => {
-            if (institution.name.trim() === '') {
+            if (institution.name.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['institutions', institutionIndex, 'name'],
-                'School is required',
+                ["institutions", institutionIndex, "name"],
+                "School is required",
               )
             }
-            if (institution.degree.trim() === '') {
+            if (institution.degree.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['institutions', institutionIndex, 'degree'],
-                'Degree is required',
+                ["institutions", institutionIndex, "degree"],
+                "Degree is required",
               )
             }
           })
           break
         }
 
-        case 'skills': {
+        case "skills": {
           if (section.groups.length === 0) {
             addSectionIssue(
               sectionIndex,
-              ['groups'],
-              'Add at least one skill group to this section',
+              ["groups"],
+              "Add at least one skill group to this section",
             )
           }
 
           section.groups.forEach((group, groupIndex) => {
-            if (group.title.trim() === '') {
+            if (group.title.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['groups', groupIndex, 'title'],
-                'Group title is required',
+                ["groups", groupIndex, "title"],
+                "Group title is required",
               )
             }
             if (group.items.length === 0) {
               addSectionIssue(
                 sectionIndex,
-                ['groups', groupIndex, 'items'],
-                'Add at least one skill',
+                ["groups", groupIndex, "items"],
+                "Add at least one skill",
               )
             }
           })
           break
         }
 
-        case 'experience': {
+        case "experience": {
           if (section.companies.length === 0) {
-            addSectionIssue(
-              sectionIndex,
-              ['companies'],
-              'Add at least one company to this section',
-            )
+            addSectionIssue(sectionIndex, ["companies"], "Add at least one company to this section")
           }
 
           section.companies.forEach((company, companyIndex) => {
-            if (company.company_name.trim() === '') {
+            if (company.company_name.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['companies', companyIndex, 'company_name'],
-                'Company is required',
+                ["companies", companyIndex, "company_name"],
+                "Company is required",
               )
             }
 
             if (company.roles.length === 0) {
               addSectionIssue(
                 sectionIndex,
-                ['companies', companyIndex, 'roles'],
-                'Add at least one role to this company',
+                ["companies", companyIndex, "roles"],
+                "Add at least one role to this company",
               )
             }
 
-            if (company.start_date.trim() === '') {
+            if (company.start_date.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['companies', companyIndex, 'start_date'],
-                'Start date is required',
+                ["companies", companyIndex, "start_date"],
+                "Start date is required",
               )
             }
 
-            if (
-              company.end_date !== undefined &&
-              !isMonthValue(company.end_date)
-            ) {
+            if (company.end_date !== undefined && !isMonthValue(company.end_date)) {
               addSectionIssue(
                 sectionIndex,
-                ['companies', companyIndex, 'end_date'],
-                'End date is required',
+                ["companies", companyIndex, "end_date"],
+                "End date is required",
               )
             }
 
@@ -198,47 +187,43 @@ export const resumeFormSchema = z
             ) {
               addSectionIssue(
                 sectionIndex,
-                ['companies', companyIndex, 'end_date'],
-                'End date cannot be before start date',
+                ["companies", companyIndex, "end_date"],
+                "End date cannot be before start date",
               )
             }
 
             company.roles.forEach((role, roleIndex) => {
-              if (role.job_title.trim() === '') {
+              if (role.job_title.trim() === "") {
                 addSectionIssue(
                   sectionIndex,
-                  ['companies', companyIndex, 'roles', roleIndex, 'job_title'],
-                  'Job title is required',
+                  ["companies", companyIndex, "roles", roleIndex, "job_title"],
+                  "Job title is required",
                 )
               }
 
-              const hasStart = (role.start_date ?? '').trim() !== ''
+              const hasStart = (role.start_date ?? "").trim() !== ""
               const endDateIsNonEmptyInvalid =
-                role.end_date !== undefined &&
-                role.end_date !== '' &&
-                !isMonthValue(role.end_date)
+                role.end_date !== undefined && role.end_date !== "" && !isMonthValue(role.end_date)
               const hasValidEnd =
-                role.end_date !== undefined &&
-                role.end_date !== '' &&
-                isMonthValue(role.end_date)
+                role.end_date !== undefined && role.end_date !== "" && isMonthValue(role.end_date)
 
               if (endDateIsNonEmptyInvalid) {
                 addSectionIssue(
                   sectionIndex,
-                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
-                  'End date is required',
+                  ["companies", companyIndex, "roles", roleIndex, "end_date"],
+                  "End date is required",
                 )
-              } else if (role.end_date === '' && hasStart) {
+              } else if (role.end_date === "" && hasStart) {
                 addSectionIssue(
                   sectionIndex,
-                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
-                  'End date is required',
+                  ["companies", companyIndex, "roles", roleIndex, "end_date"],
+                  "End date is required",
                 )
               } else if (!hasStart && hasValidEnd) {
                 addSectionIssue(
                   sectionIndex,
-                  ['companies', companyIndex, 'roles', roleIndex, 'start_date'],
-                  'Start date is required when an end date is set',
+                  ["companies", companyIndex, "roles", roleIndex, "start_date"],
+                  "Start date is required when an end date is set",
                 )
               } else if (
                 hasStart &&
@@ -251,35 +236,51 @@ export const resumeFormSchema = z
               ) {
                 addSectionIssue(
                   sectionIndex,
-                  ['companies', companyIndex, 'roles', roleIndex, 'end_date'],
-                  'End date cannot be before start date',
+                  ["companies", companyIndex, "roles", roleIndex, "end_date"],
+                  "End date cannot be before start date",
                 )
               }
 
               role.bullets.forEach((bullet, bulletIndex) => {
-                if (bullet.type === 'text') {
-                  if (bullet.text.trim() === '') {
+                if (bullet.type === "text") {
+                  if (bullet.text.trim() === "") {
                     addSectionIssue(
                       sectionIndex,
-                      ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'text'],
-                      'Bullet cannot be empty',
+                      [
+                        "companies",
+                        companyIndex,
+                        "roles",
+                        roleIndex,
+                        "bullets",
+                        bulletIndex,
+                        "text",
+                      ],
+                      "Bullet cannot be empty",
                     )
                   }
                   return
                 }
 
-                if (bullet.title.trim() === '') {
+                if (bullet.title.trim() === "") {
                   addSectionIssue(
                     sectionIndex,
-                    ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'title'],
-                    'Bullet heading is required',
+                    [
+                      "companies",
+                      companyIndex,
+                      "roles",
+                      roleIndex,
+                      "bullets",
+                      bulletIndex,
+                      "title",
+                    ],
+                    "Bullet heading is required",
                   )
                 }
-                if (bullet.text.trim() === '') {
+                if (bullet.text.trim() === "") {
                   addSectionIssue(
                     sectionIndex,
-                    ['companies', companyIndex, 'roles', roleIndex, 'bullets', bulletIndex, 'text'],
-                    'Bullet text is required',
+                    ["companies", companyIndex, "roles", roleIndex, "bullets", bulletIndex, "text"],
+                    "Bullet text is required",
                   )
                 }
               })
@@ -288,36 +289,28 @@ export const resumeFormSchema = z
           break
         }
 
-        case 'list': {
+        case "list": {
           if (section.items.length === 0) {
-            addSectionIssue(
-              sectionIndex,
-              ['items'],
-              'Add at least one item to this section',
-            )
+            addSectionIssue(sectionIndex, ["items"], "Add at least one item to this section")
           }
 
           section.items.forEach((item, itemIndex) => {
-            if (item.url && (!item.title || item.title.trim() === '')) {
+            if (item.url && (!item.title || item.title.trim() === "")) {
               addSectionIssue(
                 sectionIndex,
-                ['items', itemIndex, 'title'],
-                'Title is required when URL is provided',
+                ["items", itemIndex, "title"],
+                "Title is required when URL is provided",
               )
             }
-            if (!item.description || item.description.trim() === '') {
+            if (!item.description || item.description.trim() === "") {
               addSectionIssue(
                 sectionIndex,
-                ['items', itemIndex, 'description'],
-                'Description is required',
+                ["items", itemIndex, "description"],
+                "Description is required",
               )
             }
             if (item.url && !z.url().safeParse(item.url).success) {
-              addSectionIssue(
-                sectionIndex,
-                ['items', itemIndex, 'url'],
-                'Must be a valid URL',
-              )
+              addSectionIssue(sectionIndex, ["items", itemIndex, "url"], "Must be a valid URL")
             }
           })
           break
@@ -333,7 +326,7 @@ export function useResumeFieldContext() {
 }
 
 export interface ParagraphSectionErrors {
-  type: 'paragraph'
+  type: "paragraph"
   title?: { message: string }
   text?: { message: string }
 }
@@ -349,7 +342,7 @@ export interface EducationInstitutionErrors {
 }
 
 export interface EducationSectionErrors {
-  type: 'education'
+  type: "education"
   title?: { message: string }
   institutions?: EducationInstitutionErrors[] & { message?: string }
 }
@@ -360,7 +353,7 @@ export interface SkillGroupErrors {
 }
 
 export interface SkillsSectionErrors {
-  type: 'skills'
+  type: "skills"
   title?: { message: string }
   groups?: SkillGroupErrors[] & { message?: string }
 }
@@ -388,7 +381,7 @@ export interface ExperienceCompanyErrors {
 }
 
 export interface ExperienceSectionErrors {
-  type: 'experience'
+  type: "experience"
   title?: { message: string }
   companies?: ExperienceCompanyErrors[] & { message?: string }
 }
@@ -401,7 +394,7 @@ export interface ListItemErrors {
 }
 
 export interface ListSectionErrors {
-  type: 'list'
+  type: "list"
   title?: { message: string }
   items?: ListItemErrors[] & { message?: string }
 }
@@ -413,26 +406,21 @@ export type SectionErrors =
   | ExperienceSectionErrors
   | ListSectionErrors
 
-export function getSectionErrors(
-  errors: unknown,
-  sectionIndex: number
-): SectionErrors | undefined {
+export function getSectionErrors(errors: unknown, sectionIndex: number): SectionErrors | undefined {
   const nodes = errors as { sections?: SectionErrors[] } | undefined
   return nodes?.sections?.[sectionIndex]
 }
 
-export type SectionType = ResumeSectionData['type']
+export type SectionType = ResumeSectionData["type"]
 
 type SectionsApi = {
-  setValue: (name: 'sections', value: FormSection[], options?: object) => void
-  getValues: (name: 'sections') => FormSection[]
+  setValue: (name: "sections", value: FormSection[], options?: object) => void
+  getValues: (name: "sections") => FormSection[]
 }
 
 export function createSectionMutations({ setValue, getValues }: SectionsApi) {
-  const mutateSections = (
-    mutate: (sections: FormSection[]) => FormSection[],
-  ) => {
-    setValue('sections', mutate(getValues('sections')), { shouldDirty: true })
+  const mutateSections = (mutate: (sections: FormSection[]) => FormSection[]) => {
+    setValue("sections", mutate(getValues("sections")), { shouldDirty: true })
   }
 
   return {
@@ -456,9 +444,7 @@ export function createSectionMutations({ setValue, getValues }: SectionsApi) {
     },
     updateSection: (index: number, section: ResumeSectionData) => {
       mutateSections((sections) =>
-        sections.map((current, i) =>
-          i === index ? ({ ...section } as FormSection) : current,
-        ),
+        sections.map((current, i) => (i === index ? ({ ...section } as FormSection) : current)),
       )
     },
   }
@@ -479,22 +465,22 @@ export function itemKey(item: unknown, index: number): string {
 }
 
 const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
-  paragraph: () => withKey({ type: 'paragraph', title: '', text: '' }),
-  education: () => withKey({ type: 'education', title: '', institutions: [] }),
+  paragraph: () => withKey({ type: "paragraph", title: "", text: "" }),
+  education: () => withKey({ type: "education", title: "", institutions: [] }),
   skills: () =>
     withKey({
-      type: 'skills',
-      title: '',
-      groups: [withKey({ title: '', items: [] })],
+      type: "skills",
+      title: "",
+      groups: [withKey({ title: "", items: [] })],
     }),
   experience: () =>
     withKey({
-      type: 'experience',
-      title: '',
+      type: "experience",
+      title: "",
       companies: [
         withKey({
-          company_name: '',
-          start_date: '',
+          company_name: "",
+          start_date: "",
           end_date: undefined,
           roles: [],
         }),
@@ -502,19 +488,19 @@ const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
     }),
   list: () =>
     withKey({
-      type: 'list',
-      title: '',
-      items: [withKey({ title: '', url: '', description: '', date: '' })],
+      type: "list",
+      title: "",
+      items: [withKey({ title: "", url: "", description: "", date: "" })],
     }),
 }
 
 export function emptyContactValues() {
   return {
-    fullName: '',
-    jobTitle: '',
-    location: '',
-    phone: '',
-    email: '',
+    fullName: "",
+    jobTitle: "",
+    location: "",
+    phone: "",
+    email: "",
     socials: [] as { label: string; url: string }[],
   }
 }
@@ -522,10 +508,10 @@ export function emptyContactValues() {
 function toContactValues(profile: Profile) {
   return {
     fullName: profile.full_name,
-    jobTitle: profile.role ?? '',
-    location: profile.location ?? '',
-    phone: profile.phone ?? '',
-    email: profile.email ?? '',
+    jobTitle: profile.role ?? "",
+    location: profile.location ?? "",
+    phone: profile.phone ?? "",
+    email: profile.email ?? "",
     socials: profile.links.map((link) => ({
       label: link.label,
       url: link.url,
@@ -541,16 +527,16 @@ export function useCreateResumeForm(profile?: Profile) {
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
-      title: '',
+      title: "",
       syncProfile: true,
       ...(profile
         ? toContactValues(profile)
         : {
-            fullName: '',
-            jobTitle: '',
-            location: '',
-            phone: '',
-            email: '',
+            fullName: "",
+            jobTitle: "",
+            location: "",
+            phone: "",
+            email: "",
             socials: [],
           }),
       sections: [],
@@ -566,7 +552,7 @@ export function useCreateResumeForm(profile?: Profile) {
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {
-      setValue('syncProfile', sync, { shouldDirty: true })
+      setValue("syncProfile", sync, { shouldDirty: true })
 
       if (sync && profile) {
         // Turning sync back on discards local edits in favour of the profile.
@@ -585,12 +571,12 @@ export function useCreateResumeForm(profile?: Profile) {
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       setIsSubmitting(true)
-      form.clearErrors('root')
+      form.clearErrors("root")
 
       const contact = data.syncProfile
         ? null
         : {
-            full_name: data.fullName ?? '',
+            full_name: data.fullName ?? "",
             email: data.email || null,
             phone: data.phone || null,
             location: data.location || null,
@@ -603,16 +589,16 @@ export function useCreateResumeForm(profile?: Profile) {
         contact,
       })
 
-      toast.success('Resume created', `"${data.title}" has been created.`)
-      navigate('/resumes')
+      toast.success("Resume created", `"${data.title}" has been created.`)
+      navigate("/resumes")
     } catch (error) {
-      form.setError('root', {
-        type: 'manual',
-        message: 'Failed to create resume. Please try again.',
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to create resume. Please try again.",
       })
-      toast.error('Failed to create resume', 'Please try again.')
+      toast.error("Failed to create resume", "Please try again.")
 
-      console.error('Failed to create resume:', error)
+      console.error("Failed to create resume:", error)
     } finally {
       setIsSubmitting(false)
     }

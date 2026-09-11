@@ -11,24 +11,17 @@ import type {
   BulletErrors,
   ExperienceRoleErrors,
   ExperienceCompanyErrors,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
-import type { ResumePayload } from '@/lib/resumePayload'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import type { ResumePayload } from "@/lib/resumePayload"
 
-const DEFAULT_API_BASE_URL = 'http://localhost:3000/'
+const DEFAULT_API_BASE_URL = "http://localhost:3000/"
 
 function getApiBaseUrl(): string {
-  return (import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(
-    /\/+$/,
-    '',
-  )
+  return (import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/+$/, "")
 }
 
 export type ApiErrorCode =
-  | 'NETWORK_ERROR'
-  | 'VALIDATION_ERROR'
-  | 'COMPILE_ERROR'
-  | 'NOT_FOUND'
-  | 'INTERNAL_ERROR'
+  "NETWORK_ERROR" | "VALIDATION_ERROR" | "COMPILE_ERROR" | "NOT_FOUND" | "INTERNAL_ERROR"
 
 export type ApiErrorDetail = { path: string; message: string } | string
 
@@ -38,7 +31,7 @@ export class ApiError extends Error {
 
   constructor(code: ApiErrorCode, message: string, details: ApiErrorDetail[]) {
     super(message)
-    this.name = 'ApiError'
+    this.name = "ApiError"
     this.code = code
     this.details = details
   }
@@ -63,14 +56,14 @@ export async function processResume(payload: ResumePayload): Promise<Blob> {
 
   try {
     response = await fetch(`${getApiBaseUrl()}/api/resumes/process`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
   } catch {
     throw new ApiError(
-      'NETWORK_ERROR',
-      'Could not reach the server. Check your connection and try again.',
+      "NETWORK_ERROR",
+      "Could not reach the server. Check your connection and try again.",
       [],
     )
   }
@@ -83,8 +76,8 @@ export async function processResume(payload: ResumePayload): Promise<Blob> {
     return await response.blob()
   } catch {
     throw new ApiError(
-      'NETWORK_ERROR',
-      'Could not reach the server. Check your connection and try again.',
+      "NETWORK_ERROR",
+      "Could not reach the server. Check your connection and try again.",
       [],
     )
   }
@@ -97,7 +90,7 @@ async function toApiError(response: Response): Promise<ApiError> {
     envelope = (await response.json()) as ErrorEnvelope
   } catch {
     return new ApiError(
-      'INTERNAL_ERROR',
+      "INTERNAL_ERROR",
       `Unexpected response from the server (${response.status}).`,
       [],
     )
@@ -105,20 +98,20 @@ async function toApiError(response: Response): Promise<ApiError> {
 
   const code = normalizeCode(envelope.error?.code)
   const message =
-    typeof envelope.error?.message === 'string' && envelope.error.message
+    typeof envelope.error?.message === "string" && envelope.error.message
       ? envelope.error.message
       : `Request failed (${response.status}).`
 
   const details = Array.isArray(envelope.error?.details)
     ? envelope.error.details.filter(
         (detail): detail is ApiErrorDetail =>
-          typeof detail === 'string' ||
-          (typeof detail === 'object' &&
+          typeof detail === "string" ||
+          (typeof detail === "object" &&
             detail !== null &&
-            'path' in detail &&
-            typeof detail.path === 'string' &&
-            'message' in detail &&
-            typeof detail.message === 'string'),
+            "path" in detail &&
+            typeof detail.path === "string" &&
+            "message" in detail &&
+            typeof detail.message === "string"),
       )
     : []
 
@@ -127,22 +120,22 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 function normalizeCode(value: unknown): ApiErrorCode {
   if (
-    value === 'VALIDATION_ERROR' ||
-    value === 'COMPILE_ERROR' ||
-    value === 'NOT_FOUND' ||
-    value === 'INTERNAL_ERROR'
+    value === "VALIDATION_ERROR" ||
+    value === "COMPILE_ERROR" ||
+    value === "NOT_FOUND" ||
+    value === "INTERNAL_ERROR"
   ) {
     return value
   }
 
-  return 'INTERNAL_ERROR'
+  return "INTERNAL_ERROR"
 }
 
 /** Formats an ApiError into a single human-readable sentence. */
 export function formatApiError(error: ApiError): string {
   const firstDetail = error.details[0]
 
-  if (typeof firstDetail === 'string') {
+  if (typeof firstDetail === "string") {
     return `${error.message} (${firstDetail.trim()})`
   }
 
@@ -156,8 +149,7 @@ export function formatApiError(error: ApiError): string {
 const MAX_ERROR_LINES = 5
 
 /** Messages emitted while a JSON Schema oneOf tries unrelated variants. */
-const CASCADE_MESSAGE =
-  /oneOf|additional propert|equal to constant|required property/i
+const CASCADE_MESSAGE = /oneOf|additional propert|equal to constant|required property/i
 
 /**
  * Turns error details into short, actionable lines for display.
@@ -169,8 +161,7 @@ const CASCADE_MESSAGE =
  */
 export function getErrorFeedback(error: ApiError): string[] {
   const objectDetails = error.details.filter(
-    (detail): detail is { path: string; message: string } =>
-      typeof detail === 'object',
+    (detail): detail is { path: string; message: string } => typeof detail === "object",
   )
 
   if (objectDetails.length > 0) {
@@ -186,7 +177,7 @@ export function getErrorFeedback(error: ApiError): string[] {
   }
 
   const stringDetails = error.details.filter(
-    (detail): detail is string => typeof detail === 'string',
+    (detail): detail is string => typeof detail === "string",
   )
 
   if (stringDetails.length > 0) {
@@ -202,12 +193,10 @@ function collectDetailLines(
 ): string[] {
   const lines: string[] = []
 
-  const relevant = skipCascade
-    ? details.filter((d) => !CASCADE_MESSAGE.test(d.message))
-    : details
+  const relevant = skipCascade ? details.filter((d) => !CASCADE_MESSAGE.test(d.message)) : details
 
   for (const detail of relevant.sort(
-    (a, b) => b.path.split('/').length - a.path.split('/').length,
+    (a, b) => b.path.split("/").length - a.path.split("/").length,
   )) {
     const line = `${detail.path}: ${detail.message}`
     if (!lines.includes(line)) {
@@ -232,7 +221,7 @@ function collectDetailLines(
  *   SectionErrors[] with discriminated union by section type
  */
 export function parseApiValidationErrors(
-  details: { path: string; message: string }[]
+  details: { path: string; message: string }[],
 ): SectionErrors[] {
   const sections: SectionErrors[] = []
 
@@ -241,44 +230,38 @@ export function parseApiValidationErrors(
     const message = detail.message
 
     // Parse JSON pointer: /sections/0/institutions/1/name
-    const segments = path.split('/').filter(Boolean)
-    if (segments[0] !== 'sections') continue
+    const segments = path.split("/").filter(Boolean)
+    if (segments[0] !== "sections") continue
 
     const sectionIndex = parseInt(segments[1], 10)
     if (isNaN(sectionIndex)) continue
 
     while (sections.length <= sectionIndex) {
-      sections.push({ type: 'paragraph', title: undefined, text: undefined })
+      sections.push({ type: "paragraph", title: undefined, text: undefined })
     }
 
     const fieldPath = segments.slice(2) // e.g., ['institutions', '1', 'name']
     const sectionErrors = buildSectionErrors(fieldPath, message)
 
-    sections[sectionIndex] = mergeSectionErrors(
-      sections[sectionIndex],
-      sectionErrors,
-    )
+    sections[sectionIndex] = mergeSectionErrors(sections[sectionIndex], sectionErrors)
   }
 
   return sections
 }
 
-function buildSectionErrors(
-  path: string[],
-  message: string,
-): Partial<SectionErrors> {
+function buildSectionErrors(path: string[], message: string): Partial<SectionErrors> {
   if (path.length === 0) return {}
 
   const [field, ...rest] = path
 
   switch (field) {
-    case 'title':
+    case "title":
       return { title: { message } }
 
-    case 'text':
+    case "text":
       return { text: { message } }
 
-    case 'institutions': {
+    case "institutions": {
       const index = parseInt(rest[0], 10)
       const subField = rest[1]
       if (isNaN(index) || !subField) return {}
@@ -292,16 +275,15 @@ function buildSectionErrors(
         i === index ? { ...institutionErrors } : {},
       ) as EducationInstitutionErrors[]
       // Add message property to array for section-level error
-      ;(arr as EducationInstitutionErrors[] & { message?: string }).message =
-        undefined
+      ;(arr as EducationInstitutionErrors[] & { message?: string }).message = undefined
 
       return {
-        type: 'education',
+        type: "education",
         institutions: arr,
       }
     }
 
-    case 'groups': {
+    case "groups": {
       const index = parseInt(rest[0], 10)
       const subField = rest[1]
       if (isNaN(index) || !subField) return {}
@@ -315,12 +297,12 @@ function buildSectionErrors(
       ;(arr as SkillGroupErrors[] & { message?: string }).message = undefined
 
       return {
-        type: 'skills',
+        type: "skills",
         groups: arr,
       }
     }
 
-    case 'companies': {
+    case "companies": {
       const companyIndex = parseInt(rest[0], 10)
       if (isNaN(companyIndex)) return {}
 
@@ -337,11 +319,10 @@ function buildSectionErrors(
         const arr = Array.from({ length: companyIndex + 1 }, (_, i) =>
           i === companyIndex ? { ...companyErrors } : {},
         ) as ExperienceCompanyErrors[]
-        ;(arr as ExperienceCompanyErrors[] & { message?: string }).message =
-          undefined
+        ;(arr as ExperienceCompanyErrors[] & { message?: string }).message = undefined
 
         return {
-          type: 'experience',
+          type: "experience",
           companies: arr,
         }
       }
@@ -362,25 +343,24 @@ function buildSectionErrors(
         const rolesArr = Array.from({ length: roleIndex + 1 }, (_, j) =>
           j === roleIndex ? { ...roleErrors } : {},
         ) as ExperienceRoleErrors[]
-        ;(rolesArr as ExperienceRoleErrors[] & { message?: string }).message =
-          undefined
+        ;(rolesArr as ExperienceRoleErrors[] & { message?: string }).message = undefined
 
-        const companiesArr = Array.from(
-          { length: companyIndex + 1 },
-          (_, i) =>
-            i === companyIndex
-              ? {
-                  roles: rolesArr as ExperienceRoleErrors[] & { message?: string },
-                  message: undefined,
-                }
-              : ({} as ExperienceCompanyErrors),
+        const companiesArr = Array.from({ length: companyIndex + 1 }, (_, i) =>
+          i === companyIndex
+            ? {
+                roles: rolesArr as ExperienceRoleErrors[] & { message?: string },
+                message: undefined,
+              }
+            : ({} as ExperienceCompanyErrors),
         ) as ExperienceCompanyErrors[]
-        ;(companiesArr as ExperienceCompanyErrors[] & {
-          message?: string
-        }).message = undefined
+        ;(
+          companiesArr as ExperienceCompanyErrors[] & {
+            message?: string
+          }
+        ).message = undefined
 
         return {
-          type: 'experience',
+          type: "experience",
           companies: companiesArr,
         }
       }
@@ -409,8 +389,7 @@ function buildSectionErrors(
             }
           : ({} as ExperienceRoleErrors),
       ) as ExperienceRoleErrors[]
-      ;(rolesArr as ExperienceRoleErrors[] & { message?: string }).message =
-        undefined
+      ;(rolesArr as ExperienceRoleErrors[] & { message?: string }).message = undefined
 
       const companiesArr = Array.from({ length: companyIndex + 1 }, (_, i) =>
         i === companyIndex
@@ -420,17 +399,19 @@ function buildSectionErrors(
             }
           : ({} as ExperienceCompanyErrors),
       ) as ExperienceCompanyErrors[]
-      ;(companiesArr as ExperienceCompanyErrors[] & {
-        message?: string
-      }).message = undefined
+      ;(
+        companiesArr as ExperienceCompanyErrors[] & {
+          message?: string
+        }
+      ).message = undefined
 
       return {
-        type: 'experience',
+        type: "experience",
         companies: companiesArr,
       }
     }
 
-    case 'items': {
+    case "items": {
       const itemIndex = parseInt(rest[0], 10)
       const subField = rest[1]
       if (isNaN(itemIndex) || !subField) return {}
@@ -444,7 +425,7 @@ function buildSectionErrors(
       ;(arr as ListItemErrors[] & { message?: string }).message = undefined
 
       return {
-        type: 'list',
+        type: "list",
         items: arr,
       }
     }
@@ -485,80 +466,64 @@ function mergeSectionErrors(
   }
 
   switch (type) {
-    case 'paragraph': {
+    case "paragraph": {
       const e = existing as ParagraphSectionErrors
       const inc = incoming as Partial<ParagraphSectionErrors>
       return {
-        type: 'paragraph',
+        type: "paragraph",
         title: inc.title ?? e.title,
         text: inc.text ?? e.text,
       }
     }
 
-    case 'education': {
+    case "education": {
       const e = existing as EducationSectionErrors
       const inc = incoming as Partial<EducationSectionErrors>
       return {
-        type: 'education',
+        type: "education",
         title: inc.title ?? e.title,
         institutions: mergeArray(
-          e.institutions as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
-          inc.institutions as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
+          e.institutions as (Record<string, unknown> & { message?: string })[] | undefined,
+          inc.institutions as (Record<string, unknown> & { message?: string })[] | undefined,
         ) as EducationInstitutionErrors[] & { message?: string },
       }
     }
 
-    case 'skills': {
+    case "skills": {
       const e = existing as SkillsSectionErrors
       const inc = incoming as Partial<SkillsSectionErrors>
       return {
-        type: 'skills',
+        type: "skills",
         title: inc.title ?? e.title,
         groups: mergeArray(
-          e.groups as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
-          inc.groups as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
+          e.groups as (Record<string, unknown> & { message?: string })[] | undefined,
+          inc.groups as (Record<string, unknown> & { message?: string })[] | undefined,
         ) as SkillGroupErrors[] & { message?: string },
       }
     }
 
-    case 'experience': {
+    case "experience": {
       const e = existing as ExperienceSectionErrors
       const inc = incoming as Partial<ExperienceSectionErrors>
       return {
-        type: 'experience',
+        type: "experience",
         title: inc.title ?? e.title,
         companies: mergeArray(
-          e.companies as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
-          inc.companies as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
+          e.companies as (Record<string, unknown> & { message?: string })[] | undefined,
+          inc.companies as (Record<string, unknown> & { message?: string })[] | undefined,
         ) as ExperienceCompanyErrors[] & { message?: string },
       }
     }
 
-    case 'list': {
+    case "list": {
       const e = existing as ListSectionErrors
       const inc = incoming as Partial<ListSectionErrors>
       return {
-        type: 'list',
+        type: "list",
         title: inc.title ?? e.title,
         items: mergeArray(
-          e.items as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
-          inc.items as
-            | (Record<string, unknown> & { message?: string })[]
-            | undefined,
+          e.items as (Record<string, unknown> & { message?: string })[] | undefined,
+          inc.items as (Record<string, unknown> & { message?: string })[] | undefined,
         ) as ListItemErrors[] & { message?: string },
       }
     }

@@ -1,2 +1,2 @@
-export * from '@/components/modal/ModalProvider'
-export * from '@/components/modal/useModal'
+export * from "@/components/modal/ModalProvider"
+export * from "@/components/modal/useModal"

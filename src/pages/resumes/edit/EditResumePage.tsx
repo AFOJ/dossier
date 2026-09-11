@@ -1,24 +1,17 @@
-import { useRouteLoaderData } from 'react-router-dom'
-import { FormProvider } from 'react-hook-form'
-import {
-  Button,
-  Divider,
-  Field,
-  Heading1,
-  Input,
-  Subheading,
-} from '@/components/ui'
-import { usePageTitle } from '@/hooks/usePageTitle'
-import type { Resume } from '@/db/db'
-import { ProfileSyncCard } from '@/pages/resumes/create/components/ProfileSyncCard'
-import { SectionAddMenu } from '@/pages/resumes/create/components/SectionAddMenu'
-import { SectionList } from '@/pages/resumes/create/components/SectionList'
-import { useEditResumeForm } from '@/pages/resumes/edit/hooks/useEditResumeForm'
+import { useRouteLoaderData } from "react-router-dom"
+import { FormProvider } from "react-hook-form"
+import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import { usePageTitle } from "@/hooks/usePageTitle"
+import type { Resume } from "@/db/db"
+import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
+import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
+import { SectionList } from "@/pages/resumes/create/components/SectionList"
+import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
 export default function EditResumePage() {
-  const { resume } = useRouteLoaderData('resume-edit') as { resume: Resume }
+  const { resume } = useRouteLoaderData("resume-edit") as { resume: Resume }
 
-  usePageTitle('Edit Resume')
+  usePageTitle("Edit Resume")
 
   return <EditResumeForm key={resume.id} resume={resume} />
 }
@@ -59,16 +52,13 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
             <Input
               id="resume-title"
               placeholder="Frontend Engineer Resume"
-              {...form.register('title')}
+              {...form.register("title")}
             />
           </Field>
 
           <Divider className="border-gray-300" />
 
-          <ProfileSyncCard
-            control={form.control}
-            onSyncChange={setSyncProfile}
-          />
+          <ProfileSyncCard control={form.control} onSyncChange={setSyncProfile} />
 
           <Divider className="border-gray-300" />
 
@@ -89,17 +79,12 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
 
           <div className="flex justify-end gap-2">
             {isDirty && (
-              <Button
-                type="button"
-                intent="secondary"
-                onClick={revert}
-                disabled={isSubmitting}
-              >
+              <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
                 Revert
               </Button>
             )}
             <Button type="submit" disabled={!isDirty || isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save changes'}
+              {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </div>
         </form>

@@ -1,1 +1,1 @@
-export * from '@/components/illustrations/IsometricIllustrations'
+export * from "@/components/illustrations/IsometricIllustrations"

@@ -1,26 +1,21 @@
-import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
-import { upsertProfile } from '@/db/profile'
-import {
-  profileSchema,
-  type ProfileFormData,
-} from '@/pages/profile/schema'
+import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useState } from "react"
+import { upsertProfile } from "@/db/profile"
+import { profileSchema, type ProfileFormData } from "@/pages/profile/schema"
 
-export function useCreateProfileForm(
-  defaultValues?: Partial<ProfileFormData>,
-) {
+export function useCreateProfileForm(defaultValues?: Partial<ProfileFormData>) {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullName: '',
-      location: '',
-      phone: '',
-      email: '',
+      fullName: "",
+      location: "",
+      phone: "",
+      email: "",
       socials: [],
       ...defaultValues,
     },
@@ -30,7 +25,7 @@ export function useCreateProfileForm(
     try {
       setIsSubmitting(true)
 
-      form.clearErrors('root')
+      form.clearErrors("root")
 
       await upsertProfile({
         full_name: data.fullName,
@@ -41,14 +36,14 @@ export function useCreateProfileForm(
         role: data.jobTitle || null,
       })
 
-      navigate('/resumes')
+      navigate("/resumes")
     } catch (error) {
-      form.setError('root', {
-        type: 'manual',
-        message: 'Failed to save profile. Please try again.',
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to save profile. Please try again.",
       })
 
-      console.error('Failed to save profile:', error)
+      console.error("Failed to save profile:", error)
     } finally {
       setIsSubmitting(false)
     }

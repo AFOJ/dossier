@@ -1,5 +1,5 @@
-import { Menu } from '@base-ui/react/menu'
-import type { ExperienceCompanyRoleBullet } from '@/db/types'
+import { Menu } from "@base-ui/react/menu"
+import type { ExperienceCompanyRoleBullet } from "@/db/types"
 
 type BulletAddMenuProps = {
   onAdd: (bullet: ExperienceCompanyRoleBullet) => void
@@ -17,23 +17,17 @@ export function BulletAddMenu(props: Readonly<BulletAddMenuProps>) {
           <Menu.Popup className="z-50 w-52 rounded-lg border border-gray-200 bg-white p-1 shadow-lg outline-none">
             <Menu.Item
               className="flex cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2 text-sm text-gray-700 outline-none data-highlighted:bg-gray-100 data-highlighted:text-gray-900"
-              onClick={() => props.onAdd({ type: 'text', text: '' })}
+              onClick={() => props.onAdd({ type: "text", text: "" })}
             >
               <span className="font-medium">Simple bullet</span>
-              <span className="text-xs text-gray-600">
-                A single line of text
-              </span>
+              <span className="text-xs text-gray-600">A single line of text</span>
             </Menu.Item>
             <Menu.Item
               className="flex cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2 text-sm text-gray-700 outline-none data-highlighted:bg-gray-100 data-highlighted:text-gray-900"
-              onClick={() =>
-                props.onAdd({ type: 'text-with-title', title: '', text: '' })
-              }
+              onClick={() => props.onAdd({ type: "text-with-title", title: "", text: "" })}
             >
               <span className="font-medium">Titled bullet</span>
-              <span className="text-xs text-gray-600">
-                A heading followed by text
-              </span>
+              <span className="text-xs text-gray-600">A heading followed by text</span>
             </Menu.Item>
           </Menu.Popup>
         </Menu.Positioner>

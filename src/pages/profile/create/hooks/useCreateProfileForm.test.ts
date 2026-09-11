@@ -1,41 +1,41 @@
-import { renderHook, act, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useCreateProfileForm } from '@/pages/profile/create/hooks/useCreateProfileForm'
-import { upsertProfile } from '@/db/profile'
+import { renderHook, act, waitFor } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { useCreateProfileForm } from "@/pages/profile/create/hooks/useCreateProfileForm"
+import { upsertProfile } from "@/db/profile"
 
-vi.mock('@/db/profile', () => ({
+vi.mock("@/db/profile", () => ({
   upsertProfile: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
 
-vi.mock('react-router-dom', () => ({
+vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }))
 
-describe('useCreateProfileForm', () => {
+describe("useCreateProfileForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('merges provided default values', () => {
+  it("merges provided default values", () => {
     const { result } = renderHook(() =>
       useCreateProfileForm({
-        fullName: 'Jane Doe',
-        location: 'Toronto',
+        fullName: "Jane Doe",
+        location: "Toronto",
       }),
     )
 
     expect(result.current.form.getValues()).toMatchObject({
-      fullName: 'Jane Doe',
-      location: 'Toronto',
-      email: '',
-      phone: '',
+      fullName: "Jane Doe",
+      location: "Toronto",
+      email: "",
+      phone: "",
       socials: [],
     })
   })
 
-  it('does not submit an invalid form', async () => {
+  it("does not submit an invalid form", async () => {
     const { result } = renderHook(() => useCreateProfileForm())
 
     await act(async () => {
@@ -45,24 +45,22 @@ describe('useCreateProfileForm', () => {
     expect(upsertProfile).not.toHaveBeenCalled()
     expect(mockNavigate).not.toHaveBeenCalled()
 
-    expect(result.current.form.formState.errors.fullName?.message).toBe(
-      'Full name is required',
-    )
+    expect(result.current.form.formState.errors.fullName?.message).toBe("Full name is required")
   })
 
-  it('maps optional empty fields to null before saving', async () => {
+  it("maps optional empty fields to null before saving", async () => {
     vi.mocked(upsertProfile).mockResolvedValueOnce(1)
 
     const { result } = renderHook(() => useCreateProfileForm())
 
     await act(async () => {
-      result.current.form.setValue('fullName', 'John Doe')
+      result.current.form.setValue("fullName", "John Doe")
 
       await result.current.onSubmit()
     })
 
     expect(upsertProfile).toHaveBeenCalledWith({
-      full_name: 'John Doe',
+      full_name: "John Doe",
       email: null,
       phone: null,
       location: null,
@@ -70,28 +68,28 @@ describe('useCreateProfileForm', () => {
       links: [],
     })
 
-    expect(mockNavigate).toHaveBeenCalledWith('/resumes')
+    expect(mockNavigate).toHaveBeenCalledWith("/resumes")
   })
 
-  it('preserves multiple social links', async () => {
+  it("preserves multiple social links", async () => {
     vi.mocked(upsertProfile).mockResolvedValueOnce(1)
 
     const socials = [
       {
-        label: 'GitHub',
-        url: 'https://github.com/johndoe',
+        label: "GitHub",
+        url: "https://github.com/johndoe",
       },
       {
-        label: 'LinkedIn',
-        url: 'https://linkedin.com/in/johndoe',
+        label: "LinkedIn",
+        url: "https://linkedin.com/in/johndoe",
       },
     ]
 
     const { result } = renderHook(() => useCreateProfileForm())
 
     await act(async () => {
-      result.current.form.setValue('fullName', 'John Doe')
-      result.current.form.setValue('socials', socials)
+      result.current.form.setValue("fullName", "John Doe")
+      result.current.form.setValue("socials", socials)
 
       await result.current.onSubmit()
     })
@@ -103,7 +101,7 @@ describe('useCreateProfileForm', () => {
     )
   })
 
-  it('toggles isSubmitting during submission', async () => {
+  it("toggles isSubmitting during submission", async () => {
     let resolvePromise!: () => void
 
     vi.mocked(upsertProfile).mockImplementation(
@@ -116,7 +114,7 @@ describe('useCreateProfileForm', () => {
     const { result } = renderHook(() => useCreateProfileForm())
 
     act(() => {
-      result.current.form.setValue('fullName', 'John Doe')
+      result.current.form.setValue("fullName", "John Doe")
     })
 
     let submitPromise!: Promise<void>
@@ -135,47 +133,39 @@ describe('useCreateProfileForm', () => {
     expect(result.current.isSubmitting).toBe(false)
   })
 
-  it('sets a root error when saving fails', async () => {
-    vi.mocked(upsertProfile).mockRejectedValueOnce(
-      new Error('IndexedDB failure'),
-    )
+  it("sets a root error when saving fails", async () => {
+    vi.mocked(upsertProfile).mockRejectedValueOnce(new Error("IndexedDB failure"))
 
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
 
     const { result } = renderHook(() => useCreateProfileForm())
 
     await act(async () => {
-      result.current.form.setValue('fullName', 'John Doe')
+      result.current.form.setValue("fullName", "John Doe")
 
       await result.current.onSubmit()
     })
 
     await waitFor(() => {
-      expect(result.current.formError).toBe(
-        'Failed to save profile. Please try again.',
-      )
+      expect(result.current.formError).toBe("Failed to save profile. Please try again.")
     })
 
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('clears the previous root error after a successful retry', async () => {
-    vi.mocked(upsertProfile)
-      .mockRejectedValueOnce(new Error('Boom'))
-      .mockResolvedValueOnce(1)
+  it("clears the previous root error after a successful retry", async () => {
+    vi.mocked(upsertProfile).mockRejectedValueOnce(new Error("Boom")).mockResolvedValueOnce(1)
 
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
 
     const { result } = renderHook(() => useCreateProfileForm())
 
     await act(async () => {
-      result.current.form.setValue('fullName', 'John Doe')
+      result.current.form.setValue("fullName", "John Doe")
       await result.current.onSubmit()
     })
 
-    expect(result.current.formError).toBe(
-      'Failed to save profile. Please try again.',
-    )
+    expect(result.current.formError).toBe("Failed to save profile. Please try again.")
 
     await act(async () => {
       await result.current.onSubmit()
@@ -185,6 +175,6 @@ describe('useCreateProfileForm', () => {
       expect(result.current.formError).toBeUndefined()
     })
 
-    expect(mockNavigate).toHaveBeenCalledWith('/resumes')
+    expect(mockNavigate).toHaveBeenCalledWith("/resumes")
   })
 })

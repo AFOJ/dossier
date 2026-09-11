@@ -1,13 +1,10 @@
-import { Button, Heading3 } from '@/components/ui'
-import type { ModalContentProps } from '@/components/modal'
-import type { Resume } from '@/db/db'
-import { getErrorFeedback } from '@/lib/api'
-import { useProcessedResume } from '@/pages/resumes/list/hooks/useProcessedResume'
+import { Button, Heading3 } from "@/components/ui"
+import type { ModalContentProps } from "@/components/modal"
+import type { Resume } from "@/db/db"
+import { getErrorFeedback } from "@/lib/api"
+import { useProcessedResume } from "@/pages/resumes/list/hooks/useProcessedResume"
 
-export function ResumePreviewDialog({
-  data: resume,
-  close,
-}: Readonly<ModalContentProps<Resume>>) {
+export function ResumePreviewDialog({ data: resume, close }: Readonly<ModalContentProps<Resume>>) {
   const processed = useProcessedResume(resume)
 
   const handleDownload = () => {
@@ -21,7 +18,7 @@ export function ResumePreviewDialog({
       </div>
 
       <div className="relative h-[70vh] w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-        {processed.status === 'ready' && processed.url && (
+        {processed.status === "ready" && processed.url && (
           <iframe
             src={processed.url}
             title={`${resume.title} preview`}
@@ -29,7 +26,7 @@ export function ResumePreviewDialog({
           />
         )}
 
-        {processed.status === 'loading' && (
+        {processed.status === "loading" && (
           <div className="absolute inset-0 grid place-items-center">
             <div className="flex flex-col items-center gap-3">
               <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -38,12 +35,10 @@ export function ResumePreviewDialog({
           </div>
         )}
 
-        {processed.status === 'error' && processed.error && (
+        {processed.status === "error" && processed.error && (
           <div className="absolute inset-0 grid place-items-center p-6">
             <div className="flex flex-col items-center gap-2 text-center">
-              <p className="text-sm font-medium text-gray-800">
-                {processed.error.message}
-              </p>
+              <p className="text-sm font-medium text-gray-800">{processed.error.message}</p>
               <ul className="flex list-disc flex-col gap-0.5 pl-4 text-left text-xs text-gray-600">
                 {getErrorFeedback(processed.error).map((line) => (
                   <li key={line} className="break-all">
@@ -65,9 +60,9 @@ export function ResumePreviewDialog({
         </Button>
         <Button
           onClick={handleDownload}
-          disabled={processed.isDownloading || processed.status !== 'ready'}
+          disabled={processed.isDownloading || processed.status !== "ready"}
         >
-          {processed.isDownloading ? 'Downloading...' : 'Download PDF'}
+          {processed.isDownloading ? "Downloading..." : "Download PDF"}
         </Button>
       </div>
     </div>

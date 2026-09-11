@@ -1,5 +1,5 @@
-import { ButtonLink, SearchInput } from '@/components/ui'
-import { FileAddIcon } from '@hugeicons/core-free-icons'
+import { ButtonLink, SearchInput } from "@/components/ui"
+import { FileAddIcon } from "@hugeicons/core-free-icons"
 
 type ToolbarProps = {
   query: string
@@ -11,11 +11,7 @@ export function Toolbar(props: Readonly<ToolbarProps>) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <SearchInput
-        value={query}
-        onChange={onQueryChange}
-        placeholder="Search resumes"
-      />
+      <SearchInput value={query} onChange={onQueryChange} placeholder="Search resumes" />
       <ButtonLink intent="secondary" icon={FileAddIcon} to="/resumes/create">
         New resume
       </ButtonLink>

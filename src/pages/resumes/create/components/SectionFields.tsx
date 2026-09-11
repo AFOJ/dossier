@@ -1,14 +1,14 @@
-import { memo } from 'react'
-import { Textarea } from '@/components/ui'
-import type { ResumeSectionData } from '@/db/schemas'
-import { CompaniesEditor } from '@/pages/resumes/create/components/ExperienceSectionFields'
-import { InstitutionsEditor } from '@/pages/resumes/create/components/EducationSectionFields'
-import { GroupsEditor } from '@/pages/resumes/create/components/SkillsSectionFields'
-import { ListItemsEditor } from '@/pages/resumes/create/components/ListSectionFields'
+import { memo } from "react"
+import { Textarea } from "@/components/ui"
+import type { ResumeSectionData } from "@/db/schemas"
+import { CompaniesEditor } from "@/pages/resumes/create/components/ExperienceSectionFields"
+import { InstitutionsEditor } from "@/pages/resumes/create/components/EducationSectionFields"
+import { GroupsEditor } from "@/pages/resumes/create/components/SkillsSectionFields"
+import { ListItemsEditor } from "@/pages/resumes/create/components/ListSectionFields"
 import {
   getSectionErrors,
   useResumeFieldContext,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type SectionFieldsProps = {
   section: ResumeSectionData
@@ -26,8 +26,9 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
   const sectionErrors = getSectionErrors(errors, index)
 
   switch (section.type) {
-    case 'paragraph': {
-      const textError = sectionErrors?.type === 'paragraph' ? sectionErrors.text?.message : undefined
+    case "paragraph": {
+      const textError =
+        sectionErrors?.type === "paragraph" ? sectionErrors.text?.message : undefined
 
       return (
         <div className="flex flex-col gap-1">
@@ -37,7 +38,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
             value={section.text}
             rows={4}
             onChange={(event) =>
-              onChange({ ...section, type: 'paragraph', text: event.target.value })
+              onChange({ ...section, type: "paragraph", text: event.target.value })
             }
           />
           {textError && (
@@ -48,40 +49,36 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
         </div>
       )
     }
-    case 'education':
+    case "education":
       return (
         <InstitutionsEditor
           sectionIndex={index}
           institutions={section.institutions}
-          onChange={(institutions) =>
-            onChange({ ...section, type: 'education', institutions })
-          }
+          onChange={(institutions) => onChange({ ...section, type: "education", institutions })}
         />
       )
-    case 'skills':
+    case "skills":
       return (
         <GroupsEditor
           sectionIndex={index}
           groups={section.groups}
-          onChange={(groups) => onChange({ ...section, type: 'skills', groups })}
+          onChange={(groups) => onChange({ ...section, type: "skills", groups })}
         />
       )
-    case 'experience':
+    case "experience":
       return (
         <CompaniesEditor
           sectionIndex={index}
           companies={section.companies}
-          onChange={(companies) =>
-            onChange({ ...section, type: 'experience', companies })
-          }
+          onChange={(companies) => onChange({ ...section, type: "experience", companies })}
         />
       )
-    case 'list':
+    case "list":
       return (
         <ListItemsEditor
           sectionIndex={index}
           items={section.items}
-          onChange={(items) => onChange({ ...section, type: 'list', items })}
+          onChange={(items) => onChange({ ...section, type: "list", items })}
         />
       )
   }

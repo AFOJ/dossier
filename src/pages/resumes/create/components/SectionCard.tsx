@@ -1,12 +1,7 @@
-import {
-  Add01Icon,
-  ArrowDown01Icon,
-  ArrowUp01Icon,
-  Trash,
-} from '@hugeicons/core-free-icons'
-import { useState, type ReactNode } from 'react'
-import { Button, Input } from '@/components/ui'
-import { cn } from '@/utils'
+import { Add01Icon, ArrowDown01Icon, ArrowUp01Icon, Trash } from "@hugeicons/core-free-icons"
+import { useState, type ReactNode } from "react"
+import { Button, Input } from "@/components/ui"
+import { cn } from "@/utils"
 
 type SectionCardProps = {
   label: string
@@ -97,7 +92,7 @@ export function ItemControls(props: Readonly<ItemControlsProps>) {
   const { label, index, isFirst, isLast, onMove, onRemove, className } = props
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
+    <div className={cn("flex items-center gap-1", className)}>
       <Button
         type="button"
         intent="secondary"

@@ -1,18 +1,11 @@
-import { FormProvider } from 'react-hook-form'
-import {
-  Button,
-  Divider,
-  Field,
-  Heading1,
-  Input,
-  Subheading,
-} from '@/components/ui'
-import { usePageTitle } from '@/hooks/usePageTitle'
-import useProtectedRouteData from '@/hooks/useProtectedRouteData'
-import { ProfileSyncCard } from '@/pages/resumes/create/components/ProfileSyncCard'
-import { SectionAddMenu } from '@/pages/resumes/create/components/SectionAddMenu'
-import { SectionList } from '@/pages/resumes/create/components/SectionList'
-import { useCreateResumeForm } from '@/pages/resumes/create/hooks/useCreateResumeForm'
+import { FormProvider } from "react-hook-form"
+import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import { usePageTitle } from "@/hooks/usePageTitle"
+import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
+import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
+import { SectionList } from "@/pages/resumes/create/components/SectionList"
+import { useCreateResumeForm } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 export default function CreateResumePage() {
   const { profile } = useProtectedRouteData()
@@ -28,7 +21,7 @@ export default function CreateResumePage() {
     setSyncProfile,
   } = useCreateResumeForm(profile)
 
-  usePageTitle('Create Resume')
+  usePageTitle("Create Resume")
 
   return (
     <section className="flex flex-col gap-6">
@@ -51,16 +44,13 @@ export default function CreateResumePage() {
             <Input
               id="resume-title"
               placeholder="Data Analyst Resume"
-              {...form.register('title')}
+              {...form.register("title")}
             />
           </Field>
 
           <Divider className="border-gray-300" />
 
-          <ProfileSyncCard
-            control={form.control}
-            onSyncChange={setSyncProfile}
-          />
+          <ProfileSyncCard control={form.control} onSyncChange={setSyncProfile} />
 
           <Divider className="border-gray-300" />
 
@@ -81,7 +71,7 @@ export default function CreateResumePage() {
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create resume'}
+              {isSubmitting ? "Creating..." : "Create resume"}
             </Button>
           </div>
         </form>

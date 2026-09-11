@@ -1,22 +1,14 @@
-import { Toast as BaseToast } from '@base-ui/react/toast'
-import type { ToastObject } from '@base-ui/react/toast'
-import {
-  Alert02Icon,
-  CircleCheckIcon,
-  Cancel01Icon,
-} from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  toastManager,
-  type ToastData,
-  type ToastIntent,
-} from '@/components/toast/useToast'
-import { cn } from '@/utils'
-import './Toast.css'
+import { Toast as BaseToast } from "@base-ui/react/toast"
+import type { ToastObject } from "@base-ui/react/toast"
+import { Alert02Icon, CircleCheckIcon, Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { toastManager, type ToastData, type ToastIntent } from "@/components/toast/useToast"
+import { cn } from "@/utils"
+import "./Toast.css"
 
 const INTENT_STYLES = {
-  success: 'text-green-600',
-  error: 'text-red-600',
+  success: "text-green-600",
+  error: "text-red-600",
 } as const
 
 const INTENT_ICONS = {
@@ -53,7 +45,7 @@ type ToastCardProps = {
 }
 
 function ToastCard({ toast }: Readonly<ToastCardProps>) {
-  const intent: ToastIntent = toast.data?.intent ?? 'success'
+  const intent: ToastIntent = toast.data?.intent ?? "success"
   const Icon = INTENT_ICONS[intent]
 
   return (
@@ -64,7 +56,7 @@ function ToastCard({ toast }: Readonly<ToastCardProps>) {
           size={20}
           strokeWidth={2}
           aria-hidden
-          className={cn('shrink-0', INTENT_STYLES[intent])}
+          className={cn("shrink-0", INTENT_STYLES[intent])}
         />
 
         <div className="min-w-0 flex-1">

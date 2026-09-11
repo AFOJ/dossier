@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, Card, Divider } from '@/components/ui'
-import { useToast } from '@/components/toast'
-import { importProfile } from '@/db/profile'
+import { useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { Button, Card, Divider } from "@/components/ui"
+import { useToast } from "@/components/toast"
+import { importProfile } from "@/db/profile"
 
 export function RestoreFromExport() {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -11,11 +11,9 @@ export function RestoreFromExport() {
   const toast = useToast()
   const navigate = useNavigate()
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    event.target.value = ''
+    event.target.value = ""
 
     if (!file) {
       return
@@ -26,16 +24,11 @@ export function RestoreFromExport() {
 
     try {
       await importProfile(await file.text())
-      toast.success(
-        'Data imported',
-        'Your profile and documents have been restored.',
-      )
-      navigate('/profile')
+      toast.success("Data imported", "Your profile and documents have been restored.")
+      navigate("/profile")
     } catch (error) {
-      setError(
-        'This file is not a valid Dossier export. Please check the file and try again.',
-      )
-      console.error('Failed to import data:', error)
+      setError("This file is not a valid Dossier export. Please check the file and try again.")
+      console.error("Failed to import data:", error)
     } finally {
       setIsImporting(false)
     }
@@ -49,8 +42,7 @@ export function RestoreFromExport() {
             Already have a Dossier profile export?
           </p>
           <p className="mt-0.5 text-sm text-gray-500">
-            Restore your profile and documents from an exported file instead of
-            starting fresh.
+            Restore your profile and documents from an exported file instead of starting fresh.
           </p>
           {error && (
             <p role="alert" className="mt-2 text-sm text-red-700">
@@ -76,7 +68,7 @@ export function RestoreFromExport() {
           onClick={() => inputRef.current?.click()}
           className="shrink-0 self-start sm:self-auto"
         >
-          {isImporting ? 'Importing...' : 'Import from export file'}
+          {isImporting ? "Importing..." : "Import from export file"}
         </Button>
       </Card>
 

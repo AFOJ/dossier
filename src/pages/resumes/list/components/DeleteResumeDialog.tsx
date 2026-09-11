@@ -1,14 +1,11 @@
-import { useState } from 'react'
-import { Button, Heading3 } from '@/components/ui'
-import type { ModalContentProps } from '@/components/modal'
-import { useToast } from '@/components/toast'
-import type { Resume } from '@/db/db'
-import { deleteResume } from '@/db/resume'
+import { useState } from "react"
+import { Button, Heading3 } from "@/components/ui"
+import type { ModalContentProps } from "@/components/modal"
+import { useToast } from "@/components/toast"
+import type { Resume } from "@/db/db"
+import { deleteResume } from "@/db/resume"
 
-export function DeleteResumeDialog({
-  data: resume,
-  close,
-}: Readonly<ModalContentProps<Resume>>) {
+export function DeleteResumeDialog({ data: resume, close }: Readonly<ModalContentProps<Resume>>) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
@@ -18,18 +15,18 @@ export function DeleteResumeDialog({
     setError(null)
 
     if (!resume.id) {
-      toast.error('Failed to delete resume', 'This resume could not be found.')
+      toast.error("Failed to delete resume", "This resume could not be found.")
       close()
       return
     }
 
     try {
       await deleteResume(resume.id)
-      toast.success('Resume deleted', `"${resume.title}" was deleted.`)
+      toast.success("Resume deleted", `"${resume.title}" was deleted.`)
       close()
     } catch {
-      setError('Failed to delete resume. Please try again.')
-      toast.error('Failed to delete resume', 'Please try again.')
+      setError("Failed to delete resume. Please try again.")
+      toast.error("Failed to delete resume", "Please try again.")
       setIsDeleting(false)
     }
   }
@@ -39,9 +36,8 @@ export function DeleteResumeDialog({
       <div className="flex flex-col gap-1">
         <Heading3>Delete resume?</Heading3>
         <p className="text-sm leading-6 text-gray-600">
-          This will permanently delete{' '}
-          <span className="font-medium text-gray-900">{resume.title}</span> and
-          cannot be undone.
+          This will permanently delete{" "}
+          <span className="font-medium text-gray-900">{resume.title}</span> and cannot be undone.
         </p>
       </div>
 
@@ -52,12 +48,7 @@ export function DeleteResumeDialog({
       )}
 
       <div className="flex flex-wrap justify-end gap-2">
-        <Button
-          intent="secondary"
-          onClick={close}
-          disabled={isDeleting}
-          autoFocus
-        >
+        <Button intent="secondary" onClick={close} disabled={isDeleting} autoFocus>
           Cancel
         </Button>
         <Button
@@ -65,7 +56,7 @@ export function DeleteResumeDialog({
           disabled={isDeleting}
           className="bg-red-700 enabled:hover:bg-red-800 focus:ring-red-500"
         >
-          {isDeleting ? 'Deleting...' : 'Delete resume'}
+          {isDeleting ? "Deleting..." : "Delete resume"}
         </Button>
       </div>
     </div>

@@ -5,14 +5,14 @@ import {
   useState,
   type KeyboardEvent,
   type PropsWithChildren,
-} from 'react'
-import { createPortal } from 'react-dom'
+} from "react"
+import { createPortal } from "react-dom"
 import {
   ModalContext,
   type ModalComponent,
   type ModalContextValue,
   type ModalEntry,
-} from '@/components/modal/modalContext'
+} from "@/components/modal/modalContext"
 
 const focusableSelector =
   'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -20,30 +20,24 @@ const focusableSelector =
 export function ModalProvider({ children }: Readonly<PropsWithChildren>) {
   const [modals, setModals] = useState<ModalEntry[]>([])
 
-  const openModal = useCallback<ModalContextValue['openModal']>(
-    (id, Content, data, options) => {
-      setModals((current) => [
-        ...current.filter((modal) => modal.id !== id),
-        { id, Content: Content as ModalComponent<unknown>, data, options },
-      ])
-    },
-    [],
-  )
+  const openModal = useCallback<ModalContextValue["openModal"]>((id, Content, data, options) => {
+    setModals((current) => [
+      ...current.filter((modal) => modal.id !== id),
+      { id, Content: Content as ModalComponent<unknown>, data, options },
+    ])
+  }, [])
 
   const closeModal = useCallback((id: string) => {
     setModals((current) => current.filter((modal) => modal.id !== id))
   }, [])
 
-  const isOpen = useCallback(
-    (id: string) => modals.some((modal) => modal.id === id),
-    [modals],
-  )
+  const isOpen = useCallback((id: string) => modals.some((modal) => modal.id === id), [modals])
 
   useEffect(() => {
     if (modals.length === 0) return
 
     const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    document.body.style.overflow = "hidden"
 
     return () => {
       document.body.style.overflow = previousOverflow
@@ -70,7 +64,7 @@ export function ModalProvider({ children }: Readonly<PropsWithChildren>) {
 
 type ModalSurfaceProps = PropsWithChildren<{
   onClose: () => void
-  options: ModalEntry['options']
+  options: ModalEntry["options"]
   isTopmost: boolean
   zIndex: number
 }>
@@ -86,14 +80,10 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
     }
 
     lastFocusedElement.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
 
     const dialog = dialogRef.current
-    const initialFocus = dialog?.querySelector<HTMLElement>(
-      `[autofocus], ${focusableSelector}`,
-    )
+    const initialFocus = dialog?.querySelector<HTMLElement>(`[autofocus], ${focusableSelector}`)
     ;(initialFocus ?? dialog)?.focus()
 
     return () => {
@@ -106,16 +96,15 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
       return
     }
 
-    if (event.key === 'Escape' && options.closeOnEscape) {
+    if (event.key === "Escape" && options.closeOnEscape) {
       event.preventDefault()
       onClose()
       return
     }
 
-    if (event.key !== 'Tab') return
+    if (event.key !== "Tab") return
 
-    const focusable =
-      dialogRef.current?.querySelectorAll<HTMLElement>(focusableSelector)
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(focusableSelector)
 
     if (!focusable || focusable.length === 0) {
       event.preventDefault()
@@ -143,11 +132,7 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
       className="fixed inset-0 flex items-center justify-center bg-gray-950/40 p-4"
       style={{ zIndex }}
       onMouseDown={(event) => {
-        if (
-          isTopmost &&
-          options.closeOnBackdropClick &&
-          event.target === event.currentTarget
-        ) {
+        if (isTopmost && options.closeOnBackdropClick && event.target === event.currentTarget) {
           onClose()
         }
       }}

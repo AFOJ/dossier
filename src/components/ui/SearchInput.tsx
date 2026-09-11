@@ -1,7 +1,7 @@
-import { Search01Icon } from '@hugeicons/core-free-icons'
-import { Icon } from '@/components/ui/Icon'
-import { cn } from '@/utils'
-import { Input } from '@/components/ui/Input'
+import { Search01Icon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/Icon"
+import { cn } from "@/utils"
+import { Input } from "@/components/ui/Input"
 
 type SearchInputProps = {
   value: string
@@ -11,10 +11,10 @@ type SearchInputProps = {
 }
 
 export function SearchInput(props: Readonly<SearchInputProps>) {
-  const { value, onChange, placeholder = 'Search', className } = props
+  const { value, onChange, placeholder = "Search", className } = props
 
   return (
-    <div className={cn('relative w-full sm:w-56', className)}>
+    <div className={cn("relative w-full sm:w-56", className)}>
       <Icon
         aria-hidden
         className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"

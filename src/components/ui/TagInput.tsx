@@ -1,7 +1,7 @@
-import { Cancel01Icon } from '@hugeicons/core-free-icons'
-import { cn } from '@/utils'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useState, type KeyboardEvent } from 'react'
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { cn } from "@/utils"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState, type KeyboardEvent } from "react"
 
 type TagInputProps = {
   value: string[]
@@ -11,30 +11,25 @@ type TagInputProps = {
 }
 
 export function TagInput(props: Readonly<TagInputProps>) {
-  const {
-    value,
-    onChange,
-    placeholder = 'Type a skill and press Enter',
-    ariaLabel,
-  } = props
-  const [draft, setDraft] = useState('')
+  const { value, onChange, placeholder = "Type a skill and press Enter", ariaLabel } = props
+  const [draft, setDraft] = useState("")
 
   const commitDraft = () => {
     const tag = draft.trim()
-    if (tag !== '' && !value.includes(tag)) {
+    if (tag !== "" && !value.includes(tag)) {
       onChange([...value, tag])
     }
-    setDraft('')
+    setDraft("")
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' || event.key === ',') {
+    if (event.key === "Enter" || event.key === ",") {
       event.preventDefault()
       commitDraft()
       return
     }
 
-    if (event.key === 'Backspace' && draft === '' && value.length > 0) {
+    if (event.key === "Backspace" && draft === "" && value.length > 0) {
       onChange(value.slice(0, -1))
     }
   }
@@ -42,8 +37,8 @@ export function TagInput(props: Readonly<TagInputProps>) {
   return (
     <div
       className={cn(
-        'flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 p-2',
-        'hover:border-gray-400 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-600',
+        "flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 p-2",
+        "hover:border-gray-400 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-600",
       )}
     >
       {value.map((tag) => (

@@ -28,8 +28,7 @@ export interface ExperienceCompanyRole {
 }
 
 export type ExperienceCompanyRoleBullet =
-  | { type: 'text'; text: string }
-  | { type: 'text-with-title'; title: string; text: string }
+  { type: "text"; text: string } | { type: "text-with-title"; title: string; text: string }
 
 export interface ExperienceCompany {
   company_name: string
@@ -47,8 +46,8 @@ export interface ListItem {
 }
 
 export type ResumeSection =
-  | { type: 'paragraph'; title: string; text: string }
-  | { type: 'education'; title: string; institutions: EducationalInstitution[] }
-  | { type: 'skills'; title: string; groups: SkillGroup[] }
-  | { type: 'experience'; title: string; companies: ExperienceCompany[] }
-  | { type: 'list'; title: string; items: ListItem[] }
+  | { type: "paragraph"; title: string; text: string }
+  | { type: "education"; title: string; institutions: EducationalInstitution[] }
+  | { type: "skills"; title: string; groups: SkillGroup[] }
+  | { type: "experience"; title: string; companies: ExperienceCompany[] }
+  | { type: "list"; title: string; items: ListItem[] }

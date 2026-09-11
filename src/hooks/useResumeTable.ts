@@ -1,12 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '@/db/db'
-import { queryResumes } from '@/db/resume'
-import {
-  DEFAULT_PAGE_SIZE,
-  getPageMetadata,
-  toPositiveInteger,
-} from '@/lib/pagination'
+import { useCallback, useEffect, useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
+import { db } from "@/db/db"
+import { queryResumes } from "@/db/resume"
+import { DEFAULT_PAGE_SIZE, getPageMetadata, toPositiveInteger } from "@/lib/pagination"
 
 const DEFAULT_PAGE = 1
 const SEARCH_DEBOUNCE_MS = 250
@@ -30,7 +26,7 @@ function useDebouncedValue<T>(value: T, delay: number) {
 }
 
 export function useResumeTable() {
-  const [query, setInputQuery] = useState('')
+  const [query, setInputQuery] = useState("")
   const [page, setPageState] = useState(DEFAULT_PAGE)
   const [perPage, setPerPageState] = useState(DEFAULT_PAGE_SIZE)
 
@@ -51,8 +47,7 @@ export function useResumeTable() {
     [queryKey],
   )
 
-  const result =
-    taggedResult?.key === queryKey ? taggedResult.result : undefined
+  const result = taggedResult?.key === queryKey ? taggedResult.result : undefined
 
   const pagination = result?.pagination ?? getPageMetadata(0, { page, perPage })
 

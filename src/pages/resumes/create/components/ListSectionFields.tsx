@@ -1,15 +1,12 @@
-import type { ListItem } from '@/db/types'
-import { Field, Input, Textarea } from '@/components/ui'
-import {
-  AddItemButton,
-  ItemControls,
-} from '@/pages/resumes/create/components/SectionCard'
+import type { ListItem } from "@/db/types"
+import { Field, Input, Textarea } from "@/components/ui"
+import { AddItemButton, ItemControls } from "@/pages/resumes/create/components/SectionCard"
 import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
   withKey,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type ListItemRowProps = {
   sectionIndex: number
@@ -23,23 +20,14 @@ type ListItemRowProps = {
 }
 
 export function ListItemRow(props: Readonly<ListItemRowProps>) {
-  const {
-    sectionIndex,
-    item,
-    index,
-    isFirst,
-    isLast,
-    onChange,
-    onMove,
-    onRemove,
-  } = props
+  const { sectionIndex, item, index, isFirst, isLast, onChange, onMove, onRemove } = props
 
   const {
     formState: { errors },
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const itemErrors = sectionErrors?.type === 'list' ? sectionErrors.items?.[index] : undefined
+  const itemErrors = sectionErrors?.type === "list" ? sectionErrors.items?.[index] : undefined
 
   const update = (patch: Partial<ListItem>) => onChange({ ...item, ...patch })
 
@@ -54,7 +42,7 @@ export function ListItemRow(props: Readonly<ListItemRowProps>) {
           id={`section-${sectionIndex}-item-title-${index}`}
           placeholder="Project name"
           aria-invalid={itemErrors?.title ? true : undefined}
-          value={item.title ?? ''}
+          value={item.title ?? ""}
           onChange={(event) => update({ title: event.target.value })}
         />
         {itemErrors?.title && (
@@ -75,7 +63,7 @@ export function ListItemRow(props: Readonly<ListItemRowProps>) {
             type="url"
             placeholder="https://example.com"
             aria-invalid={itemErrors?.url ? true : undefined}
-            value={item.url ?? ''}
+            value={item.url ?? ""}
             onChange={(event) => update({ url: event.target.value })}
           />
           {itemErrors?.url && (
@@ -93,7 +81,7 @@ export function ListItemRow(props: Readonly<ListItemRowProps>) {
           <Input
             id={`section-${sectionIndex}-item-date-${index}`}
             placeholder="2024"
-            value={item.date ?? ''}
+            value={item.date ?? ""}
             onChange={(event) => update({ date: event.target.value })}
           />
           {itemErrors?.date && (
@@ -153,7 +141,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError = sectionErrors?.type === 'list' ? sectionErrors.items?.message : undefined
+  const sectionError = sectionErrors?.type === "list" ? sectionErrors.items?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">
@@ -171,9 +159,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
           index={index}
           isFirst={index === 0}
           isLast={index === items.length - 1}
-          onChange={(next) =>
-            onChange(items.map((current, i) => (i === index ? next : current)))
-          }
+          onChange={(next) => onChange(items.map((current, i) => (i === index ? next : current)))}
           onMove={(from, to) => {
             const next = [...items]
             ;[next[from], next[to]] = [next[to], next[from]]
@@ -186,10 +172,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
       <AddItemButton
         label="Add item"
         onAdd={() =>
-          onChange([
-            ...items,
-            withKey({ title: '', url: '', description: '', date: '' }),
-          ])
+          onChange([...items, withKey({ title: "", url: "", description: "", date: "" })])
         }
       />
     </div>

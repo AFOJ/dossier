@@ -1,4 +1,4 @@
-import { db, type ResumeCacheEntry } from '@/db/db'
+import { db, type ResumeCacheEntry } from "@/db/db"
 
 /** How long a processed resume stays fresh before it must be refetched. */
 export const RESUME_CACHE_TTL_MS = 24 * 60 * 60 * 1000
@@ -56,8 +56,6 @@ export function entryToBlob(entry: ResumeCacheEntry): Blob {
   return new Blob([entry.data], { type: entry.contentType })
 }
 
-export async function clearProcessedResumeCache(
-  resumeId: string,
-): Promise<void> {
+export async function clearProcessedResumeCache(resumeId: string): Promise<void> {
   await db.resumeCache.delete(resumeId)
 }

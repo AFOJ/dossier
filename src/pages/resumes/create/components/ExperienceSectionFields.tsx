@@ -2,21 +2,21 @@ import type {
   ExperienceCompanyRoleBullet,
   ExperienceCompany,
   ExperienceCompanyRole,
-} from '@/db/types'
-import { Field, Input, Textarea } from '@/components/ui'
-import { BulletAddMenu } from '@/pages/resumes/create/components/BulletAddMenu'
-import { SyncSwitch } from '@/pages/resumes/create/components/SyncSwitch'
+} from "@/db/types"
+import { Field, Input, Textarea } from "@/components/ui"
+import { BulletAddMenu } from "@/pages/resumes/create/components/BulletAddMenu"
+import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import {
   AddItemButton,
   ItemControls,
   type ItemControlsProps,
-} from '@/pages/resumes/create/components/SectionCard'
+} from "@/pages/resumes/create/components/SectionCard"
 import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
   withKey,
-} from '@/pages/resumes/create/hooks/useCreateResumeForm'
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type BulletItem = ExperienceCompanyRoleBullet
 
@@ -30,21 +30,15 @@ type BulletsEditorProps = {
 }
 
 export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
-  const {
-    sectionIndex,
-    companyIndex,
-    roleIndex,
-    roleLabel,
-    bullets,
-    onChange,
-  } = props
+  const { sectionIndex, companyIndex, roleIndex, roleLabel, bullets, onChange } = props
 
   const {
     formState: { errors },
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[companyIndex] : undefined
+  const companyErrors =
+    sectionErrors?.type === "experience" ? sectionErrors.companies?.[companyIndex] : undefined
   const roleErrors = companyErrors?.roles?.[roleIndex]
   const bulletErrors = roleErrors?.bullets
 
@@ -54,7 +48,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
     onChange(next)
   }
 
-  const renderError = (index: number, field: 'title' | 'text') => {
+  const renderError = (index: number, field: "title" | "text") => {
     const message = bulletErrors?.[index]?.[field]?.message
     if (!message) {
       return null
@@ -71,7 +65,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
       <p className="text-sm font-medium text-gray-700">Bullets</p>
 
       {bullets.map((bullet, index) => {
-        const controls: Omit<ItemControlsProps, 'label'> = {
+        const controls: Omit<ItemControlsProps, "label"> = {
           index,
           isFirst: index === 0,
           isLast: index === bullets.length - 1,
@@ -79,7 +73,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
           onRemove: () => onChange(bullets.filter((_, i) => i !== index)),
         }
 
-        return bullet.type === 'text' ? (
+        return bullet.type === "text" ? (
           <div
             key={itemKey(bullet, index)}
             className="flex flex-col-reverse items-start gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row"
@@ -92,8 +86,8 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                 value={bullet.text}
                 className={
                   bulletErrors?.[index]?.text
-                    ? 'w-full border-red-400 focus:border-red-600 focus:ring-red-600'
-                    : 'w-full'
+                    ? "w-full border-red-400 focus:border-red-600 focus:ring-red-600"
+                    : "w-full"
                 }
                 onChange={(event) =>
                   onChange(
@@ -101,7 +95,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                       i === index
                         ? {
                             ...bullet,
-                            type: 'text' as const,
+                            type: "text" as const,
                             text: event.target.value,
                           }
                         : current,
@@ -109,7 +103,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                   )
                 }
               />
-              {renderError(index, 'text')}
+              {renderError(index, "text")}
             </div>
             <ItemControls {...controls} label={`bullet ${index + 1}`} />
           </div>
@@ -123,53 +117,45 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                 <div>
                   <Input
                     aria-label={`${roleLabel} bullet ${index + 1} heading`}
-                    aria-invalid={
-                      bulletErrors?.[index]?.title ? true : undefined
-                    }
+                    aria-invalid={bulletErrors?.[index]?.title ? true : undefined}
                     placeholder="Heading"
                     value={bullet.title}
                     className={
                       bulletErrors?.[index]?.title
-                        ? 'w-full border-red-400 focus:border-red-600 focus:ring-red-600'
-                        : 'w-full'
+                        ? "w-full border-red-400 focus:border-red-600 focus:ring-red-600"
+                        : "w-full"
                     }
                     onChange={(event) =>
                       onChange(
                         bullets.map((current, i) =>
-                          i === index
-                            ? { ...bullet, title: event.target.value }
-                            : current,
+                          i === index ? { ...bullet, title: event.target.value } : current,
                         ),
                       )
                     }
                   />
-                  {renderError(index, 'title')}
+                  {renderError(index, "title")}
                 </div>
                 <div>
                   <Textarea
                     aria-label={`${roleLabel} bullet ${index + 1} text`}
-                    aria-invalid={
-                      bulletErrors?.[index]?.text ? true : undefined
-                    }
+                    aria-invalid={bulletErrors?.[index]?.text ? true : undefined}
                     placeholder="What did you achieve?"
                     rows={3}
                     value={bullet.text}
                     className={
                       bulletErrors?.[index]?.text
-                        ? 'w-full border-red-400 focus:border-red-600 focus:ring-red-600'
-                        : 'w-full'
+                        ? "w-full border-red-400 focus:border-red-600 focus:ring-red-600"
+                        : "w-full"
                     }
                     onChange={(event) =>
                       onChange(
                         bullets.map((current, i) =>
-                          i === index
-                            ? { ...bullet, text: event.target.value }
-                            : current,
+                          i === index ? { ...bullet, text: event.target.value } : current,
                         ),
                       )
                     }
                   />
-                  {renderError(index, 'text')}
+                  {renderError(index, "text")}
                 </div>
               </div>
             </div>
@@ -178,9 +164,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         )
       })}
 
-      <BulletAddMenu
-        onAdd={(bullet) => onChange([...bullets, withKey(bullet)])}
-      />
+      <BulletAddMenu onAdd={(bullet) => onChange([...bullets, withKey(bullet)])} />
     </div>
   )
 }
@@ -207,11 +191,9 @@ function EndDateField(props: Readonly<EndDateFieldProps>) {
           aria-invalid={props.error ? true : undefined}
           disabled={props.isPresent}
           className="min-w-0 flex-1 basis-40"
-          value={props.value ?? ''}
+          value={props.value ?? ""}
           onChange={(event) =>
-            props.onValueChange(
-              event.target.value.trim() === '' ? undefined : event.target.value,
-            )
+            props.onValueChange(event.target.value.trim() === "" ? undefined : event.target.value)
           }
         />
 
@@ -221,9 +203,7 @@ function EndDateField(props: Readonly<EndDateFieldProps>) {
             onCheckedChange={props.onPresentChange}
             label="I currently work here"
           />
-          <span className="text-sm font-medium text-gray-900">
-            I currently work here
-          </span>
+          <span className="text-sm font-medium text-gray-900">I currently work here</span>
         </div>
       </div>
 
@@ -249,15 +229,7 @@ type RoleEditorProps = {
 }
 
 export function RoleEditor(props: Readonly<RoleEditorProps>) {
-  const {
-    sectionIndex,
-    companyIndex,
-    roleIndex,
-    role,
-    isFirst,
-    isLast,
-    onChange,
-  } = props
+  const { sectionIndex, companyIndex, roleIndex, role, isFirst, isLast, onChange } = props
   const roleLabel = `role ${roleIndex + 1}`
 
   const {
@@ -265,7 +237,8 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[companyIndex] : undefined
+  const companyErrors =
+    sectionErrors?.type === "experience" ? sectionErrors.companies?.[companyIndex] : undefined
   const roleErrors = companyErrors?.roles?.[roleIndex]
 
   return (
@@ -284,9 +257,7 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
                 placeholder="Data Analyst"
                 aria-invalid={roleErrors?.job_title ? true : undefined}
                 value={role.job_title}
-                onChange={(event) =>
-                  onChange({ ...role, job_title: event.target.value })
-                }
+                onChange={(event) => onChange({ ...role, job_title: event.target.value })}
               />
             </Field>
 
@@ -297,14 +268,12 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
               <Input
                 id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-type`}
                 placeholder="Full-time"
-                value={role.employment_type ?? ''}
+                value={role.employment_type ?? ""}
                 onChange={(event) =>
                   onChange({
                     ...role,
                     employment_type:
-                      event.target.value.trim() === ''
-                        ? undefined
-                        : event.target.value,
+                      event.target.value.trim() === "" ? undefined : event.target.value,
                   })
                 }
               />
@@ -317,14 +286,11 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
               <Input
                 id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-location`}
                 placeholder="London, UK"
-                value={role.location ?? ''}
+                value={role.location ?? ""}
                 onChange={(event) =>
                   onChange({
                     ...role,
-                    location:
-                      event.target.value.trim() === ''
-                        ? undefined
-                        : event.target.value,
+                    location: event.target.value.trim() === "" ? undefined : event.target.value,
                   })
                 }
               />
@@ -339,14 +305,11 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
                 id={`section-${sectionIndex}-company-${companyIndex}-role-${roleIndex}-start`}
                 type="month"
                 aria-invalid={roleErrors?.start_date ? true : undefined}
-                value={role.start_date ?? ''}
+                value={role.start_date ?? ""}
                 onChange={(event) =>
                   onChange({
                     ...role,
-                    start_date:
-                      event.target.value.trim() === ''
-                        ? undefined
-                        : event.target.value,
+                    start_date: event.target.value.trim() === "" ? undefined : event.target.value,
                   })
                 }
               />
@@ -359,7 +322,7 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
               isPresent={role.end_date === undefined}
               onValueChange={(end_date) => onChange({ ...role, end_date })}
               onPresentChange={(present) =>
-                onChange({ ...role, end_date: present ? undefined : '' })
+                onChange({ ...role, end_date: present ? undefined : "" })
               }
             />
           </div>
@@ -402,33 +365,25 @@ type CompanyRowProps = {
 }
 
 export function CompanyRow(props: Readonly<CompanyRowProps>) {
-  const {
-    sectionIndex,
-    company,
-    index,
-    isFirst,
-    isLast,
-    onChange,
-    onMove,
-    onRemove,
-  } = props
+  const { sectionIndex, company, index, isFirst, isLast, onChange, onMove, onRemove } = props
 
   const {
     formState: { errors },
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const companyErrors = sectionErrors?.type === 'experience' ? sectionErrors.companies?.[index] : undefined
+  const companyErrors =
+    sectionErrors?.type === "experience" ? sectionErrors.companies?.[index] : undefined
 
   const isCurrentRole = company.end_date === undefined
 
-  const update = (patch: Partial<ExperienceCompany>) =>
-    onChange({ ...company, ...patch })
+  const update = (patch: Partial<ExperienceCompany>) => onChange({ ...company, ...patch })
 
   const roles = company.roles
   const rolesError =
-    (errors as { sections?: { companies?: { roles?: { message?: string } }[] }[] })?.sections?.[sectionIndex]?.companies?.[index]?.roles?.message
-      ?? companyErrors?.roles?.message
+    (errors as { sections?: { companies?: { roles?: { message?: string } }[] }[] })?.sections?.[
+      sectionIndex
+    ]?.companies?.[index]?.roles?.message ?? companyErrors?.roles?.message
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
@@ -457,13 +412,11 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
             <Input
               id={`section-${sectionIndex}-company-${index}-website`}
               placeholder="https://example.com"
-              value={company.company_website ?? ''}
+              value={company.company_website ?? ""}
               onChange={(event) =>
                 update({
                   company_website:
-                    event.target.value.trim() === ''
-                      ? undefined
-                      : event.target.value,
+                    event.target.value.trim() === "" ? undefined : event.target.value,
                 })
               }
             />
@@ -490,9 +443,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
             error={companyErrors?.end_date?.message}
             isPresent={isCurrentRole}
             onValueChange={(end_date) => update({ end_date })}
-            onPresentChange={(present) =>
-              update({ end_date: present ? undefined : '' })
-            }
+            onPresentChange={(present) => update({ end_date: present ? undefined : "" })}
           />
         </div>
 
@@ -525,9 +476,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
             onChange={(next) =>
               onChange({
                 ...company,
-                roles: roles.map((current, i) =>
-                  i === roleIndex ? next : current,
-                ),
+                roles: roles.map((current, i) => (i === roleIndex ? next : current)),
               })
             }
             onMove={(from, to) => {
@@ -552,11 +501,11 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
               roles: [
                 ...roles,
                 withKey({
-                  job_title: '',
+                  job_title: "",
                   employment_type: undefined,
                   location: undefined,
                   start_date: undefined,
-                  end_date: '',
+                  end_date: "",
                   bullets: [],
                 }),
               ],
@@ -582,7 +531,8 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError = sectionErrors?.type === 'experience' ? sectionErrors.companies?.message : undefined
+  const sectionError =
+    sectionErrors?.type === "experience" ? sectionErrors.companies?.message : undefined
 
   return (
     <div className="flex flex-col gap-3">
@@ -601,9 +551,7 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
           isFirst={index === 0}
           isLast={index === companies.length - 1}
           onChange={(next) =>
-            onChange(
-              companies.map((current, i) => (i === index ? next : current)),
-            )
+            onChange(companies.map((current, i) => (i === index ? next : current)))
           }
           onMove={(from, to) => {
             const next = [...companies]
@@ -620,8 +568,8 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
           onChange([
             ...companies,
             withKey({
-              company_name: '',
-              start_date: '',
+              company_name: "",
+              start_date: "",
               end_date: undefined,
               roles: [],
             }),

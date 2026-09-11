@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react'
-import { parseResumeJsonFile } from './parseResumeJsonFile'
-import type { Resume } from '@/db/db'
+import { useCallback, useRef, useState } from "react"
+import { parseResumeJsonFile } from "./parseResumeJsonFile"
+import type { Resume } from "@/db/db"
 
 interface UseJsonUploaderReturn {
   isDragActive: boolean
@@ -59,50 +59,44 @@ export function useJsonUploader(): UseJsonUploaderReturn {
     const droppedFiles = event.dataTransfer.files
     if (droppedFiles.length > 0) {
       const file = droppedFiles[0]
-      if (file.type === 'application/json' || file.name.endsWith('.json')) {
+      if (file.type === "application/json" || file.name.endsWith(".json")) {
         setSelectedFile(file)
       }
     }
   }, [])
 
-  const onFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files
-      if (files && files.length > 0) {
-        const file = files[0]
-        if (file.type === 'application/json' || file.name.endsWith('.json')) {
-          setSelectedFile(file)
-        }
+  const onFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      if (file.type === "application/json" || file.name.endsWith(".json")) {
+        setSelectedFile(file)
       }
-      event.target.value = ''
-    },
-    [],
-  )
+    }
+    event.target.value = ""
+  }, [])
 
   const clearSelection = useCallback(() => {
     setSelectedFile(null)
     setParseError(null)
   }, [])
 
-  const parseAndUpload = useCallback(
-    async (file: File): Promise<ParsedResumeResult | null> => {
-      setIsParsing(true)
-      setParseError(null)
+  const parseAndUpload = useCallback(async (file: File): Promise<ParsedResumeResult | null> => {
+    setIsParsing(true)
+    setParseError(null)
 
-      try {
-        const result = await parseResumeJsonFile(file)
-        if (!result) {
-          const errorMessage = 'Failed to parse resume file.'
-          setParseError(errorMessage)
-          return null
-        }
-        return result
-      } finally {
-        setIsParsing(false)
+    try {
+      const result = await parseResumeJsonFile(file)
+      if (!result) {
+        const errorMessage = "Failed to parse resume file."
+        setParseError(errorMessage)
+        return null
       }
-    },
-    [],
-  )
+      return result
+    } finally {
+      setIsParsing(false)
+    }
+  }, [])
 
   return {
     isDragActive,

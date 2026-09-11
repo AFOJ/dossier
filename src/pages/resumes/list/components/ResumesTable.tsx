@@ -4,14 +4,14 @@ import {
   Edit02Icon,
   EyeIcon,
   FileExportIcon,
-} from '@hugeicons/core-free-icons'
-import { Button, ButtonLink, Tooltip, type IconProps } from '@/components/ui'
-import type { Resume } from '@/db/db'
-import { Pagination } from '@/pages/resumes/list/components/Pagination'
+} from "@hugeicons/core-free-icons"
+import { Button, ButtonLink, Tooltip, type IconProps } from "@/components/ui"
+import type { Resume } from "@/db/db"
+import { Pagination } from "@/pages/resumes/list/components/Pagination"
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+  dateStyle: "medium",
+  timeStyle: "short",
 })
 
 function formatDate(date: Date) {
@@ -121,27 +121,11 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <QuickAction
-            label="View"
-            icon={EyeIcon}
-            onClick={() => onPreview(resume)}
-          />
-          <QuickAction
-            label="Export JSON"
-            icon={FileExportIcon}
-            onClick={() => onExport(resume)}
-          />
+          <QuickAction label="View" icon={EyeIcon} onClick={() => onPreview(resume)} />
+          <QuickAction label="Export JSON" icon={FileExportIcon} onClick={() => onExport(resume)} />
           <QuickAction label="Edit" icon={Edit02Icon} to={editUrl} />
-          <QuickAction
-            label="Duplicate"
-            icon={Copy01Icon}
-            onClick={() => onDuplicate(resume)}
-          />
-          <QuickAction
-            label="Delete"
-            icon={Delete02Icon}
-            onClick={() => onDelete(resume)}
-          />
+          <QuickAction label="Duplicate" icon={Copy01Icon} onClick={() => onDuplicate(resume)} />
+          <QuickAction label="Delete" icon={Delete02Icon} onClick={() => onDelete(resume)} />
         </div>
       </td>
     </tr>
@@ -150,15 +134,12 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
 
 type QuickActionProps = {
   label: string
-  icon: IconProps['icon']
-} & (
-  | { to: string; onClick?: undefined }
-  | { to?: undefined; onClick: () => void }
-)
+  icon: IconProps["icon"]
+} & ({ to: string; onClick?: undefined } | { to?: undefined; onClick: () => void })
 
 function QuickAction(props: Readonly<QuickActionProps>) {
   const { label, icon, to, onClick } = props
-  const className = 'size-8 p-0 text-gray-500 hover:text-gray-900'
+  const className = "size-8 p-0 text-gray-500 hover:text-gray-900"
 
   return (
     <Tooltip content={label}>
