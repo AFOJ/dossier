@@ -19,39 +19,56 @@ export function BulkDeleteDialog(props: Readonly<ModalContentProps<BulkDeleteDia
   } = props
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState<Resume[]>(resumes)
+  const [deletedCount, setDeletedCount] = useState(0)
   const toast = useToast()
 
   const handleDelete = async () => {
     setIsDeleting(true)
     setError(null)
 
-    try {
-      for (const resume of resumes) {
-        if (resume.id) {
-          await deleteResume(resume.id)
-        }
+    const failed: Resume[] = []
+    let deleted = 0
+    for (const resume of remaining) {
+      if (!resume.id) {
+        continue
       }
+      try {
+        await deleteResume(resume.id)
+        deleted += 1
+      } catch {
+        failed.push(resume)
+      }
+    }
+
+    const totalDeleted = deletedCount + deleted
+    if (failed.length === 0) {
       toast.success(
         "Resumes deleted",
-        `${resumes.length} resume${resumes.length > 1 ? "s" : ""} deleted.`,
+        `${totalDeleted} resume${totalDeleted === 1 ? "" : "s"} deleted.`,
       )
       onComplete()
       close()
-    } catch {
-      setError("Failed to delete resumes. Please try again.")
-      toast.error("Failed to delete resumes", "Please try again.")
-      setIsDeleting(false)
+      return
     }
+
+    setRemaining(failed)
+    setDeletedCount(totalDeleted)
+    setError(
+      `Deleted ${totalDeleted} of ${resumes.length} resumes. ${failed.length} could not be deleted. You can retry the remaining ones.`,
+    )
+    toast.error("Some resumes could not be deleted", `${failed.length} remaining.`)
+    setIsDeleting(false)
   }
 
-  const displayResumes = resumes.slice(0, MAX_DISPLAY)
-  const remaining = resumes.length - MAX_DISPLAY
+  const displayResumes = remaining.slice(0, MAX_DISPLAY)
+  const hiddenCount = remaining.length - MAX_DISPLAY
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <Heading3>
-          Delete {resumes.length} resume{resumes.length > 1 ? "s" : ""}?
+          Delete {remaining.length} resume{remaining.length === 1 ? "" : "s"}?
         </Heading3>
         <p className="text-sm leading-6 text-gray-600">
           This will permanently delete the following and cannot be undone.
@@ -65,7 +82,7 @@ export function BulkDeleteDialog(props: Readonly<ModalContentProps<BulkDeleteDia
               {resume.title}
             </li>
           ))}
-          {remaining > 0 && <li className="text-gray-500">+ {remaining} more...</li>}
+          {hiddenCount > 0 && <li className="text-gray-500">+ {hiddenCount} more...</li>}
         </ul>
       </div>
 
@@ -86,7 +103,7 @@ export function BulkDeleteDialog(props: Readonly<ModalContentProps<BulkDeleteDia
         >
           {isDeleting
             ? "Deleting..."
-            : `Delete ${resumes.length} resume${resumes.length > 1 ? "s" : ""}`}
+            : `Delete ${remaining.length} resume${remaining.length === 1 ? "" : "s"}`}
         </Button>
       </div>
     </div>

@@ -16,6 +16,7 @@ interface ImportCounts {
   overwritten: number
   copied: number
   kept: number
+  failed: number
 }
 
 function summarizeCounts(counts: ImportCounts): string {
@@ -31,6 +32,9 @@ function summarizeCounts(counts: ImportCounts): string {
   }
   if (counts.kept > 0) {
     parts.push(`${counts.kept} kept`)
+  }
+  if (counts.failed > 0) {
+    parts.push(`${counts.failed} failed`)
   }
   return parts.join(", ")
 }
@@ -79,16 +83,20 @@ export default function UploadResumePage() {
 
   const finishBatch = (counts: ImportCounts) => {
     const total = counts.imported + counts.overwritten + counts.copied
-    if (total === 0 && counts.kept > 0) {
+    if (total === 0 && counts.failed === 0 && counts.kept > 0) {
       toast.success("Nothing imported", "Kept the existing resumes.")
       return
     }
-    toast.success("Resumes imported", summarizeCounts(counts))
+    if (counts.failed > 0) {
+      toast.error("Import partially completed", summarizeCounts(counts))
+    } else {
+      toast.success("Resumes imported", summarizeCounts(counts))
+    }
     navigate("/resumes")
   }
 
   const handleBatchParsed = async (items: BatchParsedItem[]) => {
-    const counts: ImportCounts = { imported: 0, overwritten: 0, copied: 0, kept: 0 }
+    const counts: ImportCounts = { imported: 0, overwritten: 0, copied: 0, kept: 0, failed: 0 }
     const conflicts: {
       incomingResume: Resume
       incomingResumeId: string
@@ -99,8 +107,12 @@ export default function UploadResumePage() {
     for (const item of items) {
       const existingResume = await getResume(item.resumeId)
       if (!existingResume) {
-        await importFreshResume(item.resume, item.resumeId)
-        counts.imported += 1
+        try {
+          await importFreshResume(item.resume, item.resumeId)
+          counts.imported += 1
+        } catch {
+          counts.failed += 1
+        }
       } else {
         conflicts.push({
           incomingResume: item.resume,
@@ -144,11 +156,16 @@ export default function UploadResumePage() {
             counts.kept += 1
             continue
           }
-          await applyResolution(
-            resolution.item.incomingResume,
-            resolution.item.existingResume.id!,
-            resolution.decision,
-          )
+          try {
+            await applyResolution(
+              resolution.item.incomingResume,
+              resolution.item.existingResume.id!,
+              resolution.decision,
+            )
+          } catch {
+            counts.failed += 1
+            continue
+          }
           if (resolution.decision === "overwrite") {
             counts.overwritten += 1
           } else {

@@ -112,43 +112,54 @@ export function useUploadResume({
   )
 
   const stageZipFile = useCallback(
-    async (file: File) => {
+    async (file: File, room: number): Promise<{ remaining: number; truncated: boolean }> => {
       setPendingCount((count) => count + 1)
       try {
         const { entries, skipped } = await extractResumeJsonFiles(file)
-        for (const skippedEntry of skipped) {
+        const rows: { row: StagedFile; text?: string }[] = [
+          ...skipped.map((skippedEntry) => ({
+            row: {
+              key: crypto.randomUUID(),
+              name: `${file.name} / ${skippedEntry.name}`,
+              size: 0,
+              status: "invalid" as const,
+              error: skippedEntry.reason,
+            },
+          })),
+          ...entries.map((entry) => ({
+            row: {
+              key: crypto.randomUUID(),
+              name: `${file.name} / ${entry.name}`,
+              size: 0,
+              status: "parsing" as const,
+            },
+            text: entry.text,
+          })),
+        ]
+        const accepted = rows.slice(0, room)
+        setStagedFiles((previous) => [...previous, ...accepted.map((candidate) => candidate.row)])
+        for (const acceptedRow of accepted) {
+          if (acceptedRow.text !== undefined) {
+            parseJsonText(acceptedRow.row.key, acceptedRow.row.name, acceptedRow.text)
+          }
+        }
+        return { remaining: room - accepted.length, truncated: rows.length > accepted.length }
+      } catch (error) {
+        if (room > 0) {
           const key = crypto.randomUUID()
           setStagedFiles((previous) => [
             ...previous,
             {
               key,
-              name: `${file.name} / ${skippedEntry.name}`,
-              size: 0,
+              name: file.name,
+              size: file.size,
               status: "invalid",
-              error: skippedEntry.reason,
+              error: error instanceof Error ? error.message : "Could not read ZIP file.",
             },
           ])
+          return { remaining: room - 1, truncated: false }
         }
-        for (const entry of entries) {
-          const key = crypto.randomUUID()
-          setStagedFiles((previous) => [
-            ...previous,
-            { key, name: `${file.name} / ${entry.name}`, size: 0, status: "parsing" },
-          ])
-          parseJsonText(key, entry.name, entry.text)
-        }
-      } catch (error) {
-        const key = crypto.randomUUID()
-        setStagedFiles((previous) => [
-          ...previous,
-          {
-            key,
-            name: file.name,
-            size: file.size,
-            status: "invalid",
-            error: error instanceof Error ? error.message : "Could not read ZIP file.",
-          },
-        ])
+        return { remaining: room, truncated: true }
       } finally {
         setPendingCount((count) => count - 1)
       }
@@ -158,20 +169,20 @@ export function useUploadResume({
 
   const addFiles = useCallback(
     async (files: File[]) => {
-      const room = Math.max(0, MAX_STAGED_FILES - stagedFiles.length)
-      const accepted = files.slice(0, room)
-      const rejectedCount = files.length - accepted.length
-      if (rejectedCount > 0) {
-        toast.error(
-          "Too many files",
-          `Only the first ${MAX_STAGED_FILES} files were added (${rejectedCount} skipped).`,
-        )
-      }
-      for (const file of accepted) {
+      let remaining = Math.max(0, MAX_STAGED_FILES - stagedFiles.length)
+      let truncated = false
+      for (const file of files) {
+        if (remaining <= 0) {
+          truncated = true
+          break
+        }
         if (isZipFile(file)) {
-          await stageZipFile(file)
+          const result = await stageZipFile(file, remaining)
+          remaining = result.remaining
+          truncated = truncated || result.truncated
         } else if (isJsonFile(file)) {
           await stageJsonFile(file)
+          remaining -= 1
         } else {
           const key = crypto.randomUUID()
           setStagedFiles((previous) => [
@@ -184,7 +195,14 @@ export function useUploadResume({
               error: "Unsupported file type. Only JSON and ZIP files are accepted.",
             },
           ])
+          remaining -= 1
         }
+      }
+      if (truncated) {
+        toast.error(
+          "Too many files",
+          `Only the first ${MAX_STAGED_FILES} files were added. Remove some to add more.`,
+        )
       }
     },
     [stagedFiles.length, stageJsonFile, stageZipFile, toast],

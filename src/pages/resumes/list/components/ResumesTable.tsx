@@ -147,7 +147,9 @@ function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
   const editUrl = `/resumes/${resume.id}/edit`
 
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement) {
+    // Interactive descendants (links, buttons incl. their icon SVGs, checkboxes)
+    // handle their own clicks; anything else on the row opens the preview.
+    if (event.target instanceof Element && event.target.closest("a,button,input")) {
       return
     }
     onPreview(resume)

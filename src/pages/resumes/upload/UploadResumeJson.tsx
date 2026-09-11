@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Cancel01Icon } from "@hugeicons/core-free-icons"
 import { Button, Heading3, Subheading } from "@/components/ui"
+import { useToast } from "@/components/toast"
 import { cn } from "@/utils"
 import { IsometricFileOpen } from "@/components/illustrations"
 import { useUploadResume } from "./hooks/useUploadResume"
@@ -40,6 +41,8 @@ function StatusBadge({ staged }: Readonly<{ staged: StagedFile }>) {
 export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
   const { onBatchParsed } = props
   const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const toast = useToast()
 
   const {
     isDragActive,
@@ -62,8 +65,12 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
 
   const handleImport = async () => {
     setIsImporting(true)
+    setImportError(null)
     try {
       await importValid()
+    } catch {
+      setImportError("Import failed. Some resumes may not have been imported. Please try again.")
+      toast.error("Import failed", "Some resumes may not have been imported. Please try again.")
     } finally {
       setIsImporting(false)
     }
@@ -119,6 +126,15 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
           </p>
         </div>
       </div>
+
+      {importError && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          {importError}
+        </p>
+      )}
 
       {stagedFiles.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white">

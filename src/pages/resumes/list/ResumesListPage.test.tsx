@@ -180,6 +180,21 @@ describe("ResumesListPage", () => {
     expect(await screen.findByRole("dialog")).toHaveTextContent("My Resume")
   })
 
+  it("navigates to edit without opening the preview modal", async () => {
+    const user = userEvent.setup()
+    renderPage(
+      makeTableState({
+        totalCount: 1,
+        pageItems: [makeResume({ id: "abc", title: "My Resume" })],
+      }),
+    )
+
+    await user.click(await screen.findByRole("link", { name: "Edit" }))
+
+    expect(await screen.findByText("Edit resume page")).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
   it("exports a resume as JSON from its quick action", async () => {
     const user = userEvent.setup()
     const resume = makeResume({ id: "exp-1", title: "Export Me" })
@@ -347,6 +362,43 @@ describe("ResumesListPage", () => {
     await waitFor(() => {
       expect(deleteResume).toHaveBeenCalledWith("1")
       expect(deleteResume).toHaveBeenCalledWith("2")
+    })
+    expect(clearSelection).toHaveBeenCalled()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("reports partial completion and retries only the remaining resumes", async () => {
+    const user = userEvent.setup()
+    const clearSelection = vi.fn()
+    vi.mocked(deleteResume)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("boom"))
+    renderPage(
+      makeTableState({
+        totalCount: 2,
+        pageItems: [
+          makeResume({ id: "1", title: "Frontend Engineer" }),
+          makeResume({ id: "2", title: "Backend Engineer" }),
+        ],
+        selectedIds: new Set(["1", "2"]),
+        selectedCount: 2,
+        isAllSelected: true,
+        clearSelection,
+      }),
+    )
+
+    await user.click(await screen.findByRole("button", { name: "Delete selected" }))
+    await user.click(await screen.findByRole("button", { name: "Delete 2 resumes" }))
+
+    expect(await screen.findByText(/Deleted 1 of 2 resumes/)).toBeInTheDocument()
+    expect(screen.getByRole("dialog")).toHaveTextContent("Backend Engineer")
+    expect(screen.getByRole("dialog")).not.toHaveTextContent("Frontend Engineer")
+    expect(clearSelection).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole("button", { name: "Delete 1 resume" }))
+
+    await waitFor(() => {
+      expect(deleteResume).toHaveBeenCalledTimes(3)
     })
     expect(clearSelection).toHaveBeenCalled()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()

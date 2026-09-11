@@ -193,4 +193,60 @@ describe("UploadResumePage", () => {
     expect(mockCreateResume).not.toHaveBeenCalled()
     expect(mockUpdateResume).not.toHaveBeenCalled()
   })
+
+  it("shows an error when the import fails unexpectedly", async () => {
+    const user = userEvent.setup()
+    mockGetResume.mockRejectedValue(new Error("db down"))
+    renderPage()
+    await stageFiles([
+      makeFile(
+        "a.json",
+        makeResumeJson({ id: "77777777-7777-4777-8777-777777777777", title: "Resume A" }),
+      ),
+    ])
+
+    await user.click(await screen.findByRole("button", { name: "Import 1 resume" }))
+
+    expect(await screen.findByText(/Import failed/)).toBeInTheDocument()
+    expect(screen.queryByText("Resumes page")).not.toBeInTheDocument()
+  })
+
+  it("imports the remaining resumes when one fails", async () => {
+    const user = userEvent.setup()
+    mockCreateResume.mockRejectedValueOnce(new Error("boom"))
+    renderPage()
+    await stageFiles([
+      makeFile(
+        "a.json",
+        makeResumeJson({ id: "88888888-8888-4888-8888-888888888888", title: "Resume A" }),
+      ),
+      makeFile(
+        "b.json",
+        makeResumeJson({ id: "99999999-9999-4999-8999-999999999999", title: "Resume B" }),
+      ),
+    ])
+
+    await user.click(await screen.findByRole("button", { name: "Import 2 resumes" }))
+
+    await waitFor(() => {
+      expect(mockCreateResume).toHaveBeenCalledTimes(2)
+    })
+    expect(await screen.findByText("Resumes page")).toBeInTheDocument()
+  })
+
+  it("caps staged files at the batch limit", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    const files = Array.from({ length: 55 }, (_, index) =>
+      makeFile(`batch-${index}.json`, makeResumeJson({ title: `Batch ${index}` })),
+    )
+
+    await user.upload(fileInput(), files)
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Valid")).toHaveLength(50)
+    })
+    expect(screen.getByText(/50 of 50 valid/)).toBeInTheDocument()
+    expect(screen.queryByText("batch-54.json")).not.toBeInTheDocument()
+  })
 })

@@ -37,4 +37,26 @@ describe("extractResumeJsonFiles", () => {
 
     await expect(extractResumeJsonFiles(file)).rejects.toThrow("Could not read ZIP file.")
   })
+
+  it("rejects archives over the compressed size limit without decompressing", async () => {
+    const file = new File([new Uint8Array(11 * 1024 * 1024)], "big.zip", {
+      type: "application/zip",
+    })
+
+    await expect(extractResumeJsonFiles(file)).rejects.toThrow("ZIP file is too large")
+  })
+
+  it("skips entries over the per-file size limit but keeps the rest", async () => {
+    const file = makeZipFile({
+      "small-resume.json": resumeJson,
+      "huge-resume.json": `{"title":"${"x".repeat(3 * 1024 * 1024)}","sections":[]}`,
+    })
+
+    const { entries, skipped } = await extractResumeJsonFiles(file)
+
+    expect(entries.map((entry) => entry.name)).toEqual(["small-resume.json"])
+    expect(skipped).toEqual([
+      { name: "huge-resume.json", reason: "File is too large to import safely." },
+    ])
+  })
 })
