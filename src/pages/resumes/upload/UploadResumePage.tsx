@@ -59,7 +59,6 @@ export default function UploadResumePage() {
 
   const applyResolution = async (
     incomingResume: Resume,
-    incomingResumeId: string,
     existingId: string,
     decision: "overwrite" | "copy",
   ) => {
@@ -124,22 +123,12 @@ export default function UploadResumePage() {
         incomingResume: conflict.incomingResume,
         incomingResumeId: conflict.incomingResumeId,
         onOverwrite: async () => {
-          await applyResolution(
-            conflict.incomingResume,
-            conflict.incomingResumeId,
-            conflict.existingResume.id!,
-            "overwrite",
-          )
+          await applyResolution(conflict.incomingResume, conflict.existingResume.id!, "overwrite")
           counts.overwritten += 1
           finishBatch(counts)
         },
         onCreateCopy: async () => {
-          await applyResolution(
-            conflict.incomingResume,
-            conflict.incomingResumeId,
-            conflict.existingResume.id!,
-            "copy",
-          )
+          await applyResolution(conflict.incomingResume, conflict.existingResume.id!, "copy")
           counts.copied += 1
           finishBatch(counts)
         },
@@ -157,7 +146,6 @@ export default function UploadResumePage() {
           }
           await applyResolution(
             resolution.item.incomingResume,
-            resolution.item.incomingResumeId,
             resolution.item.existingResume.id!,
             resolution.decision,
           )

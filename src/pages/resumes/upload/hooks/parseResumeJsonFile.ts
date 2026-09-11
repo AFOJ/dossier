@@ -62,16 +62,9 @@ function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
 }
 
 function firstValidationMessage(error: z.ZodError): string {
-  const flat = error.flatten()
-  const formError = flat.formErrors[0]
-  if (formError) {
-    return formError
-  }
-  for (const messages of Object.values(flat.fieldErrors)) {
-    const message = messages?.[0]
-    if (message) {
-      return message
-    }
+  const firstIssue = error.issues[0]
+  if (firstIssue) {
+    return firstIssue.message
   }
   return "Invalid resume data."
 }

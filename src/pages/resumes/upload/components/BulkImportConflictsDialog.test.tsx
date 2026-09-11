@@ -2,7 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { BulkImportConflictsDialog } from "@/pages/resumes/upload/components/BulkImportConflictsDialog"
-import type { ImportConflictItem } from "@/pages/resumes/upload/components/BulkImportConflictsDialog"
+import type {
+  ConflictResolution,
+  ImportConflictItem,
+} from "@/pages/resumes/upload/components/BulkImportConflictsDialog"
 import type { Resume } from "@/db/db"
 
 function makeResume(overrides: Partial<Resume> = {}): Resume {
@@ -84,7 +87,11 @@ describe("BulkImportConflictsDialog", () => {
       expect(onApply).toHaveBeenCalledTimes(1)
     })
     const resolutions = onApply.mock.calls[0][0]
-    expect(resolutions.map((resolution) => resolution.decision)).toEqual(["keep", "keep", "keep"])
+    expect(resolutions.map((resolution: ConflictResolution) => resolution.decision)).toEqual([
+      "keep",
+      "keep",
+      "keep",
+    ])
     expect(onComplete).toHaveBeenCalled()
     expect(close).toHaveBeenCalled()
   })
@@ -115,7 +122,10 @@ describe("BulkImportConflictsDialog", () => {
       expect(onApply).toHaveBeenCalledTimes(1)
     })
     const resolutions = onApply.mock.calls[0][0]
-    expect(resolutions.map((resolution) => resolution.decision)).toEqual(["keep", "copy"])
+    expect(resolutions.map((resolution: ConflictResolution) => resolution.decision)).toEqual([
+      "keep",
+      "copy",
+    ])
     expect(resolutions[0].item.sourceName).toBe("first.json")
     expect(resolutions[1].item.sourceName).toBe("second.json")
   })
@@ -133,7 +143,10 @@ describe("BulkImportConflictsDialog", () => {
       expect(onApply).toHaveBeenCalledTimes(1)
     })
     const resolutions = onApply.mock.calls[0][0]
-    expect(resolutions.map((resolution) => resolution.decision)).toEqual(["overwrite", "copy"])
+    expect(resolutions.map((resolution: ConflictResolution) => resolution.decision)).toEqual([
+      "overwrite",
+      "copy",
+    ])
   })
 
   it("re-trigger apply-all after clearing an individual decision", async () => {
@@ -151,7 +164,10 @@ describe("BulkImportConflictsDialog", () => {
       expect(onApply).toHaveBeenCalledTimes(1)
     })
     const resolutions = onApply.mock.calls[0][0]
-    expect(resolutions.map((resolution) => resolution.decision)).toEqual(["keep", "copy"])
+    expect(resolutions.map((resolution: ConflictResolution) => resolution.decision)).toEqual([
+      "keep",
+      "copy",
+    ])
   })
 
   it("clears a decision when its selected option is clicked again", async () => {
