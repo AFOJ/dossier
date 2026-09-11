@@ -2,10 +2,13 @@ import { z } from "zod"
 import type { Resume } from "@/db/db"
 import { resumeSchema, resumePayloadSchema } from "@/db/schemas"
 
-interface ParsedResumeResult {
+export interface ParsedResumeResult {
   resume: Resume
   resumeId: string
 }
+
+export type ParseResumeResult =
+  { success: true; resume: Resume; resumeId: string } | { success: false; error: string }
 
 function convertPayloadToResume(
   payload: z.infer<typeof resumePayloadSchema>,
@@ -58,6 +61,82 @@ function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
   }
 }
 
+function firstValidationMessage(error: z.ZodError): string {
+  const flat = error.flatten()
+  const formError = flat.formErrors[0]
+  if (formError) {
+    return formError
+  }
+  for (const messages of Object.values(flat.fieldErrors)) {
+    const message = messages?.[0]
+    if (message) {
+      return message
+    }
+  }
+  return "Invalid resume data."
+}
+
+/**
+ * Parses resume JSON from raw text (file contents or ZIP entry).
+ * Returns a discriminated result so batch imports can report per-file
+ * errors and skip invalid entries without aborting the whole batch.
+ */
+export function parseResumeJsonText(text: string, fileName: string): ParseResumeResult {
+  let parsedData: unknown
+  try {
+    parsedData = JSON.parse(text)
+  } catch (error) {
+    console.error("[parseResumeJsonText] JSON parse error", { fileName, error })
+    return { success: false, error: "File is not valid JSON." }
+  }
+
+  if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
+    console.error("[parseResumeJsonText] Root is not an object", { fileName })
+    return { success: false, error: "File does not contain a resume object." }
+  }
+
+  const hasId = "id" in parsedData && typeof (parsedData as Record<string, unknown>).id === "string"
+
+  if (hasId) {
+    const validationResult = resumeSchema.safeParse(parsedData)
+    if (!validationResult.success) {
+      console.error("[parseResumeJsonText] Resume validation failed", {
+        fileName,
+        error: validationResult.error.flatten(),
+      })
+      return {
+        success: false,
+        error: `Invalid resume: ${firstValidationMessage(validationResult.error)}`,
+      }
+    }
+    const validResume = validationResult.data
+    const resume = toResumeWithDates(validResume)
+    const resumeId = validResume.id ?? crypto.randomUUID()
+    if (!validResume.id) {
+      resume.id = resumeId
+    }
+    return { success: true, resume, resumeId }
+  }
+
+  const validationResult = resumePayloadSchema.safeParse(parsedData)
+  if (!validationResult.success) {
+    console.error("[parseResumeJsonText] ResumePayload validation failed", {
+      fileName,
+      error: validationResult.error.flatten(),
+    })
+    return {
+      success: false,
+      error: `Invalid resume: ${firstValidationMessage(validationResult.error)}`,
+    }
+  }
+  const resumeId = crypto.randomUUID()
+  return {
+    success: true,
+    resume: convertPayloadToResume(validationResult.data, resumeId),
+    resumeId,
+  }
+}
+
 export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResult | null> {
   if (!file.name.toLowerCase().endsWith(".json") && file.type !== "application/json") {
     console.error("[parseResumeJsonFile] Not a JSON file", {
@@ -67,49 +146,9 @@ export async function parseResumeJsonFile(file: File): Promise<ParsedResumeResul
     return null
   }
 
-  let parsedData: unknown
-  try {
-    parsedData = JSON.parse(await file.text())
-  } catch (error) {
-    console.error("[parseResumeJsonFile] JSON parse error", { fileName: file.name, error })
+  const result = parseResumeJsonText(await file.text(), file.name)
+  if (!result.success) {
     return null
   }
-
-  if (!parsedData || typeof parsedData !== "object") {
-    console.error("[parseResumeJsonFile] Root is not an object", { fileName: file.name })
-    return null
-  }
-
-  const hasId = "id" in parsedData && typeof (parsedData as Record<string, unknown>).id === "string"
-
-  let resume: Resume
-  let resumeId: string
-
-  if (hasId) {
-    const validationResult = resumeSchema.safeParse(parsedData)
-    if (!validationResult.success) {
-      console.error("[parseResumeJsonFile] Resume validation failed", {
-        fileName: file.name,
-        error: validationResult.error.flatten(),
-      })
-      return null
-    }
-    const validResume = validationResult.data
-    resume = toResumeWithDates(validResume)
-    resumeId = validResume.id ?? crypto.randomUUID()
-    if (!validResume.id) resume.id = resumeId
-  } else {
-    const validationResult = resumePayloadSchema.safeParse(parsedData)
-    if (!validationResult.success) {
-      console.error("[parseResumeJsonFile] ResumePayload validation failed", {
-        fileName: file.name,
-        error: validationResult.error.flatten(),
-      })
-      return null
-    }
-    resumeId = crypto.randomUUID()
-    resume = convertPayloadToResume(validationResult.data, resumeId)
-  }
-
-  return { resume, resumeId }
+  return { resume: result.resume, resumeId: result.resumeId }
 }
