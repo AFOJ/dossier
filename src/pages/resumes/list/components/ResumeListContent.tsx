@@ -4,7 +4,7 @@ import { ButtonLink, Heading3, Subheading } from "@/components/ui"
 import type { Resume } from "@/db/db"
 import { type useResumeTable } from "@/hooks/useResumeTable"
 import { ResumesTable } from "@/pages/resumes/list/components/ResumesTable"
-import { ResumesTableSkeleton } from "@/pages/resumes/list/components/ResumesTableSkeleton"
+import { TableSkeleton } from "@/components/table"
 
 type ResumeTableState = ReturnType<typeof useResumeTable>
 
@@ -20,7 +20,13 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
   const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
   if (table.isLoading || table.totalDbCount === undefined) {
-    return <ResumesTableSkeleton />
+    return (
+      <TableSkeleton
+        headers={["Resume title", "Created", "Last updated"]}
+        actionButtonCount={4}
+        ariaLabel="Loading resumes"
+      />
+    )
   }
 
   const dbCount = table.totalDbCount

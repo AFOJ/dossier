@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react"
 import {
   Copy01Icon,
   Delete02Icon,
@@ -6,18 +5,13 @@ import {
   EyeIcon,
   FileExportIcon,
 } from "@hugeicons/core-free-icons"
-import { Button, ButtonLink, Tooltip, type IconProps } from "@/components/ui"
 import type { Resume } from "@/db/db"
-import { Pagination } from "@/pages/resumes/list/components/Pagination"
-
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-})
-
-function formatDate(date: Date) {
-  return dateFormatter.format(date)
-}
+import {
+  EntityTable,
+  QuickAction,
+  formatTableDate,
+  type EntityTableColumn,
+} from "@/components/table"
 
 type ResumesTableProps = {
   resumes: Resume[]
@@ -39,8 +33,36 @@ type ResumesTableProps = {
   onClearSelection: () => void
 }
 
-const checkboxClassName =
-  "size-4 rounded-md border-gray-300 text-black focus:ring-primary-500 accent-black"
+const columns: EntityTableColumn<Resume>[] = [
+  {
+    key: "title",
+    header: "Resume title",
+    cellClassName: "w-full px-4 py-3 text-left cursor-pointer",
+    renderCell: (resume) => {
+      return (
+        <span className="block text-sm font-medium text-gray-900 hover:text-gray-600">
+          {resume.title}
+        </span>
+      )
+    },
+  },
+  {
+    key: "created",
+    header: "Created",
+    cellClassName: "whitespace-nowrap px-4 py-3 text-sm text-gray-500",
+    renderCell: (resume) => {
+      return formatTableDate(resume.createdAt)
+    },
+  },
+  {
+    key: "updated",
+    header: "Last updated",
+    cellClassName: "whitespace-nowrap px-4 py-3 text-sm text-gray-500",
+    renderCell: (resume) => {
+      return formatTableDate(resume.updatedAt)
+    },
+  },
+]
 
 export function ResumesTable(props: Readonly<ResumesTableProps>) {
   const {
@@ -63,202 +85,69 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
     onClearSelection,
   } = props
 
-  const pageIds = resumes.map((r) => r.id!).filter(Boolean) as string[]
-  const selectAllCheckboxRef = useRef<HTMLInputElement>(null)
-
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      onClearSelection()
-    } else {
-      onSelectAll(pageIds)
-    }
-  }
-
-  useEffect(() => {
-    if (selectAllCheckboxRef.current) {
-      selectAllCheckboxRef.current.indeterminate = isIndeterminate
-    }
-  }, [isIndeterminate])
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              <th className="px-4 py-3 w-12">
-                <input
-                  ref={selectAllCheckboxRef}
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={() => handleSelectAll()}
-                  aria-label="Select all resumes on this page"
-                  className={checkboxClassName}
-                />
-              </th>
-              <th className="px-4 py-3">Resume title</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3">Last updated</th>
-              <th className="px-4 py-3 text-right">Quick actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resumes.map((resume) => (
-              <ResumesTableRow
-                key={resume.id}
-                resume={resume}
-                isSelected={selectedIds.has(resume.id!)}
-                onToggleSelect={onToggleSelect}
-                onPreview={onPreview}
-                onExport={onExport}
-                onDuplicate={onDuplicate}
-                onDelete={onDelete}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <Pagination
-        page={page}
-        perPage={perPage}
-        totalPages={totalPages}
-        totalCount={totalCount}
-        onPageChange={onPageChange}
-        onPerPageChange={onPerPageChange}
-      />
-    </div>
-  )
-}
-
-type ResumesTableRowProps = {
-  resume: Resume
-  isSelected: boolean
-  onToggleSelect: (id: string) => void
-  onPreview: (resume: Resume) => void
-  onExport: (resume: Resume) => void
-  onDuplicate: (resume: Resume) => void
-  onDelete: (resume: Resume) => void
-}
-
-function ResumesTableRow(props: Readonly<ResumesTableRowProps>) {
-  const { resume, isSelected, onToggleSelect, onPreview, onExport, onDuplicate, onDelete } = props
-
-  const editUrl = `/resumes/${resume.id}/edit`
-
-  const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
-    // Interactive descendants (links, buttons incl. their icon SVGs, checkboxes)
-    // handle their own clicks; anything else on the row opens the preview.
-    if (event.target instanceof Element && event.target.closest("a,button,input")) {
-      return
-    }
-    onPreview(resume)
-  }
-
-  return (
-    <tr
-      className={`border-b border-gray-100 transition-colors ${isSelected ? "bg-primary-50" : "hover:bg-gray-50"}`}
-      onClick={handleRowClick}
-    >
-      <td className="px-4 py-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelect(resume.id!)}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`Select ${resume.title}`}
-          className={checkboxClassName}
-        />
-      </td>
-      <td className="w-full px-4 py-3 text-left cursor-pointer">
-        <span className="block text-sm font-medium text-gray-900 hover:text-gray-600">
-          {resume.title}
-        </span>
-      </td>
-
-      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-        {formatDate(resume.createdAt)}
-      </td>
-
-      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-        {formatDate(resume.updatedAt)}
-      </td>
-
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1">
-          <QuickAction
-            label="View"
-            icon={EyeIcon}
-            onClick={(e) => {
-              e.stopPropagation()
-              onPreview(resume)
-            }}
-          />
-          <QuickAction
-            label="Export JSON"
-            icon={FileExportIcon}
-            onClick={(e) => {
-              e.stopPropagation()
-              onExport(resume)
-            }}
-          />
-          <QuickAction label="Edit" icon={Edit02Icon} to={editUrl} />
-          <QuickAction
-            label="Duplicate"
-            icon={Copy01Icon}
-            onClick={(e) => {
-              e.stopPropagation()
-              onDuplicate(resume)
-            }}
-          />
-          <QuickAction
-            label="Delete"
-            icon={Delete02Icon}
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(resume)
-            }}
-          />
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-type QuickActionProps = {
-  label: string
-  icon: IconProps["icon"]
-} & (
-  | { to: string; onClick?: undefined }
-  | {
-      to?: undefined
-      onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
-    }
-)
-
-function QuickAction(props: Readonly<QuickActionProps>) {
-  const { label, icon, to, onClick } = props
-  const className = "size-8 p-0 text-gray-500 hover:text-gray-900"
-
-  return (
-    <Tooltip content={label}>
-      {to !== undefined ? (
-        <ButtonLink
-          aria-label={label}
-          icon={icon}
-          intent="secondary"
-          className={className}
-          to={to}
-        />
-      ) : (
-        <Button
-          aria-label={label}
-          icon={icon}
-          intent="secondary"
-          onClick={onClick}
-          className={className}
-        />
-      )}
-    </Tooltip>
+    <EntityTable
+      items={resumes}
+      columns={columns}
+      getItemId={(resume) => {
+        return resume.id!
+      }}
+      getSelectLabel={(resume) => {
+        return `Select ${resume.title}`
+      }}
+      selectAllLabel="Select all resumes on this page"
+      page={page}
+      perPage={perPage}
+      totalPages={totalPages}
+      totalCount={totalCount}
+      onPageChange={onPageChange}
+      onPerPageChange={onPerPageChange}
+      selectedIds={selectedIds}
+      isAllSelected={isAllSelected}
+      isIndeterminate={isIndeterminate}
+      onToggleSelect={onToggleSelect}
+      onSelectAll={onSelectAll}
+      onClearSelection={onClearSelection}
+      onRowClick={onPreview}
+      renderActions={(resume) => {
+        return (
+          <>
+            <QuickAction
+              label="View"
+              icon={EyeIcon}
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onPreview(resume)
+              }}
+            />
+            <QuickAction
+              label="Export JSON"
+              icon={FileExportIcon}
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onExport(resume)
+              }}
+            />
+            <QuickAction label="Edit" icon={Edit02Icon} to={`/resumes/${resume.id}/edit`} />
+            <QuickAction
+              label="Duplicate"
+              icon={Copy01Icon}
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onDuplicate(resume)
+              }}
+            />
+            <QuickAction
+              label="Delete"
+              icon={Delete02Icon}
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onDelete(resume)
+              }}
+            />
+          </>
+        )
+      }}
+    />
   )
 }
