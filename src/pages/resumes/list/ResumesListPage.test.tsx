@@ -59,7 +59,6 @@ function makeProcessedState() {
 function makeTableState(overrides: Partial<TableState> = {}): TableState {
   return {
     query: "",
-    debouncedQuery: "",
     resultQuery: "",
     isSearchPending: false,
     isInitialLoading: false,
