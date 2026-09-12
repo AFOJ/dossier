@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/AFOJ/dossier/compare/dossier-v1.2.0...dossier-v1.3.0) (2026-09-12)
+
+
+### Features
+
+* restore shareable URLs for the resume list ([#22](https://github.com/AFOJ/dossier/issues/22)) ([fb97ff5](https://github.com/AFOJ/dossier/commit/fb97ff5695c76263d5d120b810332e8499bee145))
+
 ## [1.2.0](https://github.com/AFOJ/dossier/compare/dossier-v1.1.0...dossier-v1.2.0) (2026-09-11)
 
 
