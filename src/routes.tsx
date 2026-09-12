@@ -11,11 +11,16 @@ import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ModalProvider } from "@/components/modal"
 import { Toaster } from "@/components/toast"
 import { getProfile } from "@/db/profile"
+import { getCoverLetter } from "@/db/coverLetter"
 import { getResume } from "@/db/resume"
 import type { ProtectedRouteData } from "@/hooks/useProtectedRouteData"
 import ProtectedLayout from "@/layouts/ProtectedLayout"
 import CreateProfilePage from "@/pages/profile/create"
 import ProfilePage from "@/pages/profile/view"
+import CreateCoverLetterPage from "@/pages/cover-letters/create"
+import EditCoverLetterPage from "@/pages/cover-letters/edit"
+import CoverLettersListPage from "@/pages/cover-letters/list"
+import UploadCoverLetterPage from "@/pages/cover-letters/upload"
 import CreateResumePage from "@/pages/resumes/create"
 import EditResumePage from "@/pages/resumes/edit"
 import ResumesListPage from "@/pages/resumes/list"
@@ -51,6 +56,16 @@ const resumeEditRouteLoader = async ({ params }: { params: { resumeId?: string }
   }
 
   return { resume }
+}
+
+const coverLetterEditRouteLoader = async ({ params }: { params: { coverLetterId?: string } }) => {
+  const coverLetter = await getCoverLetter(params.coverLetterId ?? "")
+
+  if (!coverLetter) {
+    return redirect("/cover-letters")
+  }
+
+  return { coverLetter }
 }
 
 const PublicOnlyLayout = () => <Outlet />
@@ -99,6 +114,17 @@ const router = createBrowserRouter(
             path=":resumeId/edit"
             loader={resumeEditRouteLoader}
             element={<EditResumePage />}
+          />
+        </Route>
+        <Route path="cover-letters">
+          <Route index element={<CoverLettersListPage />} />
+          <Route path="create" element={<CreateCoverLetterPage />} />
+          <Route path="upload" element={<UploadCoverLetterPage />} />
+          <Route
+            id="cover-letter-edit"
+            path=":coverLetterId/edit"
+            loader={coverLetterEditRouteLoader}
+            element={<EditCoverLetterPage />}
           />
         </Route>
         <Route path="profile" element={<ProfilePage />} />
