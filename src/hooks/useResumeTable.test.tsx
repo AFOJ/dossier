@@ -209,12 +209,12 @@ describe("useResumeTable", () => {
       "Product Designer",
     ])
 
-    await waitFor(() => expect(result.current.isSearchPending).toBe(false), {
+    await waitFor(() => expect(result.current.totalCount).toBe(0), {
       timeout: 3000,
     })
+    expect(result.current.isSearchPending).toBe(false)
     expect(result.current.isLoading).toBe(false)
     expect(result.current.pageItems).toHaveLength(0)
-    expect(result.current.totalCount).toBe(0)
   })
 
   it("never returns to loading when the page changes", async () => {
@@ -305,8 +305,10 @@ describe("useResumeTable", () => {
         expect(searchParamsOf(result.current.location.search).has("query")).toBe(false),
       { timeout: 3000 },
     )
-    await waitFor(() => expect(result.current.table.isLoading).toBe(false))
-    expect(result.current.table.totalCount).toBe(2)
+    await waitFor(() => expect(result.current.table.totalCount).toBe(2), {
+      timeout: 3000,
+    })
+    expect(result.current.table.isLoading).toBe(false)
   })
 
   it("resets to the first page when search commits", async () => {
@@ -408,6 +410,50 @@ describe("useResumeTable", () => {
     expect(result.current.page).toBe(1)
     expect(result.current.perPage).toBe(10)
     expect(result.current.totalCount).toBe(1)
+  })
+
+  it("treats a whitespace-only URL query as empty", async () => {
+    await seedResumes(["Resume 0"])
+
+    const { result } = renderTable(["/?query=%20"])
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.query).toBe("")
+    expect(result.current.isSearchPending).toBe(false)
+    expect(result.current.totalCount).toBe(1)
+  })
+
+  it("trims padding around a shared URL query", async () => {
+    await seedResumes(["Frontend Engineer", "Product Designer"])
+
+    const { result } = renderTable(["/?query=%20engineer%20"])
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.isSearchPending).toBe(false)
+    expect(result.current.totalCount).toBe(1)
+  })
+
+  it("drops a pending search commit when navigation changes the query", async () => {
+    await seedResumes(["Frontend Engineer", "Product Designer"])
+
+    const { result } = renderTableWithLocation(["/"])
+
+    await waitFor(() => expect(result.current.table.isLoading).toBe(false))
+
+    act(() => result.current.table.setQuery("zzz"))
+    expect(result.current.table.isSearchPending).toBe(true)
+
+    act(() => result.current.navigate("/?query=designer"))
+
+    await act(async () => {
+      await delay(400)
+    })
+
+    expect(searchParamsOf(result.current.location.search).get("query")).toBe(
+      "designer",
+    )
+    expect(result.current.table.query).toBe("designer")
+    expect(result.current.table.isSearchPending).toBe(false)
   })
 
   it("syncs the search input on back navigation", async () => {

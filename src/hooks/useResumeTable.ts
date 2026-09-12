@@ -18,7 +18,7 @@ type TaggedResumeQueryResult = {
 export function useResumeTable() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const committedQuery = searchParams.get("query") ?? ""
+  const committedQuery = (searchParams.get("query") ?? "").trim()
   const requestedPage = toPositiveInteger(Number(searchParams.get("page")), DEFAULT_PAGE)
   const requestedPerPage = toPositiveInteger(
     Number(searchParams.get("perPage")),
