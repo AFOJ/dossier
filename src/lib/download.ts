@@ -13,7 +13,7 @@ export function downloadBlob(filename: string, blob: Blob): void {
   URL.revokeObjectURL(url)
 }
 
-export type ExportKind = "profile" | "resume"
+export type ExportKind = "profile" | "resume" | "cover-letter"
 
 export function getExportFilename(kind: ExportKind, date = new Date(), label?: string): string {
   const suffix = label ? `-${label}` : ""
