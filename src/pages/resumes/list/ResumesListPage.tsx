@@ -82,6 +82,7 @@ export default function ResumesListPage() {
       <Toolbar
         query={table.query}
         onQueryChange={table.setQuery}
+        isSearchPending={table.isSearchPending}
         selectedCount={table.selectedCount}
         onBulkExport={handleBulkExport}
         onBulkDelete={handleBulkDelete}

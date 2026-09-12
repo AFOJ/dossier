@@ -59,7 +59,6 @@ function makeProcessedState() {
 function makeTableState(overrides: Partial<TableState> = {}): TableState {
   return {
     query: "",
-    debouncedQuery: "",
     resultQuery: "",
     isSearchPending: false,
     isInitialLoading: false,
@@ -73,6 +72,7 @@ function makeTableState(overrides: Partial<TableState> = {}): TableState {
     totalPages: 1,
     pageItems: [],
     isLoading: false,
+    isRefreshing: false,
     selectedIds: new Set<string>(),
     selectedCount: 0,
     isAllSelected: false,
@@ -457,21 +457,82 @@ describe("ResumesListPage", () => {
     expect(await screen.findByText("No matches")).toBeInTheDocument()
   })
 
-  it("shows the skeleton while a cleared search is pending", async () => {
+  it("shows the skeleton before the first load completes", async () => {
     renderPage(
       makeTableState({
-        query: "",
-        resultQuery: "njdfdjfjdnjfnjnfdjdjfjdfnjdfdfjdfnjfnddfnjf",
-        isSearchPending: true,
+        isLoading: true,
+        totalDbCount: undefined,
         totalCount: 0,
         pageItems: [],
       }),
     )
 
     expect(await screen.findByLabelText("Loading resumes")).toBeInTheDocument()
-    expect(screen.queryByText("Frontend Engineer")).not.toBeInTheDocument()
     expect(screen.queryByText("No matches")).not.toBeInTheDocument()
     expect(screen.queryByText("No resumes yet")).not.toBeInTheDocument()
+  })
+
+  it("keeps showing current rows while a cleared search is pending", async () => {
+    renderPage(
+      makeTableState({
+        query: "",
+        resultQuery: "njdfdjfjdnjfnjnfdjdjfjdfnjfnddfnjf",
+        isSearchPending: true,
+        isRefreshing: true,
+        totalCount: 1,
+        pageItems: [makeResume({ id: "1", title: "Frontend Engineer" })],
+      }),
+    )
+
+    expect(await screen.findByText("Frontend Engineer")).toBeInTheDocument()
+    expect(screen.queryByLabelText("Loading resumes")).not.toBeInTheDocument()
+    expect(screen.queryByText("No matches")).not.toBeInTheDocument()
+    expect(screen.queryByText("No resumes yet")).not.toBeInTheDocument()
+  })
+
+  it("keeps showing the previous no-results state while a search is pending", async () => {
+    renderPage(
+      makeTableState({
+        query: "nope-x",
+        resultQuery: "nope",
+        isSearchPending: true,
+        totalCount: 0,
+        pageItems: [],
+      }),
+    )
+
+    expect(await screen.findByText("No matches")).toBeInTheDocument()
+    expect(screen.getByText("nope")).toBeInTheDocument()
+    expect(screen.queryByLabelText("Loading resumes")).not.toBeInTheDocument()
+  })
+
+  it("shows a pending indicator in the search input while a search is pending", async () => {
+    renderPage(
+      makeTableState({
+        query: "engi",
+        resultQuery: "",
+        isSearchPending: true,
+        totalCount: 3,
+        pageItems: [makeResume({ id: "1", title: "Frontend Engineer" })],
+      }),
+    )
+
+    expect(await screen.findByText("Frontend Engineer")).toBeInTheDocument()
+    expect(screen.getByRole("status", { name: "Searching" })).toBeInTheDocument()
+  })
+
+  it("shows no pending indicator once the search has settled", async () => {
+    renderPage(
+      makeTableState({
+        query: "engineer",
+        resultQuery: "engineer",
+        totalCount: 1,
+        pageItems: [makeResume({ id: "1", title: "Frontend Engineer" })],
+      }),
+    )
+
+    expect(await screen.findByText("Frontend Engineer")).toBeInTheDocument()
+    expect(screen.queryByRole("status", { name: "Searching" })).not.toBeInTheDocument()
   })
 
   it("shows the visible range and page buttons", async () => {

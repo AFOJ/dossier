@@ -4,6 +4,7 @@ import { FileAddIcon, FileExportIcon, Delete02Icon } from "@hugeicons/core-free-
 type ToolbarProps = {
   query: string
   onQueryChange: (query: string) => void
+  isSearchPending: boolean
   selectedCount: number
   onBulkExport: () => void
   onBulkDelete: () => void
@@ -11,12 +12,17 @@ type ToolbarProps = {
 }
 
 export function Toolbar(props: Readonly<ToolbarProps>) {
-  const { query, onQueryChange, selectedCount, onBulkExport, onBulkDelete, isBulkExporting } = props
+  const { query, onQueryChange, isSearchPending, selectedCount, onBulkExport, onBulkDelete, isBulkExporting } = props
   const isDisabled = selectedCount === 0
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <SearchInput value={query} onChange={onQueryChange} placeholder="Search resumes" />
+      <SearchInput
+        value={query}
+        onChange={onQueryChange}
+        placeholder="Search resumes"
+        loading={isSearchPending}
+      />
       <ButtonLink intent="secondary" icon={FileAddIcon} to="/resumes/create">
         New resume
       </ButtonLink>
