@@ -79,7 +79,10 @@ export function useResumeTable() {
 
   const result = taggedResult?.key === queryKey ? taggedResult.result : undefined
 
-  const pagination = result?.pagination ??
+  const displayResult = result ?? taggedResult?.result
+  const isRefreshing = displayResult !== result
+
+  const pagination = displayResult?.pagination ??
     getPageMetadata(0, { page: requestedPage, perPage: requestedPerPage })
 
   useEffect(() => {
@@ -91,11 +94,11 @@ export function useResumeTable() {
     }
   }, [pagination.page, requestedPage, result, updateParams])
 
-  const isLoading = result === undefined
+  const isLoading = displayResult === undefined
   const isSearching = query.trim() !== committedQuery
   const isInitialLoading = isLoading || totalDbCount === undefined
 
-  const pageItems = result?.items ?? []
+  const pageItems = displayResult?.items ?? []
 
   const selectedCount = selectedIds.size
   const isAllSelected = pageItems.length > 0 && pageItems.every((r) => selectedIds.has(r.id!))
@@ -165,6 +168,7 @@ export function useResumeTable() {
     totalPages: pagination.totalPages,
     pageItems,
     isLoading,
+    isRefreshing,
     selectedIds,
     selectedCount,
     isAllSelected,

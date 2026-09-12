@@ -19,45 +19,47 @@ type ResumeListContentProps = {
 export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
   const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
-  if (table.isLoading || table.isSearchPending || table.totalDbCount === undefined) {
+  if (table.isLoading || table.totalDbCount === undefined) {
     return <ResumesTableSkeleton />
   }
 
   const dbCount = table.totalDbCount
-
-  const trimmedQuery = table.query.trim()
+  const isSettled = !table.isSearchPending && !table.isRefreshing
+  const effectiveQuery = isSettled ? table.query : table.resultQuery
 
   if (dbCount === 0) {
     return <EmptyState />
   }
 
-  if (table.totalCount === 0 && trimmedQuery !== "") {
-    return <NoResults query={table.query} />
+  if (table.totalCount === 0 && effectiveQuery.trim() !== "") {
+    return <NoResults query={effectiveQuery} />
   }
 
   const isAllSelected = table.isAllSelected
   const isIndeterminate = table.selectedCount > 0 && !isAllSelected
 
   return (
-    <ResumesTable
-      resumes={table.pageItems ?? []}
-      page={table.page}
-      perPage={table.perPage}
-      totalPages={table.totalPages}
-      totalCount={table.totalCount}
-      onPageChange={table.setPage}
-      onPerPageChange={table.setPerPage}
-      onPreview={onPreview}
-      onExport={onExport}
-      onDuplicate={onDuplicate}
-      onDelete={onDelete}
-      selectedIds={table.selectedIds}
-      isAllSelected={isAllSelected}
-      isIndeterminate={isIndeterminate}
-      onToggleSelect={table.toggleSelect}
-      onSelectAll={table.selectAll}
-      onClearSelection={table.clearSelection}
-    />
+    <div aria-busy={!isSettled}>
+      <ResumesTable
+        resumes={table.pageItems ?? []}
+        page={table.page}
+        perPage={table.perPage}
+        totalPages={table.totalPages}
+        totalCount={table.totalCount}
+        onPageChange={table.setPage}
+        onPerPageChange={table.setPerPage}
+        onPreview={onPreview}
+        onExport={onExport}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+        selectedIds={table.selectedIds}
+        isAllSelected={isAllSelected}
+        isIndeterminate={isIndeterminate}
+        onToggleSelect={table.toggleSelect}
+        onSelectAll={table.selectAll}
+        onClearSelection={table.clearSelection}
+      />
+    </div>
   )
 }
 

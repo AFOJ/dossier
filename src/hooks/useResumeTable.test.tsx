@@ -183,6 +183,55 @@ describe("useResumeTable", () => {
     expect(result.current.selectedCount).toBe(0)
   })
 
+  it("is loading before the first load completes", async () => {
+    await seedResumes(["Resume 0"])
+
+    const { result } = renderTable()
+
+    expect(result.current.isLoading).toBe(true)
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+  })
+
+  it("keeps showing current rows while a search is pending", async () => {
+    await seedResumes(["Frontend Engineer", "Product Designer"])
+
+    const { result } = renderTable()
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.pageItems).toHaveLength(2)
+
+    act(() => result.current.setQuery("zzz-no-match"))
+    expect(result.current.isSearchPending).toBe(true)
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.pageItems?.map((r) => r.title).sort()).toEqual([
+      "Frontend Engineer",
+      "Product Designer",
+    ])
+
+    await waitFor(() => expect(result.current.isSearchPending).toBe(false), {
+      timeout: 3000,
+    })
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.pageItems).toHaveLength(0)
+    expect(result.current.totalCount).toBe(0)
+  })
+
+  it("never returns to loading when the page changes", async () => {
+    await seedResumes(Array.from({ length: 12 }, (_, i) => `Resume ${i}`))
+
+    const { result } = renderTableWithLocation(["/"])
+
+    await waitFor(() => expect(result.current.table.isLoading).toBe(false))
+
+    act(() => result.current.table.setPage(2))
+    expect(result.current.table.isLoading).toBe(false)
+
+    await waitFor(() => expect(result.current.table.page).toBe(2))
+    expect(result.current.table.isLoading).toBe(false)
+    expect(result.current.table.pageItems).toHaveLength(2)
+  })
+
   it("debounces clearing the query until the unfiltered results are ready", async () => {
     await seedResumes(["Resume 0"])
 
