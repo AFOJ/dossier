@@ -20,12 +20,6 @@ export const coverLetterFormSchema = z
     location: z.string().optional(),
     phone: z.string().optional(),
     email: z.string().optional(),
-    socials: z.array(
-      z.object({
-        label: z.string(),
-        url: z.string(),
-      }),
-    ),
   })
   .superRefine((data, ctx) => {
     if (isCoverLetterBodyEmpty(data.body ?? "")) {
@@ -56,24 +50,6 @@ export const coverLetterFormSchema = z
         message: "Invalid email address",
       })
     }
-
-    data.socials.forEach((social, index) => {
-      if (social.label.trim() === "") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["socials", index, "label"],
-          message: "Label is required",
-        })
-      }
-
-      if (!z.url().safeParse(social.url).success) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["socials", index, "url"],
-          message: "Must be a valid URL",
-        })
-      }
-    })
   })
 
 export type CoverLetterFormData = z.infer<typeof coverLetterFormSchema>
@@ -85,7 +61,6 @@ export function emptyContactValues() {
     location: "",
     phone: "",
     email: "",
-    socials: [] as { label: string; url: string }[],
   }
 }
 
@@ -96,12 +71,6 @@ export function profileToContactValues(profile: Profile) {
     location: profile.location ?? "",
     phone: profile.phone ?? "",
     email: profile.email ?? "",
-    socials: profile.links.map((link) => {
-      return {
-        label: link.label,
-        url: link.url,
-      }
-    }),
   }
 }
 
@@ -153,7 +122,6 @@ export function useCreateCoverLetterForm(profile?: Profile) {
             email: data.email || null,
             phone: data.phone || null,
             location: data.location || null,
-            links: data.socials,
             role: data.jobTitle || null,
           }
 

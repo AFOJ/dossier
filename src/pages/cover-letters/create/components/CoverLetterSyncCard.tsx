@@ -2,7 +2,6 @@ import { useWatch, type Control } from "react-hook-form"
 import { Card } from "@/components/ui"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import { PersonalInfoFields } from "@/pages/profile/components/PersonalInfoFields"
-import { SocialLinksFields } from "@/pages/profile/components/SocialLinksFields"
 import type { CoverLetterFormData } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
 
 type CoverLetterSyncCardProps = {
@@ -34,7 +33,6 @@ export function CoverLetterSyncCard(props: Readonly<CoverLetterSyncCardProps>) {
       {!syncProfile && (
         <Card tone="plain" className="gap-6">
           <PersonalInfoFields />
-          <SocialLinksFields />
         </Card>
       )}
     </Card>

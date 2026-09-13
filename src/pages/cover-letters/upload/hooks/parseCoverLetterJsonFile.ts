@@ -23,7 +23,6 @@ function normalizeContact(
     email: contact.email ?? null,
     phone: contact.phone ?? null,
     location: contact.location ?? null,
-    links: contact.links ?? [],
   }
 }
 

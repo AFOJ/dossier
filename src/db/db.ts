@@ -30,6 +30,14 @@ export interface ResumeCacheEntry {
   expiresAt: Date
 }
 
+export interface CoverLetterContact {
+  full_name: string
+  role: string | null
+  email: string | null
+  phone: string | null
+  location: string | null
+}
+
 export interface CoverLetter {
   id?: string
   title: string
@@ -39,7 +47,7 @@ export interface CoverLetter {
   createdAt: Date
   updatedAt: Date
   syncProfile?: boolean
-  contact?: Omit<Profile, "id"> | null
+  contact?: CoverLetterContact | null
 }
 
 export class DossierDatabase extends Dexie {

@@ -49,7 +49,6 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
               email: data.email || null,
               phone: data.phone || null,
               location: data.location || null,
-              links: data.socials,
               role: data.jobTitle || null,
             },
       })
@@ -119,12 +118,6 @@ function contactDefaults(letter: CoverLetter, profile?: Profile) {
       location: letter.contact.location ?? "",
       phone: letter.contact.phone ?? "",
       email: letter.contact.email ?? "",
-      socials: letter.contact.links.map((link) => {
-        return {
-          label: link.label,
-          url: link.url,
-        }
-      }),
     }
   }
 
