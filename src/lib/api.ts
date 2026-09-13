@@ -13,6 +13,7 @@ import type {
   ExperienceCompanyErrors,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import type { ResumePayload } from "@/lib/resumePayload"
+import type { CoverLetterPayload } from "@/lib/coverLetterPayload"
 
 const DEFAULT_API_BASE_URL = "http://localhost:3000/"
 
@@ -56,6 +57,38 @@ export async function processResume(payload: ResumePayload): Promise<Blob> {
 
   try {
     response = await fetch(`${getApiBaseUrl()}/api/resumes/process`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw new ApiError(
+      "NETWORK_ERROR",
+      "Could not reach the server. Check your connection and try again.",
+      [],
+    )
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+
+  try {
+    return await response.blob()
+  } catch {
+    throw new ApiError(
+      "NETWORK_ERROR",
+      "Could not reach the server. Check your connection and try again.",
+      [],
+    )
+  }
+}
+
+export async function processCoverLetter(payload: CoverLetterPayload): Promise<Blob> {
+  let response: Response
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}/api/cover-letters/process`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
