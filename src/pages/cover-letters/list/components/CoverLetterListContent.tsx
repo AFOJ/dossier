@@ -10,13 +10,14 @@ type CoverLetterTableState = ReturnType<typeof useCoverLetterTable>
 
 type CoverLetterListContentProps = {
   table: CoverLetterTableState
+  onPreview: (letter: CoverLetter) => void
   onExport: (letter: CoverLetter) => void
   onDuplicate: (letter: CoverLetter) => void
   onDelete: (letter: CoverLetter) => void
 }
 
 export function CoverLetterListContent(props: Readonly<CoverLetterListContentProps>) {
-  const { table, onExport, onDuplicate, onDelete } = props
+  const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
   if (table.isLoading || table.totalDbCount === undefined) {
     return (
@@ -53,6 +54,7 @@ export function CoverLetterListContent(props: Readonly<CoverLetterListContentPro
         totalCount={table.totalCount}
         onPageChange={table.setPage}
         onPerPageChange={table.setPerPage}
+        onPreview={onPreview}
         onExport={onExport}
         onDuplicate={onDuplicate}
         onDelete={onDelete}

@@ -1,6 +1,7 @@
 import { createCoverLetter } from "@/db/coverLetter"
 import { DeleteCoverLetterDialog } from "@/pages/cover-letters/list/components/DeleteCoverLetterDialog"
 import { BulkDeleteDialog } from "@/pages/cover-letters/list/components/BulkDeleteDialog"
+import { CoverLetterPreviewDialog } from "@/pages/cover-letters/list/components/CoverLetterPreviewDialog"
 import { downloadJson, getExportFilename } from "@/lib/download"
 import { toCoverLetterExportPayload } from "@/lib/coverLetterExport"
 import { Heading1, Subheading } from "@/components/ui"
@@ -25,9 +26,14 @@ export default function CoverLettersListPage() {
     closeOnBackdropClick: false,
     closeOnEscape: true,
   })
+  const previewModal = useModal(CoverLetterPreviewDialog, {
+    contentClassName: "max-w-none sm:max-w-2xl",
+  })
   const toast = useToast()
 
   usePageTitle("Cover Letters")
+
+  const handlePreview = (letter: CoverLetter) => previewModal.open(letter)
 
   const handleExport = async (letter: CoverLetter) => {
     try {
@@ -96,6 +102,7 @@ export default function CoverLettersListPage() {
 
       <CoverLetterListContent
         table={table}
+        onPreview={handlePreview}
         onExport={handleExport}
         onDuplicate={handleDuplicate}
         onDelete={deleteModal.open}

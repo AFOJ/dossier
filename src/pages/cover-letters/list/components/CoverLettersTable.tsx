@@ -1,4 +1,4 @@
-import { Copy01Icon, Delete02Icon, Edit02Icon, FileExportIcon } from "@hugeicons/core-free-icons"
+import { Copy01Icon, Delete02Icon, Edit02Icon, EyeIcon, FileExportIcon } from "@hugeicons/core-free-icons"
 import type { CoverLetter } from "@/db/db"
 import {
   EntityTable,
@@ -15,6 +15,7 @@ type CoverLettersTableProps = {
   totalCount: number
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
+  onPreview: (letter: CoverLetter) => void
   onExport: (letter: CoverLetter) => void
   onDuplicate: (letter: CoverLetter) => void
   onDelete: (letter: CoverLetter) => void
@@ -69,6 +70,7 @@ export function CoverLettersTable(props: Readonly<CoverLettersTableProps>) {
     totalCount,
     onPageChange,
     onPerPageChange,
+    onPreview,
     onExport,
     onDuplicate,
     onDelete,
@@ -97,6 +99,7 @@ export function CoverLettersTable(props: Readonly<CoverLettersTableProps>) {
       totalCount={totalCount}
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
+      onRowClick={onPreview}
       selectedIds={selectedIds}
       isAllSelected={isAllSelected}
       isIndeterminate={isIndeterminate}
@@ -106,6 +109,14 @@ export function CoverLettersTable(props: Readonly<CoverLettersTableProps>) {
       renderActions={(letter) => {
         return (
           <>
+            <QuickAction
+              label="Preview"
+              icon={EyeIcon}
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onPreview(letter)
+              }}
+            />
             <QuickAction
               label="Export JSON"
               icon={FileExportIcon}
