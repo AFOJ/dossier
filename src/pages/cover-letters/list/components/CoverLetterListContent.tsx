@@ -1,30 +1,30 @@
 import { FileAddIcon } from "@hugeicons/core-free-icons"
 import { IsometricCircleX, IsometricLibraryAdd } from "@/components/illustrations"
 import { ButtonLink, Heading3, Subheading } from "@/components/ui"
-import type { Resume } from "@/db/db"
-import { type useResumeTable } from "@/hooks/useResumeTable"
-import { ResumesTable } from "@/pages/resumes/list/components/ResumesTable"
+import type { CoverLetter } from "@/db/db"
+import { type useCoverLetterTable } from "@/hooks/useCoverLetterTable"
+import { CoverLettersTable } from "@/pages/cover-letters/list/components/CoverLettersTable"
 import { TableSkeleton } from "@/components/table"
 
-type ResumeTableState = ReturnType<typeof useResumeTable>
+type CoverLetterTableState = ReturnType<typeof useCoverLetterTable>
 
-type ResumeListContentProps = {
-  table: ResumeTableState
-  onPreview: (resume: Resume) => void
-  onExport: (resume: Resume) => void
-  onDuplicate: (resume: Resume) => void
-  onDelete: (resume: Resume) => void
+type CoverLetterListContentProps = {
+  table: CoverLetterTableState
+  onPreview: (letter: CoverLetter) => void
+  onExport: (letter: CoverLetter) => void
+  onDuplicate: (letter: CoverLetter) => void
+  onDelete: (letter: CoverLetter) => void
 }
 
-export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
+export function CoverLetterListContent(props: Readonly<CoverLetterListContentProps>) {
   const { table, onPreview, onExport, onDuplicate, onDelete } = props
 
   if (table.isLoading || table.totalDbCount === undefined) {
     return (
       <TableSkeleton
-        headers={["Resume title", "Created", "Last updated"]}
+        headers={["Cover letter title", "Created", "Last updated"]}
         actionButtonCount={4}
-        ariaLabel="Loading resumes"
+        ariaLabel="Loading cover letters"
       />
     )
   }
@@ -46,8 +46,8 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
 
   return (
     <div aria-busy={!isSettled}>
-      <ResumesTable
-        resumes={table.pageItems ?? []}
+      <CoverLettersTable
+        letters={table.pageItems ?? []}
         page={table.page}
         perPage={table.perPage}
         totalPages={table.totalPages}
@@ -75,7 +75,7 @@ function NoResults({ query }: Readonly<{ query: string }>) {
       <IsometricCircleX />
       <Heading3>No matches</Heading3>
       <Subheading>
-        No resumes match "<span className="break-all">{query}</span>".
+        No cover letters match "<span className="break-all">{query}</span>".
       </Subheading>
     </div>
   )
@@ -85,10 +85,10 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
       <IsometricLibraryAdd />
-      <Heading3>No resumes yet</Heading3>
-      <Subheading>Create your first resume to get started.</Subheading>
-      <ButtonLink icon={FileAddIcon} to="/resumes/create">
-        Create your first resume
+      <Heading3>No cover letters yet</Heading3>
+      <Subheading>Create your first cover letter to get started.</Subheading>
+      <ButtonLink icon={FileAddIcon} to="/cover-letters/create">
+        Create your first cover letter
       </ButtonLink>
     </div>
   )

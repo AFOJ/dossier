@@ -150,3 +150,28 @@ export const resumePayloadSchema = z.object({
 })
 
 export type ResumePayloadData = z.infer<typeof resumePayloadSchema>
+
+export const coverLetterSchema = z.object({
+  id: z.uuid().optional(),
+  title: z.string().min(1, "Title is required"),
+  subject: z.string().max(160, "Subject must be 160 characters or less").optional().nullable(),
+  signoff: z.string().max(120, "Sign-off must be 120 characters or less").optional().nullable(),
+  body: z.string().min(1, "Body is required"),
+  createdAt: z.iso.datetime().optional(),
+  updatedAt: z.iso.datetime().optional(),
+  syncProfile: z.boolean().optional(),
+  contact: contactSchema.nullable().optional(),
+})
+
+export type CoverLetterData = z.infer<typeof coverLetterSchema>
+
+export const coverLetterPayloadSchema = z.object({
+  id: z.uuid().optional(),
+  title: z.string().min(1, "Title is required"),
+  subject: z.string().max(160).optional().nullable(),
+  signoff: z.string().max(120).optional().nullable(),
+  contact: contactSchema.nullable().optional(),
+  body: z.string().min(1, "Body is required"),
+})
+
+export type CoverLetterPayloadData = z.infer<typeof coverLetterPayloadSchema>

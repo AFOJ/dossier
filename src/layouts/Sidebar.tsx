@@ -1,5 +1,13 @@
 import { NavLink } from "react-router-dom"
-import { File01Icon, FileAddIcon, FileUploadIcon, UserIcon } from "@hugeicons/core-free-icons"
+import {
+  File01Icon,
+  FileAddIcon,
+  FileUploadIcon,
+  UserIcon,
+  Mail01Icon,
+  MailAdd01Icon,
+  MailUpload01Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react"
 import { Divider } from "@/components/ui"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
@@ -19,6 +27,14 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { to: "/resumes", label: "Resumes", icon: File01Icon, end: true },
       { to: "/resumes/create", label: "Create", icon: FileAddIcon },
       { to: "/resumes/upload", label: "Upload", icon: FileUploadIcon },
+    ],
+  },
+  {
+    label: "Cover Letters",
+    items: [
+      { to: "/cover-letters", label: "Cover Letters", icon: Mail01Icon, end: true },
+      { to: "/cover-letters/create", label: "Create", icon: MailAdd01Icon },
+      { to: "/cover-letters/upload", label: "Upload", icon: MailUpload01Icon },
     ],
   },
   {

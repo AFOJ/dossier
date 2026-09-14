@@ -1,11 +1,5 @@
-import {
-  Copy01Icon,
-  Delete02Icon,
-  Edit02Icon,
-  EyeIcon,
-  FileExportIcon,
-} from "@hugeicons/core-free-icons"
-import type { Resume } from "@/db/db"
+import { Copy01Icon, Delete02Icon, Edit02Icon, EyeIcon, FileExportIcon } from "@hugeicons/core-free-icons"
+import type { CoverLetter } from "@/db/db"
 import {
   EntityTable,
   QuickAction,
@@ -13,18 +7,18 @@ import {
   type EntityTableColumn,
 } from "@/components/table"
 
-type ResumesTableProps = {
-  resumes: Resume[]
+type CoverLettersTableProps = {
+  letters: CoverLetter[]
   page: number
   perPage: number
   totalPages: number
   totalCount: number
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
-  onPreview: (resume: Resume) => void
-  onExport: (resume: Resume) => void
-  onDuplicate: (resume: Resume) => void
-  onDelete: (resume: Resume) => void
+  onPreview: (letter: CoverLetter) => void
+  onExport: (letter: CoverLetter) => void
+  onDuplicate: (letter: CoverLetter) => void
+  onDelete: (letter: CoverLetter) => void
   selectedIds: Set<string>
   isAllSelected: boolean
   isIndeterminate: boolean
@@ -33,16 +27,19 @@ type ResumesTableProps = {
   onClearSelection: () => void
 }
 
-const columns: EntityTableColumn<Resume>[] = [
+const columns: EntityTableColumn<CoverLetter>[] = [
   {
     key: "title",
-    header: "Resume title",
-    cellClassName: "w-full px-4 py-3 text-left cursor-pointer",
-    renderCell: (resume) => {
+    header: "Cover letter title",
+    cellClassName: "w-full px-4 py-3 text-left",
+    renderCell: (letter) => {
       return (
-        <span className="block text-sm font-medium text-gray-900 hover:text-gray-600">
-          {resume.title}
-        </span>
+        <>
+          <span className="block text-sm font-medium text-gray-900 hover:text-gray-600">
+            {letter.title}
+          </span>
+          {letter.subject && <span className="block text-xs text-gray-500">{letter.subject}</span>}
+        </>
       )
     },
   },
@@ -50,23 +47,23 @@ const columns: EntityTableColumn<Resume>[] = [
     key: "created",
     header: "Created",
     cellClassName: "whitespace-nowrap px-4 py-3 text-sm text-gray-500",
-    renderCell: (resume) => {
-      return formatTableDate(resume.createdAt)
+    renderCell: (letter) => {
+      return formatTableDate(letter.createdAt)
     },
   },
   {
     key: "updated",
     header: "Last updated",
     cellClassName: "whitespace-nowrap px-4 py-3 text-sm text-gray-500",
-    renderCell: (resume) => {
-      return formatTableDate(resume.updatedAt)
+    renderCell: (letter) => {
+      return formatTableDate(letter.updatedAt)
     },
   },
 ]
 
-export function ResumesTable(props: Readonly<ResumesTableProps>) {
+export function CoverLettersTable(props: Readonly<CoverLettersTableProps>) {
   const {
-    resumes,
+    letters,
     page,
     perPage,
     totalPages,
@@ -87,37 +84,37 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
 
   return (
     <EntityTable
-      items={resumes}
+      items={letters}
       columns={columns}
-      getItemId={(resume) => {
-        return resume.id!
+      getItemId={(letter) => {
+        return letter.id!
       }}
-      getSelectLabel={(resume) => {
-        return `Select ${resume.title}`
+      getSelectLabel={(letter) => {
+        return `Select ${letter.title}`
       }}
-      selectAllLabel="Select all resumes on this page"
+      selectAllLabel="Select all cover letters on this page"
       page={page}
       perPage={perPage}
       totalPages={totalPages}
       totalCount={totalCount}
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
+      onRowClick={onPreview}
       selectedIds={selectedIds}
       isAllSelected={isAllSelected}
       isIndeterminate={isIndeterminate}
       onToggleSelect={onToggleSelect}
       onSelectAll={onSelectAll}
       onClearSelection={onClearSelection}
-      onRowClick={onPreview}
-      renderActions={(resume) => {
+      renderActions={(letter) => {
         return (
           <>
             <QuickAction
-              label="View"
+              label="Preview"
               icon={EyeIcon}
               onClick={(clickEvent) => {
                 clickEvent.stopPropagation()
-                onPreview(resume)
+                onPreview(letter)
               }}
             />
             <QuickAction
@@ -125,16 +122,16 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
               icon={FileExportIcon}
               onClick={(clickEvent) => {
                 clickEvent.stopPropagation()
-                onExport(resume)
+                onExport(letter)
               }}
             />
-            <QuickAction label="Edit" icon={Edit02Icon} to={`/resumes/${resume.id}/edit`} />
+            <QuickAction label="Edit" icon={Edit02Icon} to={`/cover-letters/${letter.id}/edit`} />
             <QuickAction
               label="Duplicate"
               icon={Copy01Icon}
               onClick={(clickEvent) => {
                 clickEvent.stopPropagation()
-                onDuplicate(resume)
+                onDuplicate(letter)
               }}
             />
             <QuickAction
@@ -142,7 +139,7 @@ export function ResumesTable(props: Readonly<ResumesTableProps>) {
               icon={Delete02Icon}
               onClick={(clickEvent) => {
                 clickEvent.stopPropagation()
-                onDelete(resume)
+                onDelete(letter)
               }}
             />
           </>

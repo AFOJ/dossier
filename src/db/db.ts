@@ -30,10 +30,40 @@ export interface ResumeCacheEntry {
   expiresAt: Date
 }
 
+export interface CoverLetterCacheEntry {
+  coverLetterId: string
+  data: ArrayBuffer
+  contentType: string
+  processedAt: Date
+  expiresAt: Date
+}
+
+export interface CoverLetterContact {
+  full_name: string
+  role: string | null
+  email: string | null
+  phone: string | null
+  location: string | null
+}
+
+export interface CoverLetter {
+  id?: string
+  title: string
+  subject?: string | null
+  signoff?: string | null
+  body: string
+  createdAt: Date
+  updatedAt: Date
+  syncProfile?: boolean
+  contact?: CoverLetterContact | null
+}
+
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   resumes!: Table<Resume, string>
   resumeCache!: Table<ResumeCacheEntry, string>
+  coverLetters!: Table<CoverLetter, string>
+  coverLetterCache!: Table<CoverLetterCacheEntry, string>
 
   constructor() {
     super("DossierDatabase")
@@ -47,6 +77,21 @@ export class DossierDatabase extends Dexie {
       profiles: "++id",
       resumes: "id, updatedAt",
       resumeCache: "resumeId",
+    })
+
+    this.version(3).stores({
+      profiles: "++id",
+      resumes: "id, updatedAt",
+      resumeCache: "resumeId",
+      coverLetters: "id, updatedAt",
+    })
+
+    this.version(4).stores({
+      profiles: "++id",
+      resumes: "id, updatedAt",
+      resumeCache: "resumeId",
+      coverLetters: "id, updatedAt",
+      coverLetterCache: "coverLetterId",
     })
   }
 }
