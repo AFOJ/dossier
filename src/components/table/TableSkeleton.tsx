@@ -9,7 +9,7 @@ export function TableSkeleton(props: Readonly<TableSkeletonProps>) {
 
   return (
     <div className="flex flex-col gap-3" aria-label={ariaLabel}>
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-[10px] border border-gray-200 bg-white">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">

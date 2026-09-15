@@ -12,7 +12,7 @@ export function Card(props: Readonly<CardProps>) {
     <div
       {...rest}
       className={cn(
-        "flex flex-col gap-2 rounded-lg border border-gray-200 p-4",
+        "flex flex-col gap-2 rounded-[10px] border border-gray-200 p-4",
         tone === "muted" ? "bg-gray-50" : "bg-white",
         className,
       )}

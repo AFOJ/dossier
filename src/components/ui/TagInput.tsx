@@ -37,7 +37,7 @@ export function TagInput(props: Readonly<TagInputProps>) {
   return (
     <div
       className={cn(
-        "flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 p-2",
+        "flex w-full flex-wrap items-center gap-1.5 rounded-[10px] border border-gray-300 p-2",
         "hover:border-gray-400 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-600",
       )}
     >
