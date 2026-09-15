@@ -32,7 +32,7 @@ export function ListItemRow(props: Readonly<ListItemRowProps>) {
   const update = (patch: Partial<ListItem>) => onChange({ ...item, ...patch })
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
+    <div className="flex flex-col gap-3 rounded-[10px] border border-gray-200 p-3">
       <Field
         label="Title"
         inputId={`section-${sectionIndex}-item-title-${index}`}

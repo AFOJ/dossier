@@ -17,7 +17,7 @@ export function ResumePreviewDialog({ data: resume, close }: Readonly<ModalConte
         <Heading3 className="truncate">{resume.title}</Heading3>
       </div>
 
-      <div className="relative h-[70vh] w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+      <div className="relative h-[70vh] w-full overflow-hidden rounded-[10px] border border-gray-200 bg-gray-50">
         {processed.status === "ready" && processed.url && (
           <iframe
             src={processed.url}

@@ -50,7 +50,7 @@ export default function LandingPage() {
                   href={GITHUB_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  className="inline-flex items-center gap-1 rounded-[10px] px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
                 >
                   GitHub
                   <HugeiconsIcon aria-hidden icon={ArrowUpRight01Icon} size={14} strokeWidth={2} />
@@ -155,7 +155,7 @@ export default function LandingPage() {
                   href="https://api.dossier.ojabba.com"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  className="inline-flex items-center gap-1 rounded-[10px] px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
                 >
                   API
                   <HugeiconsIcon aria-hidden icon={ArrowUpRight01Icon} size={14} strokeWidth={2} />
@@ -164,7 +164,7 @@ export default function LandingPage() {
                   href={GITHUB_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  className="inline-flex items-center gap-1 rounded-[10px] px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
                 >
                   GitHub
                   <HugeiconsIcon aria-hidden icon={ArrowUpRight01Icon} size={14} strokeWidth={2} />

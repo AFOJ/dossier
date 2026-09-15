@@ -50,7 +50,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
   const { index, isFirst, isLast, onMove, onRemove } = props
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:gap-4 sm:items-start sm:border-none sm:p-0">
+    <div className="flex flex-col gap-2 rounded-[10px] border border-gray-200 p-3 sm:flex-row sm:gap-4 sm:items-start sm:border-none sm:p-0">
       <div className="flex items-center justify-between sm:contents">
         <div className="flex items-center gap-1 sm:pt-1">
           <ReorderControls index={index} isFirst={isFirst} isLast={isLast} onMove={onMove} />

@@ -72,7 +72,7 @@ export default function CreateCoverLetterPage() {
           >
             <Suspense
               fallback={
-                <div className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
+                <div className="rounded-[10px] border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
                   Loading editor…
                 </div>
               }
@@ -96,7 +96,7 @@ export default function CreateCoverLetterPage() {
           </Field>
 
           {formError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
+            <div className="rounded-[10px] bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
               {formError}
             </div>
           )}

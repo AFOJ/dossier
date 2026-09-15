@@ -33,7 +33,7 @@ export function GroupRow(props: Readonly<GroupRowProps>) {
   const groupErrors = sectionErrors?.type === "skills" ? sectionErrors.groups?.[index] : undefined
 
   return (
-    <div className="flex flex-col-reverse gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-start">
+    <div className="flex flex-col-reverse gap-2 rounded-[10px] border border-gray-200 p-3 sm:flex-row sm:items-start">
       <div className="grid min-w-0 flex-1 gap-3">
         <Field
           label="Group title"

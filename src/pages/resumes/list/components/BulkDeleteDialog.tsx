@@ -75,7 +75,7 @@ export function BulkDeleteDialog(props: Readonly<ModalContentProps<BulkDeleteDia
         </p>
       </div>
 
-      <div className="max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
+      <div className="max-h-60 overflow-y-auto rounded-[10px] border border-gray-200 bg-gray-50 p-4 text-sm">
         <ul className="flex flex-col gap-1">
           {displayResumes.map((resume) => (
             <li key={resume.id} className="truncate font-medium text-gray-900">

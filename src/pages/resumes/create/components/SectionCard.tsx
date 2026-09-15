@@ -33,7 +33,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
   const [titleInputId] = useState(() => `section-title-${crypto.randomUUID()}`)
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-gray-200 p-4">
+    <div className="flex flex-col gap-4 rounded-[10px] border border-gray-200 p-4">
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:items-center">
         <Input
           id={titleInputId}

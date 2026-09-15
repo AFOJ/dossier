@@ -72,7 +72,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
           <SectionAddMenu onSelect={addSection} />
 
           {formError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
+            <div className="rounded-[10px] bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
               {formError}
             </div>
           )}
