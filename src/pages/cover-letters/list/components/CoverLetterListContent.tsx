@@ -87,7 +87,7 @@ function EmptyState() {
       <IsometricLibraryAdd />
       <Heading3>No cover letters yet</Heading3>
       <Subheading>Create your first cover letter to get started.</Subheading>
-      <ButtonLink icon={FileAddIcon} to="/cover-letters/create">
+      <ButtonLink icon={FileAddIcon} intent="secondary" to="/cover-letters/create">
         Create your first cover letter
       </ButtonLink>
     </div>

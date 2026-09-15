@@ -114,7 +114,7 @@ export function UploadCoverLetterJson(props: Readonly<UploadCoverLetterJsonProps
             Import existing cover letters from JSON files or a ZIP export.
           </Subheading>
           <Button
-            intent="primary"
+            intent="secondary"
             type="button"
             onClick={(event) => {
               event.preventDefault()

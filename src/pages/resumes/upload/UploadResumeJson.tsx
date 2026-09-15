@@ -109,7 +109,7 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
             Import existing resumes from JSON files or a ZIP export.
           </Subheading>
           <Button
-            intent="primary"
+            intent="secondary"
             type="button"
             onClick={(event) => {
               event.preventDefault()

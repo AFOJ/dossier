@@ -87,7 +87,7 @@ function EmptyState() {
       <IsometricLibraryAdd />
       <Heading3>No resumes yet</Heading3>
       <Subheading>Create your first resume to get started.</Subheading>
-      <ButtonLink icon={FileAddIcon} to="/resumes/create">
+      <ButtonLink icon={FileAddIcon} intent="secondary" to="/resumes/create">
         Create your first resume
       </ButtonLink>
     </div>
