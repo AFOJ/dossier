@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import "fake-indexeddb/auto"
 import { db, type Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
-import { saveProcessedEntity } from "@/db/entityCache"
+import { getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
 import {
   upsertProfile,
   getProfile,
@@ -401,6 +401,60 @@ describe("importProfile", () => {
 
     const restored = await db.coverLetters.toArray()
     expect(restored.map((letter) => letter.id)).toEqual(["letter-1"])
+  })
+
+  it("clears processed PDF caches so imported entities never reuse stale content", async () => {
+    // An unsynced cover letter keeps its own cache entry after profile edits,
+    // so its processed PDF can outlive the letter that produced it.
+    await upsertProfile({ ...baseProfile, full_name: "John Doe", links: [] })
+    const letterId = "letter-1"
+    await createCoverLetter(
+      { title: "Pre-import Letter", body: "<p>stale</p>" },
+      {
+        id: letterId,
+        syncProfile: false,
+        contact: {
+          full_name: "John Doe",
+          role: null,
+          email: null,
+          phone: null,
+          location: null,
+        },
+      },
+    )
+    await saveProcessedEntity({
+      entityType: "coverLetter",
+      entityId: letterId,
+      blob: PDF(),
+      processedAt: new Date("2099-01-01T00:00:00.000Z"),
+    })
+    expect(await db.entityCache.count()).toBe(1)
+
+    // The import replaces the letter with one that reuses the id and has an
+    // older updatedAt, which previously made the stale PDF look "current".
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        coverLetters: [
+          {
+            id: letterId,
+            title: "Imported Letter",
+            body: "<p>fresh</p>",
+            createdAt: "2020-01-01T00:00:00.000Z",
+            updatedAt: "2020-01-01T00:00:00.000Z",
+          },
+        ],
+      }),
+    )
+
+    expect(await db.entityCache.count()).toBe(0)
+    expect(
+      await getValidProcessedEntity({
+        entityType: "coverLetter",
+        entityId: letterId,
+        entityUpdatedAt: new Date("2020-01-01T00:00:00.000Z"),
+      }),
+    ).toBeNull()
   })
 
   it("imports exports written before cover letters were supported", async () => {

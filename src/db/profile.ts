@@ -186,6 +186,11 @@ export async function importProfile(fileContent: string): Promise<void> {
 
     await db.resumes.clear()
     await db.coverLetters.clear()
+    // Import replaces the profile and every entity table wholesale, so all
+    // processed-PDF cache entries are potentially stale (an imported entity can
+    // reuse a pre-import id with an older/equal updatedAt). Clear the whole
+    // cache rather than trying to enumerate which entries need eviction.
+    await db.entityCache.clear()
 
     if (restoredResumes.length > 0) {
       await db.resumes.bulkPut(restoredResumes)
