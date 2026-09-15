@@ -12,7 +12,6 @@ export const coverLetterFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
     subject: z.string().max(160, "Subject must be 160 characters or less").optional(),
-    signoff: z.string().max(120, "Sign-off must be 120 characters or less").optional(),
     body: z.string().min(1, "Body is required"),
     syncProfile: z.boolean(),
     fullName: z.string().optional(),
@@ -84,7 +83,6 @@ export function useCreateCoverLetterForm(profile?: Profile) {
     defaultValues: {
       title: "",
       subject: "",
-      signoff: "",
       body: "",
       syncProfile: true,
       ...(profile ? profileToContactValues(profile) : emptyContactValues()),
@@ -129,7 +127,6 @@ export function useCreateCoverLetterForm(profile?: Profile) {
         {
           title: data.title,
           subject: data.subject?.trim() ? data.subject.trim() : null,
-          signoff: data.signoff?.trim() ? data.signoff.trim() : null,
           body: sanitizeCoverLetterBody(data.body),
         },
         {

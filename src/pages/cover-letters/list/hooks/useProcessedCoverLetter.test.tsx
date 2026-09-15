@@ -26,7 +26,6 @@ async function makeLetter(): Promise<CoverLetter> {
     {
       title: "Acme Application",
       subject: "Support Engineer",
-      signoff: "Regards",
       body: "<p>Hello</p>",
     },
     { syncProfile: false, contact: null },
@@ -70,7 +69,6 @@ describe("useProcessedCoverLetter", () => {
     expect(payload).toMatchObject({
       title: letter.title,
       subject: letter.subject,
-      signoff: letter.signoff,
       body: letter.body,
     })
   })

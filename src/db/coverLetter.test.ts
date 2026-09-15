@@ -32,14 +32,12 @@ describe("CoverLetter Service", () => {
     await updateCoverLetter(id, {
       title: "Updated",
       subject: "Application",
-      signoff: "Kind regards,",
       body: "<p>Updated</p>",
     })
     const updated = await getCoverLetter(id)
 
     expect(updated?.title).toBe("Updated")
     expect(updated?.subject).toBe("Application")
-    expect(updated?.signoff).toBe("Kind regards,")
     expect(updated?.createdAt).toEqual(initial?.createdAt)
     expect(updated!.updatedAt.getTime()).toBeGreaterThan(initial!.updatedAt.getTime())
 

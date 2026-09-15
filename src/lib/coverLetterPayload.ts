@@ -17,7 +17,6 @@ export interface CoverLetterPayloadContact {
 export interface CoverLetterPayload {
   title: string
   subject?: string
-  signoff?: string
   body: string
   contact?: CoverLetterPayloadContact
 }
@@ -31,7 +30,6 @@ export async function toCoverLetterPayload(letter: CoverLetter): Promise<CoverLe
   return {
     title: letter.title.trim(),
     subject: letter.subject ?? undefined,
-    signoff: letter.signoff ?? undefined,
     body: letter.body,
     contact: toContactPayload(contact),
   }
