@@ -1,4 +1,10 @@
-import { Copy01Icon, Delete02Icon, Edit02Icon, EyeIcon, FileExportIcon } from "@hugeicons/core-free-icons"
+import {
+  Copy01Icon,
+  Delete02Icon,
+  Edit02Icon,
+  EyeIcon,
+  FileExportIcon,
+} from "@hugeicons/core-free-icons"
 import type { CoverLetter } from "@/db/db"
 import {
   EntityTable,

@@ -23,9 +23,7 @@ export interface CoverLetterPayload {
 
 export async function toCoverLetterPayload(letter: CoverLetter): Promise<CoverLetterPayload> {
   const contact =
-    letter.syncProfile === false
-      ? letter.contact
-      : ((await getProfile()) ?? letter.contact)
+    letter.syncProfile === false ? letter.contact : ((await getProfile()) ?? letter.contact)
 
   return {
     title: letter.title.trim(),

@@ -20,10 +20,7 @@ export function useResumeTable() {
 
   const committedQuery = (searchParams.get("query") ?? "").trim()
   const requestedPage = toPositiveInteger(Number(searchParams.get("page")), DEFAULT_PAGE)
-  const requestedPerPage = toPositiveInteger(
-    Number(searchParams.get("perPage")),
-    DEFAULT_PAGE_SIZE,
-  )
+  const requestedPerPage = toPositiveInteger(Number(searchParams.get("perPage")), DEFAULT_PAGE_SIZE)
 
   const [query, setInputQuery] = useState(committedQuery)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -82,7 +79,8 @@ export function useResumeTable() {
   const displayResult = result ?? taggedResult?.result
   const isRefreshing = displayResult !== result
 
-  const pagination = displayResult?.pagination ??
+  const pagination =
+    displayResult?.pagination ??
     getPageMetadata(0, { page: requestedPage, perPage: requestedPerPage })
 
   useEffect(() => {

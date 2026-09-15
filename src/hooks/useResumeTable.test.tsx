@@ -292,17 +292,13 @@ describe("useResumeTable", () => {
 
     act(() => result.current.table.setQuery("engineer"))
     await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).get("query")).toBe(
-          "engineer",
-        ),
+      () => expect(searchParamsOf(result.current.location.search).get("query")).toBe("engineer"),
       { timeout: 3000 },
     )
 
     act(() => result.current.table.setQuery(""))
     await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).has("query")).toBe(false),
+      () => expect(searchParamsOf(result.current.location.search).has("query")).toBe(false),
       { timeout: 3000 },
     )
     await waitFor(() => expect(result.current.table.totalCount).toBe(2), {
@@ -321,10 +317,7 @@ describe("useResumeTable", () => {
 
     act(() => result.current.table.setQuery("Resume 1"))
     await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).get("query")).toBe(
-          "Resume 1",
-        ),
+      () => expect(searchParamsOf(result.current.location.search).get("query")).toBe("Resume 1"),
       { timeout: 3000 },
     )
     expect(searchParamsOf(result.current.location.search).has("page")).toBe(false)
@@ -343,9 +336,8 @@ describe("useResumeTable", () => {
     expect(searchParamsOf(result.current.location.search).get("page")).toBe("2")
 
     act(() => result.current.table.setPage(1))
-    await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).has("page")).toBe(false),
+    await waitFor(() =>
+      expect(searchParamsOf(result.current.location.search).has("page")).toBe(false),
     )
     await waitFor(() => expect(result.current.table.page).toBe(1))
   })
@@ -374,11 +366,8 @@ describe("useResumeTable", () => {
     expect(result.current.table.perPage).toBe(2)
 
     act(() => result.current.table.setPerPage(10))
-    await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).has("perPage")).toBe(
-          false,
-        ),
+    await waitFor(() =>
+      expect(searchParamsOf(result.current.location.search).has("perPage")).toBe(false),
     )
     expect(searchParamsOf(result.current.location.search).has("page")).toBe(false)
     await waitFor(() => expect(result.current.table.perPage).toBe(10))
@@ -394,9 +383,7 @@ describe("useResumeTable", () => {
 
     act(() => result.current.table.setPage(2))
     await waitFor(() =>
-      expect(searchParamsOf(result.current.location.search).get("tab")).toBe(
-        "archived",
-      ),
+      expect(searchParamsOf(result.current.location.search).get("tab")).toBe("archived"),
     )
     expect(searchParamsOf(result.current.location.search).get("page")).toBe("2")
   })
@@ -449,9 +436,7 @@ describe("useResumeTable", () => {
       await delay(400)
     })
 
-    expect(searchParamsOf(result.current.location.search).get("query")).toBe(
-      "designer",
-    )
+    expect(searchParamsOf(result.current.location.search).get("query")).toBe("designer")
     expect(result.current.table.query).toBe("designer")
     expect(result.current.table.isSearchPending).toBe(false)
   })
@@ -459,10 +444,7 @@ describe("useResumeTable", () => {
   it("syncs the search input on back navigation", async () => {
     await seedResumes(["Frontend Engineer", "Product Designer"])
 
-    const { result } = renderTableWithLocation(
-      ["/", "/?query=engineer"],
-      1,
-    )
+    const { result } = renderTableWithLocation(["/", "/?query=engineer"], 1)
 
     await waitFor(() => expect(result.current.table.isLoading).toBe(false))
     expect(result.current.table.query).toBe("engineer")
@@ -479,28 +461,19 @@ describe("useResumeTable", () => {
     await seedResumes(["Frontend Engineer", "Product Designer"])
 
     // A forward entry survives only if the search commit replaces.
-    const { result } = renderTableWithLocation(
-      ["/", "/?query=designer"],
-      0,
-    )
+    const { result } = renderTableWithLocation(["/", "/?query=designer"], 0)
 
     await waitFor(() => expect(result.current.table.isLoading).toBe(false))
 
     act(() => result.current.table.setQuery("engineer"))
     await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).get("query")).toBe(
-          "engineer",
-        ),
+      () => expect(searchParamsOf(result.current.location.search).get("query")).toBe("engineer"),
       { timeout: 3000 },
     )
 
     act(() => result.current.navigate(1))
-    await waitFor(
-      () =>
-        expect(searchParamsOf(result.current.location.search).get("query")).toBe(
-          "designer",
-        ),
+    await waitFor(() =>
+      expect(searchParamsOf(result.current.location.search).get("query")).toBe("designer"),
     )
     expect(result.current.table.query).toBe("designer")
   })

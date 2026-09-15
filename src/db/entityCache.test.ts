@@ -194,7 +194,11 @@ describe("entityCache", () => {
     await saveProcessedEntity({ entityType: "resume", entityId: syncedResumeId, blob: PDF() })
     await saveProcessedEntity({ entityType: "resume", entityId: unsyncedResumeId, blob: PDF() })
     await saveProcessedEntity({ entityType: "coverLetter", entityId: syncedLetterId, blob: PDF() })
-    await saveProcessedEntity({ entityType: "coverLetter", entityId: unsyncedLetterId, blob: PDF() })
+    await saveProcessedEntity({
+      entityType: "coverLetter",
+      entityId: unsyncedLetterId,
+      blob: PDF(),
+    })
 
     expect(await db.entityCache.count()).toBe(4)
 

@@ -4,7 +4,10 @@ import type { CoverLetter } from "@/db/db"
 import { getErrorFeedback } from "@/lib/api"
 import { useProcessedCoverLetter } from "@/pages/cover-letters/list/hooks/useProcessedCoverLetter"
 
-export function CoverLetterPreviewDialog({ data: letter, close }: Readonly<ModalContentProps<CoverLetter>>) {
+export function CoverLetterPreviewDialog({
+  data: letter,
+  close,
+}: Readonly<ModalContentProps<CoverLetter>>) {
   const processed = useProcessedCoverLetter(letter)
 
   const handleDownload = () => {

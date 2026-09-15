@@ -12,7 +12,15 @@ type ToolbarProps = {
 }
 
 export function Toolbar(props: Readonly<ToolbarProps>) {
-  const { query, onQueryChange, isSearchPending, selectedCount, onBulkExport, onBulkDelete, isBulkExporting } = props
+  const {
+    query,
+    onQueryChange,
+    isSearchPending,
+    selectedCount,
+    onBulkExport,
+    onBulkDelete,
+    isBulkExporting,
+  } = props
   const isDisabled = selectedCount === 0
 
   return (

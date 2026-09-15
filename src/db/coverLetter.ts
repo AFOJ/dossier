@@ -83,9 +83,7 @@ export async function getAllCoverLetters(): Promise<CoverLetter[]> {
 
 export async function updateCoverLetter(
   id: string,
-  changes: Partial<
-    Pick<CoverLetter, "title" | "subject" | "body" | "syncProfile" | "contact">
-  >,
+  changes: Partial<Pick<CoverLetter, "title" | "subject" | "body" | "syncProfile" | "contact">>,
 ): Promise<void> {
   await COVER_LETTER_TABLE.update(id, {
     ...changes,

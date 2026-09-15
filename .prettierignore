@@ -1,0 +1,5 @@
+CHANGELOG.md
+.release-please-manifest.json
+release-please-config.json
+package.json
+pnpm-lock.yaml
