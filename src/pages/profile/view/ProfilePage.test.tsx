@@ -140,6 +140,7 @@ describe("ProfilePage", () => {
       exportedAt: "2026-08-23T00:00:00.000Z",
       profile,
       resumes: [],
+      coverLetters: [],
     }
     vi.mocked(exportProfile).mockResolvedValueOnce(exportData)
     renderPage()
