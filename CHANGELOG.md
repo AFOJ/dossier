@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/AFOJ/dossier/compare/dossier-v1.3.0...dossier-v1.4.0) (2026-09-15)
+
+
+### Features
+
+* add cover letter management ([#24](https://github.com/AFOJ/dossier/issues/24)) ([9f440ed](https://github.com/AFOJ/dossier/commit/9f440edbefde9b1c1dc3b6d9f846921bc06e5cac))
+
+
+### Bug Fixes
+
+* include cover letters in profile export/import ([#28](https://github.com/AFOJ/dossier/issues/28)) ([20adbd6](https://github.com/AFOJ/dossier/commit/20adbd6fbea33c653b732c863f5eb9a070f7cef1))
+* remove cover letter sign-off field ([#27](https://github.com/AFOJ/dossier/issues/27)) ([bd22561](https://github.com/AFOJ/dossier/commit/bd225614ad609a62ae17c6b7de2d3861c022b5d2))
+* setup cache invalidation on profile edits ([#26](https://github.com/AFOJ/dossier/issues/26)) ([6599c26](https://github.com/AFOJ/dossier/commit/6599c262441278eff556581bd62d20f00b81800a))
+
 ## [1.3.0](https://github.com/AFOJ/dossier/compare/dossier-v1.2.0...dossier-v1.3.0) (2026-09-12)
 
 
