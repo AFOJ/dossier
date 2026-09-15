@@ -9,6 +9,7 @@ import {
   getValidProcessedEntity,
   saveProcessedEntity,
 } from "@/db/entityCache"
+import { upsertProfile } from "@/db/profile"
 import { createResume, deleteResume, updateResume } from "@/db/resume"
 
 const PDF = () => new Blob(["%PDF-fake"], { type: "application/pdf" })
@@ -170,5 +171,45 @@ describe("entityCache", () => {
     await expect(
       clearProcessedEntityCache({ entityType: "coverLetter", entityId: "does-not-exist" }),
     ).resolves.toBeUndefined()
+  })
+
+  it("invalidates caches for synced entities when the profile is updated", async () => {
+    await upsertProfile({
+      full_name: "Jane Doe",
+      role: "Engineer",
+      email: null,
+      phone: null,
+      location: null,
+      links: [],
+    })
+
+    const syncedResumeId = await createResume("Synced Resume", [])
+    const unsyncedResumeId = await createResume("Unsynced Resume", [], { syncProfile: false })
+    const syncedLetterId = await createCoverLetter({ title: "Synced Letter", body: "<p>Hi</p>" })
+    const unsyncedLetterId = await createCoverLetter(
+      { title: "Unsynced Letter", body: "<p>Hi</p>" },
+      { syncProfile: false },
+    )
+
+    await saveProcessedEntity({ entityType: "resume", entityId: syncedResumeId, blob: PDF() })
+    await saveProcessedEntity({ entityType: "resume", entityId: unsyncedResumeId, blob: PDF() })
+    await saveProcessedEntity({ entityType: "coverLetter", entityId: syncedLetterId, blob: PDF() })
+    await saveProcessedEntity({ entityType: "coverLetter", entityId: unsyncedLetterId, blob: PDF() })
+
+    expect(await db.entityCache.count()).toBe(4)
+
+    await upsertProfile({
+      full_name: "Jane Doe",
+      role: "Staff Engineer",
+      email: "jane@example.com",
+      phone: null,
+      location: "Remote",
+      links: [],
+    })
+
+    expect(await db.entityCache.get(`resume:${syncedResumeId}`)).toBeUndefined()
+    expect(await db.entityCache.get(`coverLetter:${syncedLetterId}`)).toBeUndefined()
+    expect(await db.entityCache.get(`resume:${unsyncedResumeId}`)).toBeDefined()
+    expect(await db.entityCache.get(`coverLetter:${unsyncedLetterId}`)).toBeDefined()
   })
 })

@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { db, type Profile, type Resume } from "@/db/db"
+import { getAllCoverLetters } from "@/db/coverLetter"
+import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import { resumeSectionSchema, exportContactSchema } from "@/db/schemas"
 import { getAllResumes } from "@/db/resume"
 
@@ -7,9 +9,28 @@ export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> 
   const existing = await db.profiles.toCollection().first()
   if (existing) {
     await db.profiles.update(existing.id!, data)
+    await invalidateSyncedEntityCaches()
     return existing.id!
   }
   return db.profiles.add(data)
+}
+
+async function invalidateSyncedEntityCaches(): Promise<void> {
+  const [resumes, letters] = await Promise.all([getAllResumes(), getAllCoverLetters()])
+  await Promise.all([
+    clearProcessedEntityCacheForEntities({
+      entityType: "resume",
+      entityIds: resumes
+        .filter((resume) => resume.syncProfile !== false)
+        .map((resume) => resume.id!),
+    }),
+    clearProcessedEntityCacheForEntities({
+      entityType: "coverLetter",
+      entityIds: letters
+        .filter((letter) => letter.syncProfile !== false)
+        .map((letter) => letter.id!),
+    }),
+  ])
 }
 
 export async function getProfile(): Promise<Profile | null> {
@@ -18,9 +39,10 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function deleteProfile(): Promise<void> {
-  await db.transaction("rw", db.profiles, db.resumes, async () => {
+  await db.transaction("rw", db.profiles, db.resumes, db.entityCache, async () => {
     await db.resumes.clear()
     await db.profiles.clear()
+    await db.entityCache.clear()
   })
 }
 
@@ -102,7 +124,7 @@ export async function importProfile(fileContent: string): Promise<void> {
 
   const { profile, resumes } = result.data
 
-  await db.transaction("rw", db.profiles, db.resumes, async () => {
+  await db.transaction("rw", db.profiles, db.resumes, db.coverLetters, db.entityCache, async () => {
     await upsertProfile(profile)
 
     const restoredResumes: Resume[] = resumes.map((resume) => {

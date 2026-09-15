@@ -70,3 +70,11 @@ export async function clearProcessedEntityCache(options: {
   const { entityType, entityId } = options
   await db.entityCache.delete(cacheKey(entityType, entityId))
 }
+
+export async function clearProcessedEntityCacheForEntities(options: {
+  entityType: CacheEntityType
+  entityIds: string[]
+}): Promise<void> {
+  const { entityType, entityIds } = options
+  await db.entityCache.bulkDelete(entityIds.map((id) => cacheKey(entityType, id)))
+}

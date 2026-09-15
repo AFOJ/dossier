@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import "fake-indexeddb/auto"
 import { db, type Profile } from "@/db/db"
+import { createCoverLetter } from "@/db/coverLetter"
+import { saveProcessedEntity } from "@/db/entityCache"
 import {
   upsertProfile,
   getProfile,
@@ -11,9 +13,13 @@ import {
 } from "@/db/profile"
 import { createResume, getAllResumes } from "@/db/resume"
 
+const PDF = () => new Blob(["%PDF-fake"], { type: "application/pdf" })
+
 beforeEach(async () => {
   await db.profiles.clear()
   await db.resumes.clear()
+  await db.coverLetters.clear()
+  await db.entityCache.clear()
 })
 
 const baseProfile: Profile = {
@@ -70,6 +76,28 @@ describe("Profile Service", () => {
 
     expect(await getProfile()).toBeNull()
     expect(await getAllResumes()).toEqual([])
+  })
+
+  it("clears the processed entity cache on deletion", async () => {
+    await upsertProfile({
+      ...baseProfile,
+      full_name: "John",
+      phone: "123",
+      links: [],
+    })
+    const resumeId = await createResume("Resume 1", [])
+    const letterId = await createCoverLetter({ title: "Letter 1", body: "<p>Hi</p>" })
+
+    await saveProcessedEntity({ entityType: "resume", entityId: resumeId, blob: PDF() })
+    await saveProcessedEntity({ entityType: "coverLetter", entityId: letterId, blob: PDF() })
+
+    expect(await db.entityCache.count()).toBe(2)
+
+    await deleteProfile()
+
+    expect(await db.profiles.count()).toBe(0)
+    expect(await db.resumes.count()).toBe(0)
+    expect(await db.entityCache.count()).toBe(0)
   })
 })
 
