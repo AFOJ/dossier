@@ -32,11 +32,16 @@ export async function ensureProcessedCoverLetter(
   }
 
   const processedAt = new Date()
-  await saveProcessedEntity({ entityType: "coverLetter", entityId: letter.id!, blob, processedAt })
+  await saveProcessedEntity({
+    entityType: "coverLetter",
+    entityId: letter.id!,
+    blob,
+    processedAt,
+  })
 
   return { blob, processedAt }
 }
 
 export function getProcessedCoverLetterFilename(title: string): string {
-  return `${slugify(title)}-cover-letter.pdf`
+  return `${slugify(title) || "cover-letter"}-cover-letter.pdf`
 }

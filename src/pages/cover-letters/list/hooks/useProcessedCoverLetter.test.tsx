@@ -88,6 +88,33 @@ describe("useProcessedCoverLetter", () => {
     expect(mockProcessCoverLetter).toHaveBeenCalledTimes(1)
   }, 20_000)
 
+  it("discards an in-flight result when the letter changes and refetches", async () => {
+    const firstLetter = await makeLetter()
+    let release!: (blob: Blob) => void
+    const gate = new Promise<Blob>((resolve) => {
+      release = resolve
+    })
+    mockProcessCoverLetter.mockReturnValueOnce(gate)
+
+    const { result, rerender } = renderHook(
+      ({ letter }: { letter: CoverLetter }) => useProcessedCoverLetter(letter),
+      { initialProps: { letter: firstLetter } },
+    )
+
+    expect(result.current.status).toBe("loading")
+
+    const secondLetter = await makeLetter()
+    mockProcessCoverLetter.mockResolvedValueOnce(PDF())
+    rerender({ letter: secondLetter })
+
+    release(PDF())
+
+    await waitFor(() => expect(result.current.status).toBe("ready"))
+    expect(mockProcessCoverLetter).toHaveBeenCalledTimes(2)
+    expect(mockProcessCoverLetter.mock.calls[0][0].title).toBe(firstLetter.title)
+    expect(mockProcessCoverLetter.mock.calls[1][0].title).toBe(secondLetter.title)
+  }, 20_000)
+
   it("refetches when the cached copy has expired", async () => {
     const { CACHE_TTL_MS } = await import("@/db/entityCache")
     const letter = await makeLetter()

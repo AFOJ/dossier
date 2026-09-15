@@ -40,22 +40,37 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
     }
   }, [])
 
-  const load = useCallback(() => {
-    inFlightRef.current ??= (async () => {
+  const load = useCallback<() => Promise<void> | undefined>(() => {
+    if (inFlightRef.current) {
+      return inFlightRef.current
+    }
+
+    async function fetch(): Promise<void> {
+      let isStale = false
       try {
         setError(undefined)
 
-        const { blob, processedAt } = await ensureProcessedCoverLetter(letterRef.current)
+        const requested = letterRef.current
+        const { blob, processedAt } = await ensureProcessedCoverLetter(requested)
 
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current)
+        // The active letter changed while the PDF was generating (e.g. an
+        // edit landed mid-flight): discard the stale result and refetch.
+        const current = letterRef.current
+        isStale =
+          current.id !== requested.id ||
+          current.updatedAt.getTime() !== requested.updatedAt.getTime()
+
+        if (!isStale) {
+          if (urlRef.current) {
+            URL.revokeObjectURL(urlRef.current)
+          }
+
+          blobRef.current = blob
+          urlRef.current = URL.createObjectURL(blob)
+          setUrl(urlRef.current)
+          setProcessedAt(processedAt)
+          setStatus("ready")
         }
-
-        blobRef.current = blob
-        urlRef.current = URL.createObjectURL(blob)
-        setUrl(urlRef.current)
-        setProcessedAt(processedAt)
-        setStatus("ready")
       } catch (cause) {
         setStatus("error")
         setError(
@@ -67,12 +82,17 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
                 [],
               ),
         )
-      } finally {
-        inFlightRef.current = undefined
       }
-    })()
 
-    return inFlightRef.current
+      inFlightRef.current = undefined
+      if (isStale) {
+        return fetch()
+      }
+    }
+
+    const promise = fetch()
+    inFlightRef.current = promise
+    return promise
   }, [])
 
   useEffect(() => {

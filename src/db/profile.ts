@@ -9,10 +9,18 @@ export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> 
   const existing = await db.profiles.toCollection().first()
   if (existing) {
     await db.profiles.update(existing.id!, data)
-    await invalidateSyncedEntityCaches()
+    await safelyInvalidateSyncedEntityCaches()
     return existing.id!
   }
   return db.profiles.add(data)
+}
+
+async function safelyInvalidateSyncedEntityCaches(): Promise<void> {
+  try {
+    await invalidateSyncedEntityCaches()
+  } catch (error) {
+    console.error("Failed to invalidate entity caches:", error)
+  }
 }
 
 async function invalidateSyncedEntityCaches(): Promise<void> {

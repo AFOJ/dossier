@@ -30,7 +30,12 @@ export async function ensureProcessedResume(resume: Resume): Promise<ProcessedRe
   }
 
   const processedAt = new Date()
-  await saveProcessedEntity({ entityType: "resume", entityId: resume.id!, blob, processedAt })
+  await saveProcessedEntity({
+    entityType: "resume",
+    entityId: resume.id!,
+    blob,
+    processedAt,
+  })
 
   return { blob, processedAt }
 }

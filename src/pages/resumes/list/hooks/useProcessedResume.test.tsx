@@ -67,6 +67,33 @@ describe("useProcessedResume", () => {
     expect(mockProcessResume).toHaveBeenCalledTimes(1)
   }, 20_000)
 
+  it("discards an in-flight result when the resume changes and refetches", async () => {
+    const firstResume = await makeResume()
+    let release!: (blob: Blob) => void
+    const gate = new Promise<Blob>((resolve) => {
+      release = resolve
+    })
+    mockProcessResume.mockReturnValueOnce(gate)
+
+    const { result, rerender } = renderHook(
+      ({ resume }: { resume: Resume }) => useProcessedResume(resume),
+      { initialProps: { resume: firstResume } },
+    )
+
+    expect(result.current.status).toBe("loading")
+
+    const secondResume = await makeResume()
+    mockProcessResume.mockResolvedValueOnce(PDF())
+    rerender({ resume: secondResume })
+
+    release(PDF())
+
+    await waitFor(() => expect(result.current.status).toBe("ready"))
+    expect(mockProcessResume).toHaveBeenCalledTimes(2)
+    expect(mockProcessResume.mock.calls[0][0].title).toBe(firstResume.title)
+    expect(mockProcessResume.mock.calls[1][0].title).toBe(secondResume.title)
+  }, 20_000)
+
   it("refetches when the cached copy has expired", async () => {
     const { CACHE_TTL_MS } = await import("@/db/entityCache")
     const resume = await makeResume()
