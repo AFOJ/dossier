@@ -22,28 +22,24 @@ export interface Resume {
   contact?: Omit<Profile, "id"> | null
 }
 
-export interface ResumeCacheEntry {
-  resumeId: string
-  data: ArrayBuffer
-  contentType: string
-  processedAt: Date
-  expiresAt: Date
-}
-
-export interface CoverLetterCacheEntry {
-  coverLetterId: string
-  data: ArrayBuffer
-  contentType: string
-  processedAt: Date
-  expiresAt: Date
-}
-
 export interface CoverLetterContact {
   full_name: string
   role: string | null
   email: string | null
   phone: string | null
   location: string | null
+}
+
+export type CacheEntityType = "resume" | "coverLetter"
+
+export interface EntityCacheEntry {
+  id: string
+  entityType: CacheEntityType
+  entityId: string
+  data: ArrayBuffer
+  contentType: string
+  processedAt: Date
+  expiresAt: Date
 }
 
 export interface CoverLetter {
@@ -61,9 +57,8 @@ export interface CoverLetter {
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   resumes!: Table<Resume, string>
-  resumeCache!: Table<ResumeCacheEntry, string>
   coverLetters!: Table<CoverLetter, string>
-  coverLetterCache!: Table<CoverLetterCacheEntry, string>
+  entityCache!: Table<EntityCacheEntry, string>
 
   constructor() {
     super("DossierDatabase")
@@ -74,24 +69,21 @@ export class DossierDatabase extends Dexie {
     })
 
     this.version(2).stores({
-      profiles: "++id",
-      resumes: "id, updatedAt",
       resumeCache: "resumeId",
     })
 
     this.version(3).stores({
-      profiles: "++id",
-      resumes: "id, updatedAt",
-      resumeCache: "resumeId",
       coverLetters: "id, updatedAt",
     })
 
     this.version(4).stores({
-      profiles: "++id",
-      resumes: "id, updatedAt",
-      resumeCache: "resumeId",
-      coverLetters: "id, updatedAt",
       coverLetterCache: "coverLetterId",
+    })
+
+    this.version(5).stores({
+      resumeCache: null,
+      coverLetterCache: null,
+      entityCache: "id, entityType, entityId",
     })
   }
 }

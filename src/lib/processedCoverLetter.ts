@@ -1,6 +1,6 @@
 import type { CoverLetter } from "@/db/db"
 import { db } from "@/db/db"
-import { entryToBlob, getValidProcessedCoverLetter, saveProcessedCoverLetter } from "@/db/coverLetterCache"
+import { entryToBlob, getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
 import { processCoverLetter } from "@/lib/api"
 import { toCoverLetterPayload } from "@/lib/coverLetterPayload"
 import { slugify } from "@/utils"
@@ -10,8 +10,14 @@ export interface ProcessedCoverLetter {
   processedAt: Date
 }
 
-export async function ensureProcessedCoverLetter(letter: CoverLetter): Promise<ProcessedCoverLetter> {
-  const cached = await getValidProcessedCoverLetter(letter.id!, letter.updatedAt)
+export async function ensureProcessedCoverLetter(
+  letter: CoverLetter,
+): Promise<ProcessedCoverLetter> {
+  const cached = await getValidProcessedEntity({
+    entityType: "coverLetter",
+    entityId: letter.id!,
+    entityUpdatedAt: letter.updatedAt,
+  })
 
   if (cached) {
     return { blob: entryToBlob(cached), processedAt: cached.processedAt }
@@ -26,11 +32,11 @@ export async function ensureProcessedCoverLetter(letter: CoverLetter): Promise<P
   }
 
   const processedAt = new Date()
-  await saveProcessedCoverLetter(letter.id!, blob, { processedAt })
+  await saveProcessedEntity({ entityType: "coverLetter", entityId: letter.id!, blob, processedAt })
 
   return { blob, processedAt }
 }
 
 export function getProcessedCoverLetterFilename(title: string): string {
-  return `${slugify(title) || "cover-letter"}-cover-letter.pdf`
+  return `${slugify(title)}-cover-letter.pdf`
 }

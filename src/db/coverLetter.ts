@@ -1,4 +1,5 @@
 import { db, type CoverLetter } from "@/db/db"
+import { clearProcessedEntityCache } from "@/db/entityCache"
 import { DEFAULT_PAGE_SIZE, getPageMetadata, type PaginationInput } from "@/lib/pagination"
 
 const COVER_LETTER_TABLE = db.coverLetters
@@ -92,8 +93,18 @@ export async function updateCoverLetter(
     ...changes,
     updatedAt: new Date(),
   })
+  try {
+    await clearProcessedEntityCache({ entityType: "coverLetter", entityId: id })
+  } catch (error) {
+    console.error("Failed to clear cover letter cache:", error)
+  }
 }
 
 export async function deleteCoverLetter(id: string): Promise<void> {
   await COVER_LETTER_TABLE.delete(id)
+  try {
+    await clearProcessedEntityCache({ entityType: "coverLetter", entityId: id })
+  } catch (error) {
+    console.error("Failed to clear cover letter cache:", error)
+  }
 }

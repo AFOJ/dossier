@@ -32,7 +32,7 @@ beforeEach(async () => {
   vi.clearAllMocks()
   await db.profiles.clear()
   await db.resumes.clear()
-  await db.resumeCache.clear()
+  await db.entityCache.clear()
 
   mockProcessResume.mockImplementation(() => Promise.resolve(PDF()))
 })
@@ -68,15 +68,17 @@ describe("useProcessedResume", () => {
   }, 20_000)
 
   it("refetches when the cached copy has expired", async () => {
-    const { RESUME_CACHE_TTL_MS } = await import("@/db/resumeCache")
+    const { CACHE_TTL_MS } = await import("@/db/entityCache")
     const resume = await makeResume()
 
     // Seed an already-expired cache entry.
-    await db.resumeCache.put({
-      resumeId: resume.id!,
+    await db.entityCache.put({
+      id: `resume:${resume.id!}`,
+      entityType: "resume",
+      entityId: resume.id!,
       data: await PDF().arrayBuffer(),
       contentType: "application/pdf",
-      processedAt: new Date(Date.now() - RESUME_CACHE_TTL_MS - 5_000),
+      processedAt: new Date(Date.now() - CACHE_TTL_MS - 5_000),
       expiresAt: new Date(Date.now() - 1_000),
     })
 
