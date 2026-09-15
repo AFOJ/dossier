@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { CoverLetter } from "@/db/db"
 import { ApiError } from "@/lib/api"
 import { downloadBlob } from "@/lib/download"
-import { ensureProcessedCoverLetter, getProcessedCoverLetterFilename } from "@/lib/processedCoverLetter"
+import {
+  ensureProcessedCoverLetter,
+  getProcessedCoverLetterFilename,
+} from "@/lib/processedCoverLetter"
 
 export type ProcessedCoverLetterStatus = "loading" | "ready" | "error"
 
@@ -27,6 +30,7 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
   const blobRef = useRef<Blob | undefined>(undefined)
   const urlRef = useRef<string | undefined>(undefined)
   const inFlightRef = useRef<Promise<void> | undefined>(undefined)
+  const letterRef = useRef(letter)
 
   useEffect(() => {
     return () => {
@@ -41,13 +45,7 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
       try {
         setError(undefined)
 
-        const letterForLoad: CoverLetter = {
-          id: letterId,
-          updatedAt: letterUpdatedAt,
-          title: letterTitle,
-        } as CoverLetter
-
-        const { blob, processedAt } = await ensureProcessedCoverLetter(letterForLoad)
+        const { blob, processedAt } = await ensureProcessedCoverLetter(letterRef.current)
 
         if (urlRef.current) {
           URL.revokeObjectURL(urlRef.current)
@@ -63,7 +61,11 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
         setError(
           cause instanceof ApiError
             ? cause
-            : new ApiError("NETWORK_ERROR", "Something went wrong while preparing the cover letter.", []),
+            : new ApiError(
+                "NETWORK_ERROR",
+                "Something went wrong while preparing the cover letter.",
+                [],
+              ),
         )
       } finally {
         inFlightRef.current = undefined
@@ -71,11 +73,13 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
     })()
 
     return inFlightRef.current
-  }, [letterId, letterUpdatedAt, letterTitle])
+  }, [])
 
   useEffect(() => {
+    letterRef.current = letter
     void load()
-  }, [load])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, letterId, letterUpdatedAt])
 
   const download = useCallback(async () => {
     setIsDownloading(true)
