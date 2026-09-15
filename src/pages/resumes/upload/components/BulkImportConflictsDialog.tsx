@@ -156,7 +156,7 @@ export function BulkImportConflictsDialog(
         <p className="break-words text-sm text-gray-500">From: {currentItem.sourceName}</p>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2">
+      <div className="rounded-[10px] border border-gray-200 bg-gray-50 px-4 py-2">
         <div className="grid grid-cols-3 gap-2 pb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
           <span />
           <span>Existing</span>

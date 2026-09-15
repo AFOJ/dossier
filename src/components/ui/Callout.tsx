@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/utils"
 import type { PropsWithChildren } from "react"
 
-const calloutVariants = cva("rounded-lg border p-3 text-sm", {
+const calloutVariants = cva("rounded-[10px] border p-3 text-sm", {
   variants: {
     intent: {
       gray: "border-gray-300 bg-gray-50 text-gray-700",

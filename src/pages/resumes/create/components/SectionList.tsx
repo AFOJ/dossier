@@ -85,7 +85,7 @@ export function SectionList(props: Readonly<SectionListProps>) {
       ))}
 
       {sections.length === 0 && (
-        <p className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+        <p className="rounded-[10px] border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
           No sections yet. Add one below to start building your resume.
         </p>
       )}

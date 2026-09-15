@@ -71,7 +71,7 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
 
 function NoResults({ query }: Readonly<{ query: string }>) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-gray-300 bg-white p-12 text-center">
       <IsometricCircleX />
       <Heading3>No matches</Heading3>
       <Subheading>
@@ -83,11 +83,11 @@ function NoResults({ query }: Readonly<{ query: string }>) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-gray-300 bg-white p-12 text-center">
       <IsometricLibraryAdd />
       <Heading3>No resumes yet</Heading3>
       <Subheading>Create your first resume to get started.</Subheading>
-      <ButtonLink icon={FileAddIcon} to="/resumes/create">
+      <ButtonLink icon={FileAddIcon} intent="secondary" to="/resumes/create">
         Create your first resume
       </ButtonLink>
     </div>

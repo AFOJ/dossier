@@ -93,7 +93,7 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
         <div
           className={cn(
             "relative flex flex-col items-center justify-center",
-            "rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center",
+            "rounded-[10px] border border-dashed border-gray-300 bg-white p-12 text-center",
             isDragActive && "border-primary-500 bg-primary-50",
           )}
           onDragEnter={onDragEnter}
@@ -109,7 +109,7 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
             Import existing resumes from JSON files or a ZIP export.
           </Subheading>
           <Button
-            intent="primary"
+            intent="secondary"
             type="button"
             onClick={(event) => {
               event.preventDefault()
@@ -130,14 +130,14 @@ export function UploadResumeJson(props: Readonly<UploadResumeJsonProps>) {
       {importError && (
         <p
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          className="rounded-[10px] border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
           {importError}
         </p>
       )}
 
       {stagedFiles.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-[10px] border border-gray-200 bg-white">
           <ul className="divide-y divide-gray-100">
             {stagedFiles.map((staged) => (
               <li key={staged.key} className="flex items-center gap-3 px-4 py-3">

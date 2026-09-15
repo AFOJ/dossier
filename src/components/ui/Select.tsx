@@ -28,13 +28,13 @@ export function Select<T extends string | number>(props: Readonly<SelectProps<T>
     >
       <BaseSelect.Trigger
         aria-label={ariaLabel}
-        className="flex items-center gap-1 rounded-lg border border-gray-400/40 bg-white px-2 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-600"
+        className="flex items-center gap-1 rounded-[10px] border border-gray-400/40 bg-white px-2 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-600"
       >
         <BaseSelect.Value>{value}</BaseSelect.Value>
       </BaseSelect.Trigger>
       <BaseSelect.Portal>
         <BaseSelect.Positioner sideOffset={6}>
-          <BaseSelect.Popup className="z-50 min-w-(--anchor-width) rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+          <BaseSelect.Popup className="z-50 min-w-(--anchor-width) rounded-[10px] border border-gray-200 bg-white p-1 shadow-lg">
             {options.map((option) => (
               <BaseSelect.Item
                 key={option.value}

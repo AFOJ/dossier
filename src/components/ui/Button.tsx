@@ -18,9 +18,9 @@ type ButtonLinkProps = Omit<ButtonProps, "nativeButton" | "render"> & {
 const buttonVariants = cva(
   cn(
     "inline-flex items-center justify-center",
-    "gap-1 px-2 py-2",
-    "rounded-lg focus:outline-none focus:ring-1 focus:ring-offset-1",
-    "font-medium text-sm transition-colors cursor-pointer ",
+    "gap-x-1.5 h-9 px-3",
+    "rounded-[10px] focus:outline-none focus:ring-1 focus:ring-offset-1",
+    "font-medium text-sm text-nowrap transition-colors cursor-pointer ",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none",
   ),
   {

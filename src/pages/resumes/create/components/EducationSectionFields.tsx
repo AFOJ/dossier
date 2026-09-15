@@ -35,7 +35,7 @@ export function InstitutionRow(props: Readonly<InstitutionRowProps>) {
   const update = (patch: Partial<EducationalInstitution>) => onChange({ ...institution, ...patch })
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
+    <div className="flex flex-col gap-3 rounded-[10px] border border-gray-200 p-3">
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
         <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field

@@ -79,7 +79,7 @@ export function RichTextEditor(props: Readonly<RichTextEditorProps>) {
 
   if (!editor) {
     return (
-      <div className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
+      <div className="rounded-[10px] border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
         Loading editor…
       </div>
     )
@@ -108,7 +108,7 @@ export function RichTextEditor(props: Readonly<RichTextEditorProps>) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-lg border bg-white",
+        "overflow-hidden rounded-[10px] border bg-white",
         invalid ? "border-red-400" : "border-gray-300 focus-within:border-gray-500",
       )}
     >

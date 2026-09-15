@@ -76,7 +76,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         return bullet.type === "text" ? (
           <div
             key={itemKey(bullet, index)}
-            className="flex flex-col-reverse items-start gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row"
+            className="flex flex-col-reverse items-start gap-2 rounded-[10px] border border-gray-200 p-3 sm:flex-row"
           >
             <div className="min-w-0 flex-1">
               <Input
@@ -110,7 +110,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         ) : (
           <div
             key={itemKey(bullet, index)}
-            className="flex flex-col-reverse items-start gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row"
+            className="flex flex-col-reverse items-start gap-2 rounded-[10px] border border-gray-200 p-3 sm:flex-row"
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-2">
@@ -242,9 +242,9 @@ export function RoleEditor(props: Readonly<RoleEditorProps>) {
   const roleErrors = companyErrors?.roles?.[roleIndex]
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+    <div className="flex flex-col gap-3 rounded-[10px] border border-gray-200 bg-gray-50 p-3">
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
-        <div className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white p-3">
+        <div className="min-w-0 flex-1 rounded-[10px] border border-gray-200 bg-white p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
               label="Job title"
@@ -386,7 +386,7 @@ export function CompanyRow(props: Readonly<CompanyRowProps>) {
     ]?.companies?.[index]?.roles?.message ?? companyErrors?.roles?.message
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
+    <div className="flex flex-col gap-3 rounded-[10px] border border-gray-200 p-3">
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
         <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
           <Field

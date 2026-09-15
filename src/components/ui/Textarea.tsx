@@ -12,7 +12,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>((props, r
       className={cn(
         "border border-gray-300 hover:border-gray-400",
         "focus:outline-none focus:ring-1 focus:ring-gray-600 focus:border-gray-600",
-        "p-2 rounded-lg placeholder:text-gray-400",
+        "p-2 rounded-[10px] placeholder:text-gray-400",
         className,
       )}
     />

@@ -5,7 +5,6 @@ import {
   Route,
   redirect,
   Outlet,
-  Navigate,
 } from "react-router-dom"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ModalProvider } from "@/components/modal"
@@ -15,6 +14,7 @@ import { getCoverLetter } from "@/db/coverLetter"
 import { getResume } from "@/db/resume"
 import type { ProtectedRouteData } from "@/hooks/useProtectedRouteData"
 import ProtectedLayout from "@/layouts/ProtectedLayout"
+import LandingPage from "@/pages/landing"
 import CreateProfilePage from "@/pages/profile/create"
 import ProfilePage from "@/pages/profile/view"
 import CreateCoverLetterPage from "@/pages/cover-letters/create"
@@ -34,6 +34,12 @@ const protectedRouteLoader = async () => {
   }
 
   return { profile } satisfies ProtectedRouteData
+}
+
+const landingRouteLoader = async () => {
+  const profile = await getProfile()
+
+  return { hasProfile: Boolean(profile) }
 }
 
 const publicOnlyRouteLoader = async () => {
@@ -91,6 +97,13 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayout />} errorElement={<ErrorBoundary />}>
       <Route
+        index
+        element={<LandingPage />}
+        loader={landingRouteLoader}
+        hydrateFallbackElement={<HydrateFallback />}
+      />
+
+      <Route
         element={<PublicOnlyLayout />}
         loader={publicOnlyRouteLoader}
         hydrateFallbackElement={<HydrateFallback />}
@@ -104,7 +117,6 @@ const router = createBrowserRouter(
         loader={protectedRouteLoader}
         hydrateFallbackElement={<HydrateFallback />}
       >
-        <Route index element={<Navigate to="resumes" replace />} />
         <Route path="resumes">
           <Route index element={<ResumesListPage />} />
           <Route path="create" element={<CreateResumePage />} />
