@@ -126,6 +126,16 @@ export const exportContactSchema = z.object({
   links: z.array(linkSchema),
 })
 
+// Cover letters persist a contact without links (the profile owns links), so
+// the export shape is the CoverLetterContact type, not exportContactSchema.
+export const coverLetterExportContactSchema = z.object({
+  full_name: z.string(),
+  role: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  location: z.string().nullable(),
+})
+
 export const resumeSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),

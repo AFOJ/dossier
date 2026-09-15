@@ -149,6 +149,35 @@ describe("exportProfile", () => {
     expect(data.resumes.map((resume) => resume.title)).toEqual(["Resume 2", "Resume 1"])
   })
 
+  it("includes all cover letters", async () => {
+    await upsertProfile({ ...baseProfile, links: [] })
+
+    await db.coverLetters.bulkAdd([
+      {
+        id: crypto.randomUUID(),
+        title: "Letter 1",
+        body: "<p>Hi</p>",
+        createdAt: new Date("2026-01-01T10:00:00Z"),
+        updatedAt: new Date("2026-01-01T10:00:00Z"),
+        syncProfile: true,
+        contact: null,
+      },
+      {
+        id: crypto.randomUUID(),
+        title: "Letter 2",
+        subject: "Hello",
+        body: "<p>Yo</p>",
+        createdAt: new Date("2026-01-02T10:00:00Z"),
+        updatedAt: new Date("2026-01-02T10:00:00Z"),
+      },
+    ])
+
+    const data = await exportProfile()
+
+    expect(data.coverLetters.map((letter) => letter.title)).toEqual(["Letter 2", "Letter 1"])
+    expect(data.coverLetters[0]?.subject).toBe("Hello")
+  })
+
   it("serializes to JSON with dates as ISO strings", async () => {
     await upsertProfile({
       full_name: "John Doe",
@@ -165,10 +194,17 @@ describe("exportProfile", () => {
       updatedAt: new Date("2026-03-04T05:06:07.000Z"),
     })
 
+    const letterId = await createCoverLetter({ title: "My Letter", body: "<p>Hello</p>" })
+    await db.coverLetters.update(letterId, {
+      createdAt: new Date("2026-03-04T05:06:07.000Z"),
+      updatedAt: new Date("2026-03-04T05:06:07.000Z"),
+    })
+
     const data = await exportProfile()
     const parsed = JSON.parse(JSON.stringify(data))
 
     expect(parsed.resumes[0].createdAt).toBe("2026-03-04T05:06:07.000Z")
+    expect(parsed.coverLetters[0].createdAt).toBe("2026-03-04T05:06:07.000Z")
     expect(typeof parsed.exportedAt).toBe("string")
   })
 
@@ -280,6 +316,100 @@ describe("importProfile", () => {
     expect(restored[0]?.id).toEqual(expect.any(String))
   })
 
+  it("restores cover letters from a valid export", async () => {
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        coverLetters: [
+          {
+            id: "letter-1",
+            title: "My Letter",
+            subject: "Hello",
+            body: "<p>Dear team</p>",
+            createdAt: "2026-01-03T10:00:00.000Z",
+            updatedAt: "2026-01-04T10:00:00.000Z",
+            syncProfile: true,
+            contact: null,
+          },
+          {
+            id: "letter-2",
+            title: "Other Letter",
+            body: "<p>Hi</p>",
+            createdAt: "2026-01-05T10:00:00.000Z",
+            updatedAt: "2026-01-05T10:00:00.000Z",
+          },
+        ],
+      }),
+    )
+
+    const letters = await db.coverLetters.toArray()
+    expect(letters).toHaveLength(2)
+
+    const letter = letters.find((item) => item.id === "letter-1")
+    expect(letter?.title).toBe("My Letter")
+    expect(letter?.subject).toBe("Hello")
+    expect(letter?.body).toBe("<p>Dear team</p>")
+    expect(letter?.createdAt).toEqual(new Date("2026-01-03T10:00:00.000Z"))
+    expect(letter?.updatedAt).toEqual(new Date("2026-01-04T10:00:00.000Z"))
+    expect(letter?.contact).toBeNull()
+    expect(letter?.syncProfile).toBe(true)
+  })
+
+  it("generates ids for cover letters missing one", async () => {
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        coverLetters: [
+          {
+            title: "My Letter",
+            body: "<p>Hi</p>",
+            createdAt: "2026-01-03T10:00:00.000Z",
+            updatedAt: "2026-01-03T10:00:00.000Z",
+          },
+        ],
+      }),
+    )
+
+    const restored = await db.coverLetters.toArray()
+    expect(restored).toHaveLength(1)
+    expect(restored[0]?.id).toEqual(expect.any(String))
+  })
+
+  it("replaces existing cover letters instead of merging with them", async () => {
+    await db.coverLetters.add({
+      id: "stale-letter",
+      title: "Old Letter",
+      body: "<p>Old</p>",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        coverLetters: [
+          {
+            id: "letter-1",
+            title: "My Letter",
+            body: "<p>Hi</p>",
+            createdAt: "2026-01-03T10:00:00.000Z",
+            updatedAt: "2026-01-03T10:00:00.000Z",
+          },
+        ],
+      }),
+    )
+
+    const restored = await db.coverLetters.toArray()
+    expect(restored.map((letter) => letter.id)).toEqual(["letter-1"])
+  })
+
+  it("imports exports written before cover letters were supported", async () => {
+    // validExport predates the coverLetters field and has no such key.
+    await importProfile(JSON.stringify(validExport))
+
+    expect(await db.coverLetters.count()).toBe(0)
+  })
+
   it("rejects invalid JSON", async () => {
     await expect(importProfile("not json")).rejects.toThrow(InvalidExportFileError)
   })
@@ -333,7 +463,7 @@ describe("importProfile", () => {
     expect(restored.map((resume) => resume.id)).toEqual(["resume-1"])
   })
 
-  it("round-trips through delete: synced resumes with null contact restore cleanly", async () => {
+  it("round-trips through delete: synced resumes and cover letters restore cleanly", async () => {
     await upsertProfile({
       ...baseProfile,
       full_name: "John Doe",
@@ -343,6 +473,8 @@ describe("importProfile", () => {
     await createResume("Production Resume", [
       { type: "paragraph", title: "Summary", text: "Summary" },
     ])
+    // createCoverLetter defaults to syncProfile: true and contact: null.
+    await createCoverLetter({ title: "Production Letter", body: "<p>Hi</p>" })
 
     const exported = JSON.stringify(await exportProfile())
 
@@ -359,6 +491,12 @@ describe("importProfile", () => {
     expect(resumes.map((resume) => resume.title)).toEqual(["Production Resume"])
     expect(resumes[0]?.contact).toBeNull()
     expect(resumes[0]?.syncProfile).toBe(true)
+
+    const letters = await db.coverLetters.toArray()
+    expect(letters).toHaveLength(1)
+    expect(letters[0]?.title).toBe("Production Letter")
+    expect(letters[0]?.contact).toBeNull()
+    expect(letters[0]?.syncProfile).toBe(true)
   })
 
   it("leaves the database untouched when validation fails", async () => {

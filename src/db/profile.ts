@@ -1,8 +1,12 @@
 import { z } from "zod"
-import { db, type Profile, type Resume } from "@/db/db"
+import { db, type CoverLetter, type Profile, type Resume } from "@/db/db"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
-import { resumeSectionSchema, exportContactSchema } from "@/db/schemas"
+import {
+  coverLetterExportContactSchema,
+  resumeSectionSchema,
+  exportContactSchema,
+} from "@/db/schemas"
 import { getAllResumes } from "@/db/resume"
 
 export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> {
@@ -59,6 +63,7 @@ export interface ExportFile {
   exportedAt: string
   profile: Omit<Profile, "id">
   resumes: Resume[]
+  coverLetters: CoverLetter[]
 }
 
 export async function exportProfile(): Promise<ExportFile> {
@@ -78,12 +83,14 @@ export async function exportProfile(): Promise<ExportFile> {
   }
 
   const resumes = await getAllResumes()
+  const coverLetters = await getAllCoverLetters()
 
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
     profile: profileData,
     resumes,
+    coverLetters,
   }
 }
 
@@ -105,6 +112,24 @@ export const exportFileSchema = z.object({
         contact: exportContactSchema.nullish(),
       }),
     )
+    .default([]),
+  coverLetters: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        title: z.string(),
+        subject: z.string().nullable().optional(),
+        body: z.string(),
+        createdAt: z.iso.datetime(),
+        updatedAt: z.iso.datetime(),
+        syncProfile: z.boolean().optional(),
+        // Synced cover letters persist contact: null (the live profile is the
+        // source of truth), so null must be accepted alongside omitted.
+        contact: coverLetterExportContactSchema.nullish(),
+      }),
+    )
+    // Absent in exports written before cover letters were included; importing
+    // an older file must still work and simply restore none.
     .default([]),
 })
 
@@ -130,7 +155,7 @@ export async function importProfile(fileContent: string): Promise<void> {
     throw new InvalidExportFileError()
   }
 
-  const { profile, resumes } = result.data
+  const { profile, resumes, coverLetters } = result.data
 
   await db.transaction("rw", db.profiles, db.resumes, db.coverLetters, db.entityCache, async () => {
     await upsertProfile(profile)
@@ -148,10 +173,26 @@ export async function importProfile(fileContent: string): Promise<void> {
       }
     })
 
+    const restoredCoverLetters: CoverLetter[] = coverLetters.map((letter) => ({
+      id: letter.id ?? crypto.randomUUID(),
+      title: letter.title,
+      subject: letter.subject ?? null,
+      body: letter.body,
+      createdAt: new Date(letter.createdAt),
+      updatedAt: new Date(letter.updatedAt),
+      syncProfile: letter.syncProfile ?? true,
+      contact: letter.contact ?? null,
+    }))
+
     await db.resumes.clear()
+    await db.coverLetters.clear()
 
     if (restoredResumes.length > 0) {
       await db.resumes.bulkPut(restoredResumes)
+    }
+
+    if (restoredCoverLetters.length > 0) {
+      await db.coverLetters.bulkPut(restoredCoverLetters)
     }
   })
 }
