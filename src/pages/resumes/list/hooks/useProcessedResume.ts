@@ -47,22 +47,37 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
     }
   }, [])
 
-  const load = useCallback(() => {
-    inFlightRef.current ??= (async () => {
+  const load = useCallback<() => Promise<void> | undefined>(() => {
+    if (inFlightRef.current) {
+      return inFlightRef.current
+    }
+
+    async function fetch(): Promise<void> {
+      let isStale = false
       try {
         setError(undefined)
 
-        const { blob, processedAt } = await ensureProcessedResume(resumeRef.current)
+        const requested = resumeRef.current
+        const { blob, processedAt } = await ensureProcessedResume(requested)
 
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current)
+        // The active resume changed while the PDF was generating (e.g. an
+        // edit landed mid-flight): discard the stale result and refetch.
+        const current = resumeRef.current
+        isStale =
+          current.id !== requested.id ||
+          current.updatedAt.getTime() !== requested.updatedAt.getTime()
+
+        if (!isStale) {
+          if (urlRef.current) {
+            URL.revokeObjectURL(urlRef.current)
+          }
+
+          blobRef.current = blob
+          urlRef.current = URL.createObjectURL(blob)
+          setUrl(urlRef.current)
+          setProcessedAt(processedAt)
+          setStatus("ready")
         }
-
-        blobRef.current = blob
-        urlRef.current = URL.createObjectURL(blob)
-        setUrl(urlRef.current)
-        setProcessedAt(processedAt)
-        setStatus("ready")
       } catch (cause) {
         setStatus("error")
         setError(
@@ -70,12 +85,17 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
             ? cause
             : new ApiError("NETWORK_ERROR", "Something went wrong while preparing the resume.", []),
         )
-      } finally {
-        inFlightRef.current = undefined
       }
-    })()
 
-    return inFlightRef.current
+      inFlightRef.current = undefined
+      if (isStale) {
+        return fetch()
+      }
+    }
+
+    const promise = fetch()
+    inFlightRef.current = promise
+    return promise
   }, [])
 
   // Re-run when the resume's meaningful identity changes (e.g. after an

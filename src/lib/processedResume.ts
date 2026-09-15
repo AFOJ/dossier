@@ -1,6 +1,6 @@
 import type { Resume } from "@/db/db"
 import { db } from "@/db/db"
-import { entryToBlob, getValidProcessedResume, saveProcessedResume } from "@/db/resumeCache"
+import { entryToBlob, getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
 import { processResume } from "@/lib/api"
 import { toResumePayload } from "@/lib/resumePayload"
 import { slugify } from "@/utils"
@@ -10,14 +10,12 @@ export interface ProcessedResume {
   processedAt: Date
 }
 
-/**
- * Returns the PDF rendering of a resume: served from the IndexedDB cache
- * while the entry is fresh and newer than the resume's last update,
- * otherwise rendered by the backend and cached with a fresh timestamp.
- * Errors (ApiError included) propagate to the caller.
- */
 export async function ensureProcessedResume(resume: Resume): Promise<ProcessedResume> {
-  const cached = await getValidProcessedResume(resume.id!, resume.updatedAt)
+  const cached = await getValidProcessedEntity({
+    entityType: "resume",
+    entityId: resume.id!,
+    entityUpdatedAt: resume.updatedAt,
+  })
 
   if (cached) {
     return { blob: entryToBlob(cached), processedAt: cached.processedAt }
@@ -32,7 +30,12 @@ export async function ensureProcessedResume(resume: Resume): Promise<ProcessedRe
   }
 
   const processedAt = new Date()
-  await saveProcessedResume(resume.id!, blob, { processedAt })
+  await saveProcessedEntity({
+    entityType: "resume",
+    entityId: resume.id!,
+    blob,
+    processedAt,
+  })
 
   return { blob, processedAt }
 }

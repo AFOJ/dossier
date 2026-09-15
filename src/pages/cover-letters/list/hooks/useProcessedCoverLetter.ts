@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { CoverLetter } from "@/db/db"
 import { ApiError } from "@/lib/api"
 import { downloadBlob } from "@/lib/download"
-import { ensureProcessedCoverLetter, getProcessedCoverLetterFilename } from "@/lib/processedCoverLetter"
+import {
+  ensureProcessedCoverLetter,
+  getProcessedCoverLetterFilename,
+} from "@/lib/processedCoverLetter"
 
 export type ProcessedCoverLetterStatus = "loading" | "ready" | "error"
 
@@ -27,6 +30,7 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
   const blobRef = useRef<Blob | undefined>(undefined)
   const urlRef = useRef<string | undefined>(undefined)
   const inFlightRef = useRef<Promise<void> | undefined>(undefined)
+  const letterRef = useRef(letter)
 
   useEffect(() => {
     return () => {
@@ -36,46 +40,66 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
     }
   }, [])
 
-  const load = useCallback(() => {
-    inFlightRef.current ??= (async () => {
+  const load = useCallback<() => Promise<void> | undefined>(() => {
+    if (inFlightRef.current) {
+      return inFlightRef.current
+    }
+
+    async function fetch(): Promise<void> {
+      let isStale = false
       try {
         setError(undefined)
 
-        const letterForLoad: CoverLetter = {
-          id: letterId,
-          updatedAt: letterUpdatedAt,
-          title: letterTitle,
-        } as CoverLetter
+        const requested = letterRef.current
+        const { blob, processedAt } = await ensureProcessedCoverLetter(requested)
 
-        const { blob, processedAt } = await ensureProcessedCoverLetter(letterForLoad)
+        // The active letter changed while the PDF was generating (e.g. an
+        // edit landed mid-flight): discard the stale result and refetch.
+        const current = letterRef.current
+        isStale =
+          current.id !== requested.id ||
+          current.updatedAt.getTime() !== requested.updatedAt.getTime()
 
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current)
+        if (!isStale) {
+          if (urlRef.current) {
+            URL.revokeObjectURL(urlRef.current)
+          }
+
+          blobRef.current = blob
+          urlRef.current = URL.createObjectURL(blob)
+          setUrl(urlRef.current)
+          setProcessedAt(processedAt)
+          setStatus("ready")
         }
-
-        blobRef.current = blob
-        urlRef.current = URL.createObjectURL(blob)
-        setUrl(urlRef.current)
-        setProcessedAt(processedAt)
-        setStatus("ready")
       } catch (cause) {
         setStatus("error")
         setError(
           cause instanceof ApiError
             ? cause
-            : new ApiError("NETWORK_ERROR", "Something went wrong while preparing the cover letter.", []),
+            : new ApiError(
+                "NETWORK_ERROR",
+                "Something went wrong while preparing the cover letter.",
+                [],
+              ),
         )
-      } finally {
-        inFlightRef.current = undefined
       }
-    })()
 
-    return inFlightRef.current
-  }, [letterId, letterUpdatedAt, letterTitle])
+      inFlightRef.current = undefined
+      if (isStale) {
+        return fetch()
+      }
+    }
+
+    const promise = fetch()
+    inFlightRef.current = promise
+    return promise
+  }, [])
 
   useEffect(() => {
+    letterRef.current = letter
     void load()
-  }, [load])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, letterId, letterUpdatedAt])
 
   const download = useCallback(async () => {
     setIsDownloading(true)

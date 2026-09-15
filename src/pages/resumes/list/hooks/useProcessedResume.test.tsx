@@ -32,7 +32,7 @@ beforeEach(async () => {
   vi.clearAllMocks()
   await db.profiles.clear()
   await db.resumes.clear()
-  await db.resumeCache.clear()
+  await db.entityCache.clear()
 
   mockProcessResume.mockImplementation(() => Promise.resolve(PDF()))
 })
@@ -67,16 +67,45 @@ describe("useProcessedResume", () => {
     expect(mockProcessResume).toHaveBeenCalledTimes(1)
   }, 20_000)
 
+  it("discards an in-flight result when the resume changes and refetches", async () => {
+    const firstResume = await makeResume()
+    let release!: (blob: Blob) => void
+    const gate = new Promise<Blob>((resolve) => {
+      release = resolve
+    })
+    mockProcessResume.mockReturnValueOnce(gate)
+
+    const { result, rerender } = renderHook(
+      ({ resume }: { resume: Resume }) => useProcessedResume(resume),
+      { initialProps: { resume: firstResume } },
+    )
+
+    expect(result.current.status).toBe("loading")
+
+    const secondResume = await makeResume()
+    mockProcessResume.mockResolvedValueOnce(PDF())
+    rerender({ resume: secondResume })
+
+    release(PDF())
+
+    await waitFor(() => expect(result.current.status).toBe("ready"))
+    expect(mockProcessResume).toHaveBeenCalledTimes(2)
+    expect(mockProcessResume.mock.calls[0][0].title).toBe(firstResume.title)
+    expect(mockProcessResume.mock.calls[1][0].title).toBe(secondResume.title)
+  }, 20_000)
+
   it("refetches when the cached copy has expired", async () => {
-    const { RESUME_CACHE_TTL_MS } = await import("@/db/resumeCache")
+    const { CACHE_TTL_MS } = await import("@/db/entityCache")
     const resume = await makeResume()
 
     // Seed an already-expired cache entry.
-    await db.resumeCache.put({
-      resumeId: resume.id!,
+    await db.entityCache.put({
+      id: `resume:${resume.id!}`,
+      entityType: "resume",
+      entityId: resume.id!,
       data: await PDF().arrayBuffer(),
       contentType: "application/pdf",
-      processedAt: new Date(Date.now() - RESUME_CACHE_TTL_MS - 5_000),
+      processedAt: new Date(Date.now() - CACHE_TTL_MS - 5_000),
       expiresAt: new Date(Date.now() - 1_000),
     })
 

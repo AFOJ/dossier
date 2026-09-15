@@ -1,5 +1,5 @@
 import { db, type Resume } from "@/db/db"
-import { clearProcessedResumeCache } from "@/db/resumeCache"
+import { clearProcessedEntityCache } from "@/db/entityCache"
 import type { ResumeSection } from "@/db/types"
 import { DEFAULT_PAGE_SIZE, getPageMetadata, type PaginationInput } from "@/lib/pagination"
 
@@ -13,15 +13,15 @@ type ResumeQueryResult = {
 export async function queryResumes(
   options: { query: string } & PaginationInput,
 ): Promise<ResumeQueryResult> {
-  const q = options.query.trim().toLowerCase()
+  const query = options.query.trim().toLowerCase()
   const requestedPagination = {
     page: options.page ?? 1,
     perPage: options.perPage ?? DEFAULT_PAGE_SIZE,
   }
-  const collection = q
+  const collection = query
     ? RESUME_TABLE.orderBy("updatedAt")
         .reverse()
-        .filter((r) => r.title.toLowerCase().includes(q))
+        .filter((resume) => resume.title.toLowerCase().includes(query))
     : RESUME_TABLE.orderBy("updatedAt").reverse()
 
   return db.transaction("r", RESUME_TABLE, async () => {
@@ -79,11 +79,9 @@ export async function updateResume(
     ...changes,
     updatedAt: new Date(),
   })
-  // Any change to the resume should invalidate its PDF cache immediately.
   try {
-    await clearProcessedResumeCache(id)
+    await clearProcessedEntityCache({ entityType: "resume", entityId: id })
   } catch (error) {
-    // TODO: log this to a logging service in the future
     console.error("Failed to clear resume cache:", error)
   }
 }
@@ -91,9 +89,8 @@ export async function updateResume(
 export async function deleteResume(id: string): Promise<void> {
   await RESUME_TABLE.delete(id)
   try {
-    await clearProcessedResumeCache(id)
+    await clearProcessedEntityCache({ entityType: "resume", entityId: id })
   } catch (error) {
-    // TODO: log this to a logging service in the future
     console.error("Failed to clear resume cache:", error)
   }
 }
