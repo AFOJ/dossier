@@ -43,7 +43,6 @@ export async function queryCoverLetters(
 export interface CreateCoverLetterInput {
   title: string
   subject?: string | null
-  signoff?: string | null
   body: string
 }
 
@@ -64,7 +63,6 @@ export async function createCoverLetter(
     id,
     title: input.title,
     subject: input.subject ?? null,
-    signoff: input.signoff ?? null,
     body: input.body,
     createdAt: now,
     updatedAt: now,
@@ -86,7 +84,7 @@ export async function getAllCoverLetters(): Promise<CoverLetter[]> {
 export async function updateCoverLetter(
   id: string,
   changes: Partial<
-    Pick<CoverLetter, "title" | "subject" | "signoff" | "body" | "syncProfile" | "contact">
+    Pick<CoverLetter, "title" | "subject" | "body" | "syncProfile" | "contact">
   >,
 ): Promise<void> {
   await COVER_LETTER_TABLE.update(id, {

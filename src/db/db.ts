@@ -46,7 +46,6 @@ export interface CoverLetter {
   id?: string
   title: string
   subject?: string | null
-  signoff?: string | null
   body: string
   createdAt: Date
   updatedAt: Date

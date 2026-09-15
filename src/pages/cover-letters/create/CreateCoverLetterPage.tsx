@@ -95,18 +95,6 @@ export default function CreateCoverLetterPage() {
             </Suspense>
           </Field>
 
-          <Field
-            label="Sign-off"
-            inputId="cover-letter-signoff"
-            error={form.formState.errors.signoff?.message}
-          >
-            <Input
-              id="cover-letter-signoff"
-              placeholder="Kind regards,"
-              {...form.register("signoff")}
-            />
-          </Field>
-
           {formError && (
             <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
               {formError}

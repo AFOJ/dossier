@@ -36,7 +36,6 @@ function convertPayloadToCoverLetter(
     id: letterId,
     title: payload.title,
     subject: payload.subject ?? null,
-    signoff: payload.signoff ?? null,
     body: sanitizeCoverLetterBody(payload.body),
     createdAt: now,
     updatedAt: now,
@@ -50,7 +49,6 @@ function toCoverLetterWithDates(valid: z.infer<typeof coverLetterSchema>): Cover
   return {
     ...valid,
     subject: valid.subject ?? null,
-    signoff: valid.signoff ?? null,
     body: sanitizeCoverLetterBody(valid.body),
     createdAt: valid.createdAt ? new Date(valid.createdAt) : new Date(),
     updatedAt: valid.updatedAt ? new Date(valid.updatedAt) : new Date(),
