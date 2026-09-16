@@ -9,6 +9,7 @@ import { ListItemsEditor } from "@/pages/resumes/create/components/ListSectionFi
 import {
   getSectionErrors,
   useResumeFieldContext,
+  type ParagraphSectionErrors,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 type SectionFieldsProps = {
@@ -30,8 +31,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
 
   switch (section.type) {
     case "paragraph": {
-      const textError =
-        sectionErrors?.type === "paragraph" ? sectionErrors.text?.message : undefined
+      const textError = (sectionErrors as ParagraphSectionErrors).text?.message
 
       return (
         <Field label="Paragraph" inputId={textInputId} error={textError}>
