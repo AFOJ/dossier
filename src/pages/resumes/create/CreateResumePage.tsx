@@ -16,7 +16,7 @@ export default function CreateResumePage() {
     formError,
     addSection,
     removeSection,
-    moveSection,
+    reorderSection,
     updateSection,
     setSyncProfile,
   } = useCreateResumeForm(profile)
@@ -57,7 +57,7 @@ export default function CreateResumePage() {
           <SectionList
             control={form.control}
             updateSection={updateSection}
-            moveSection={moveSection}
+            reorderSection={reorderSection}
             removeSection={removeSection}
           />
 

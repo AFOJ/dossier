@@ -1,5 +1,6 @@
+import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useMemo, useState } from "react"
-import { useForm, useFormContext } from "react-hook-form"
+import { useForm, useFormContext, type UseFormClearErrors } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -416,9 +417,10 @@ export type SectionType = ResumeSectionData["type"]
 type SectionsApi = {
   setValue: (name: "sections", value: FormSection[], options?: object) => void
   getValues: (name: "sections") => FormSection[]
+  clearErrors: UseFormClearErrors<ResumeFormData>
 }
 
-export function createSectionMutations({ setValue, getValues }: SectionsApi) {
+export function createSectionMutations({ setValue, getValues, clearErrors }: SectionsApi) {
   const mutateSections = (mutate: (sections: FormSection[]) => FormSection[]) => {
     setValue("sections", mutate(getValues("sections")), { shouldDirty: true })
   }
@@ -429,22 +431,28 @@ export function createSectionMutations({ setValue, getValues }: SectionsApi) {
     },
     removeSection: (index: number) => {
       mutateSections((sections) => sections.filter((_, i) => i !== index))
+      clearErrors(`sections.${index}`)
     },
-    moveSection: (index: number, direction: -1 | 1) => {
+    reorderSection: (fromIndex: number, targetIndex: number) => {
       mutateSections((sections) => {
-        const target = index + direction
-        if (target < 0 || target >= sections.length) {
+        if (
+          fromIndex < 0 ||
+          fromIndex >= sections.length ||
+          targetIndex < 0 ||
+          targetIndex >= sections.length ||
+          fromIndex === targetIndex
+        ) {
           return sections
         }
 
-        const next = [...sections]
-        ;[next[index], next[target]] = [next[target], next[index]]
-        return next
+        return arrayMove(sections, fromIndex, targetIndex)
       })
     },
     updateSection: (index: number, section: ResumeSectionData) => {
       mutateSections((sections) =>
-        sections.map((current, i) => (i === index ? ({ ...section } as FormSection) : current)),
+        sections.map((current, i) =>
+          i === index ? ({ ...section, _key: current._key } as FormSection) : current,
+        ),
       )
     },
   }
@@ -543,11 +551,11 @@ export function useCreateResumeForm(profile?: Profile) {
     },
   })
 
-  const { setValue, getValues } = form
+  const { setValue, getValues, clearErrors } = form
 
-  const { addSection, removeSection, moveSection, updateSection } = useMemo(
-    () => createSectionMutations({ setValue, getValues }),
-    [setValue, getValues],
+  const { addSection, removeSection, reorderSection, updateSection } = useMemo(
+    () => createSectionMutations({ setValue, getValues, clearErrors }),
+    [setValue, getValues, clearErrors],
   )
 
   const setSyncProfile = useCallback(
@@ -611,7 +619,7 @@ export function useCreateResumeForm(profile?: Profile) {
     formError: form.formState.errors.root?.message,
     addSection,
     removeSection,
-    moveSection,
+    reorderSection,
     updateSection,
     setSyncProfile,
   }

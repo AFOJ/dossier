@@ -26,7 +26,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
     revert,
     addSection,
     removeSection,
-    moveSection,
+    reorderSection,
     updateSection,
     setSyncProfile,
   } = useEditResumeForm(resume)
@@ -65,7 +65,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
           <SectionList
             control={form.control}
             updateSection={updateSection}
-            moveSection={moveSection}
+            reorderSection={reorderSection}
             removeSection={removeSection}
           />
 

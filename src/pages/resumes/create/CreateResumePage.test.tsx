@@ -98,7 +98,7 @@ describe("CreateResumePage", () => {
 
     await addSectionViaMenu(user, "Paragraph")
 
-    const sectionTitle = screen.getByLabelText("Section title")
+    const sectionTitle = screen.getByLabelText(/^Section title/)
     await user.type(sectionTitle, "Summary")
 
     const paragraph = screen.getByRole("textbox", { name: "Summary text" })
@@ -172,7 +172,7 @@ describe("CreateResumePage", () => {
     renderPage()
 
     await addSectionViaMenu(user, "Paragraph")
-    const paragraph = screen.getByRole("textbox", { name: "Paragraph text" })
+    const paragraph = screen.getByRole("textbox", { name: "Untitled Section (Paragraph) text" })
     await user.type(paragraph, "Some text")
 
     await user.click(screen.getByRole("button", { name: "Create resume" }))
@@ -187,6 +187,25 @@ describe("CreateResumePage", () => {
         .join(","),
     })
     expect(resumeTitleError).toBeInTheDocument()
+    expect(createResume).not.toHaveBeenCalled()
+  })
+
+  it("expands a collapsed section that fails validation on submit", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+    await user.type(screen.getByRole("textbox", { name: "Untitled Section (Paragraph) text" }), "Hello")
+
+    await user.click(screen.getByRole("button", { name: "Collapse Untitled Section (Paragraph) section" }))
+    expect(screen.getByLabelText(/^Section title/)).not.toBeVisible()
+
+    await user.type(screen.getByLabelText(/^Title/), "My Resume")
+    await user.click(screen.getByRole("button", { name: "Create resume" }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Section title/)).toBeVisible()
+    })
     expect(createResume).not.toHaveBeenCalled()
   })
 })

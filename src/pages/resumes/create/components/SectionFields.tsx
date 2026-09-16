@@ -1,5 +1,6 @@
-import { memo } from "react"
+import { memo, useId } from "react"
 import { Textarea } from "@/components/ui"
+import { Field } from "@/components/ui"
 import type { ResumeSectionData } from "@/db/schemas"
 import { CompaniesEditor } from "@/pages/resumes/create/components/ExperienceSectionFields"
 import { InstitutionsEditor } from "@/pages/resumes/create/components/EducationSectionFields"
@@ -25,14 +26,17 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
 
   const sectionErrors = getSectionErrors(errors, index)
 
+  const textInputId = useId()
+
   switch (section.type) {
     case "paragraph": {
       const textError =
         sectionErrors?.type === "paragraph" ? sectionErrors.text?.message : undefined
 
       return (
-        <div className="flex flex-col gap-1">
+        <Field label="Paragraph" inputId={textInputId} error={textError}>
           <Textarea
+            id={textInputId}
             aria-label={`${label} text`}
             placeholder="A short paragraph..."
             value={section.text}
@@ -41,12 +45,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
               onChange({ ...section, type: "paragraph", text: event.target.value })
             }
           />
-          {textError && (
-            <p role="alert" className="text-sm text-red-700">
-              {textError}
-            </p>
-          )}
-        </div>
+        </Field>
       )
     }
     case "education":
