@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react"
 import { Controller, FormProvider } from "react-hook-form"
-import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
@@ -22,7 +22,7 @@ export default function CreateCoverLetterPage() {
   usePageTitle("Create Cover Letter")
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-20">
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Create Cover Letter</Heading1>
@@ -101,11 +101,11 @@ export default function CreateCoverLetterPage() {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <FormSubmitBar>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create cover letter"}
             </Button>
-          </div>
+          </FormSubmitBar>
         </form>
       </FormProvider>
     </section>

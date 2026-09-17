@@ -1,6 +1,8 @@
 import { useRouteLoaderData } from "react-router-dom"
 import { FormProvider } from "react-hook-form"
-import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import type { UseFormClearErrors } from "react-hook-form"
+import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import type { Resume } from "@/db/db"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
@@ -16,7 +18,8 @@ export default function EditResumePage() {
   return <EditResumeForm key={resume.id} resume={resume} />
 }
 
-function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
+function EditResumeForm(props: Readonly<{ resume: Resume }>) {
+  const { resume } = props
   const {
     form,
     onSubmit,
@@ -26,13 +29,14 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
     revert,
     addSection,
     removeSection,
-    moveSection,
+    reorderSection,
     updateSection,
     setSyncProfile,
   } = useEditResumeForm(resume)
+  const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-20">
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Edit resume</Heading1>
@@ -65,8 +69,9 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
           <SectionList
             control={form.control}
             updateSection={updateSection}
-            moveSection={moveSection}
+            reorderSection={reorderSection}
             removeSection={removeSection}
+            clearErrors={clearErrors}
           />
 
           <SectionAddMenu onSelect={addSection} />
@@ -77,7 +82,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <FormSubmitBar>
             {isDirty && (
               <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
                 Revert
@@ -86,7 +91,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
             <Button type="submit" disabled={!isDirty || isSubmitting}>
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
-          </div>
+          </FormSubmitBar>
         </form>
       </FormProvider>
     </section>

@@ -1,38 +1,45 @@
-import { memo } from "react"
+import { memo, useId } from "react"
 import { Textarea } from "@/components/ui"
+import { Field } from "@/components/ui"
 import type { ResumeSectionData } from "@/db/schemas"
-import { CompaniesEditor } from "@/pages/resumes/create/components/ExperienceSectionFields"
+import { ExperienceSectionFields } from "@/pages/resumes/create/components/experience"
 import { InstitutionsEditor } from "@/pages/resumes/create/components/EducationSectionFields"
 import { GroupsEditor } from "@/pages/resumes/create/components/SkillsSectionFields"
 import { ListItemsEditor } from "@/pages/resumes/create/components/ListSectionFields"
 import {
   getSectionErrors,
   useResumeFieldContext,
+  type ParagraphSectionErrors,
+  type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import type { UseFormClearErrors } from "react-hook-form"
 
 type SectionFieldsProps = {
   section: ResumeSectionData
   label: string
   index: number
   onChange: (section: ResumeSectionData) => void
+  clearErrors: UseFormClearErrors<ResumeFormData>
 }
 
 function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
-  const { section, label, index, onChange } = props
+  const { section, label, index, onChange, clearErrors } = props
   const {
     formState: { errors },
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, index)
 
+  const textInputId = useId()
+
   switch (section.type) {
     case "paragraph": {
-      const textError =
-        sectionErrors?.type === "paragraph" ? sectionErrors.text?.message : undefined
+      const textError = (sectionErrors as ParagraphSectionErrors | undefined)?.text?.message
 
       return (
-        <div className="flex flex-col gap-1">
+        <Field label="Paragraph" inputId={textInputId} error={textError}>
           <Textarea
+            id={textInputId}
             aria-label={`${label} text`}
             placeholder="A short paragraph..."
             value={section.text}
@@ -41,12 +48,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
               onChange({ ...section, type: "paragraph", text: event.target.value })
             }
           />
-          {textError && (
-            <p role="alert" className="text-sm text-red-700">
-              {textError}
-            </p>
-          )}
-        </div>
+        </Field>
       )
     }
     case "education":
@@ -55,6 +57,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           institutions={section.institutions}
           onChange={(institutions) => onChange({ ...section, type: "education", institutions })}
+          clearErrors={clearErrors}
         />
       )
     case "skills":
@@ -63,14 +66,16 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           groups={section.groups}
           onChange={(groups) => onChange({ ...section, type: "skills", groups })}
+          clearErrors={clearErrors}
         />
       )
     case "experience":
       return (
-        <CompaniesEditor
+        <ExperienceSectionFields
           sectionIndex={index}
           companies={section.companies}
           onChange={(companies) => onChange({ ...section, type: "experience", companies })}
+          clearErrors={clearErrors}
         />
       )
     case "list":
@@ -79,6 +84,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           items={section.items}
           onChange={(items) => onChange({ ...section, type: "list", items })}
+          clearErrors={clearErrors}
         />
       )
   }

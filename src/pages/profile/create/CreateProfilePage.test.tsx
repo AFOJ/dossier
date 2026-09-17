@@ -143,30 +143,16 @@ describe("CreateProfilePage", () => {
     expect(remainingLabels[1]).toHaveValue("Twitter")
   })
 
-  it("reorders social links via the up/down controls and disables controls at the boundaries", async () => {
+  it("shows a drag handle per social link row instead of up/down controls", async () => {
     const { user } = setup()
     const addButton = screen.getByRole("button", { name: /add social link/i })
     await user.click(addButton)
     await user.click(addButton)
 
-    const labels = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
-    await user.type(labels[0], "First")
-    await user.type(labels[1], "Second")
-
-    // first row's "up" is disabled, last row's "down" is disabled
-    expect(screen.getByRole("button", { name: "Move link 1 up" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Move link 2 down" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Move link 1 down" })).toBeEnabled()
-
-    await user.click(screen.getByRole("button", { name: "Move link 1 down" }))
-
-    const reordered = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
-    expect(reordered[0]).toHaveValue("Second")
-    expect(reordered[1]).toHaveValue("First")
-
-    // boundary state should now be flipped for row 1
-    expect(screen.getByRole("button", { name: "Move link 1 up" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Move link 2 down" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Reorder link 1" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Reorder link 2" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Move link 1 up" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Move link 1 down" })).not.toBeInTheDocument()
   })
 
   it("disables the submit button while the save is in flight and re-enables it after", async () => {

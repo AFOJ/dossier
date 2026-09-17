@@ -71,11 +71,11 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     }
   })
 
-  const { setValue, getValues } = form
+  const { setValue, getValues, clearErrors } = form
 
-  const { addSection, removeSection, moveSection, updateSection } = useMemo(
-    () => createSectionMutations({ setValue, getValues }),
-    [setValue, getValues],
+  const { addSection, removeSection, reorderSection, updateSection } = useMemo(
+    () => createSectionMutations({ setValue, getValues, clearErrors }),
+    [setValue, getValues, clearErrors],
   )
 
   const setSyncProfile = useCallback(
@@ -104,7 +104,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     onSubmit,
     addSection,
     removeSection,
-    moveSection,
+    reorderSection,
     updateSection,
     setSyncProfile,
     formError: form.formState.errors.root?.message,

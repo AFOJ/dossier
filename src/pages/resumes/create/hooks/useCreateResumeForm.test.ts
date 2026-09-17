@@ -77,16 +77,38 @@ describe("useCreateResumeForm", () => {
     })
 
     act(() => {
-      result.current.moveSection(2, -1)
+      result.current.reorderSection(2, 1)
     })
 
     expect(getSections(result).map((s) => s.type)).toEqual(["paragraph", "education", "skills"])
 
     act(() => {
+      result.current.reorderSection(0, 2)
+    })
+
+    expect(getSections(result).map((s) => s.type)).toEqual(["education", "skills", "paragraph"])
+
+    act(() => {
       result.current.removeSection(0)
     })
 
-    expect(getSections(result).map((s) => s.type)).toEqual(["education", "skills"])
+    expect(getSections(result).map((s) => s.type)).toEqual(["skills", "paragraph"])
+  })
+
+  it("no-ops an out-of-bounds or no-op reorder", () => {
+    const { result } = renderHook(() => useCreateResumeForm())
+
+    act(() => {
+      result.current.addSection("paragraph")
+      result.current.addSection("skills")
+    })
+
+    act(() => {
+      result.current.reorderSection(0, 5)
+      result.current.reorderSection(1, 1)
+    })
+
+    expect(getSections(result).map((s) => s.type)).toEqual(["paragraph", "skills"])
   })
 
   it("updates a section in place preserving position", () => {
