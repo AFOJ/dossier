@@ -11,6 +11,7 @@ import {
   type DragEndEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core"
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -130,6 +131,7 @@ export function SectionList(props: Readonly<SectionListProps>) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       onDragEnd={handleDragEnd}
       accessibility={{
         announcements: {

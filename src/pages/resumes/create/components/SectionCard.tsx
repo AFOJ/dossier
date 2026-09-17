@@ -46,7 +46,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
         hasErrors && "border-red-300",
-        isDragging && "opacity-50 shadow-md ring-1 ring-gray-300",
+        isDragging && "relative z-10 opacity-50 shadow-md ring-1 ring-gray-300",
       )}
     >
       <div className="flex items-center gap-2 p-4 pb-3">

@@ -10,6 +10,7 @@ import {
   type DragEndEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core"
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -61,6 +62,7 @@ export function SocialLinksFields() {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         onDragEnd={handleDragEnd}
         accessibility={{
           announcements: {
@@ -129,7 +131,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("flex items-center gap-2", isDragging && "opacity-50")}
+      className={cn("flex items-center gap-2", isDragging && "relative z-10 opacity-50")}
     >
       <button
         type="button"

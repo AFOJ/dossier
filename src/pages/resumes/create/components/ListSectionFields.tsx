@@ -12,6 +12,7 @@ import {
   type DragEndEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core"
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -75,7 +76,7 @@ function SortableListItemCard(props: Readonly<SortableListItemCardProps>) {
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
         hasErrors && "border-red-300",
-        isDragging && "opacity-50 shadow-md ring-1 ring-gray-300",
+        isDragging && "relative z-10 opacity-50 shadow-md ring-1 ring-gray-300",
       )}
     >
       <div className="flex items-center gap-2 p-3 pb-2">
@@ -267,6 +268,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       onDragEnd={handleDragEnd}
       accessibility={{
         announcements: {
