@@ -24,6 +24,7 @@ import {
   useResumeFieldContext,
   itemKey,
   withKey,
+  type ListSectionErrors,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -134,8 +135,8 @@ function ListItemRowImpl(props: Readonly<ListItemRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const itemErrors = sectionErrors?.type === "list" ? sectionErrors.items?.[index] : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as ListSectionErrors | undefined
+  const itemErrors = sectionErrors?.items?.[index]
   const hasErrors = itemErrors !== undefined
 
   const label = item.title?.trim() || "Untitled Item"
@@ -231,8 +232,8 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError = sectionErrors?.type === "list" ? sectionErrors.items?.message : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as ListSectionErrors | undefined
+  const sectionError = sectionErrors?.items?.message
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),

@@ -24,6 +24,7 @@ import {
   useResumeFieldContext,
   itemKey,
   withKey,
+  type EducationSectionErrors,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -134,9 +135,8 @@ function InstitutionRowImpl(props: Readonly<InstitutionRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const institutionErrors =
-    sectionErrors?.type === "education" ? sectionErrors.institutions?.[index] : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as EducationSectionErrors | undefined
+  const institutionErrors = sectionErrors?.institutions?.[index]
   const hasErrors = institutionErrors !== undefined
 
   const label = institution.name?.trim() || "Untitled Institution"
@@ -261,9 +261,8 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError =
-    sectionErrors?.type === "education" ? sectionErrors.institutions?.message : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as EducationSectionErrors | undefined
+  const sectionError = sectionErrors?.institutions?.message
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),

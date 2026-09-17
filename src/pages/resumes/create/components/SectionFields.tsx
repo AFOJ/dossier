@@ -2,7 +2,7 @@ import { memo, useId } from "react"
 import { Textarea } from "@/components/ui"
 import { Field } from "@/components/ui"
 import type { ResumeSectionData } from "@/db/schemas"
-import { CompaniesEditor } from "@/pages/resumes/create/components/ExperienceSectionFields"
+import { ExperienceSectionFields } from "@/pages/resumes/create/components/experience"
 import { InstitutionsEditor } from "@/pages/resumes/create/components/EducationSectionFields"
 import { GroupsEditor } from "@/pages/resumes/create/components/SkillsSectionFields"
 import { ListItemsEditor } from "@/pages/resumes/create/components/ListSectionFields"
@@ -71,10 +71,11 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
       )
     case "experience":
       return (
-        <CompaniesEditor
+        <ExperienceSectionFields
           sectionIndex={index}
           companies={section.companies}
           onChange={(companies) => onChange({ ...section, type: "experience", companies })}
+          clearErrors={clearErrors}
         />
       )
     case "list":

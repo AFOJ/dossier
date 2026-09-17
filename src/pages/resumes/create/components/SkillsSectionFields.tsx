@@ -23,6 +23,7 @@ import {
   useResumeFieldContext,
   itemKey,
   withKey,
+  type SkillsSectionErrors,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -135,8 +136,8 @@ function GroupRowImpl(props: Readonly<GroupRowProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const groupErrors = sectionErrors?.type === "skills" ? sectionErrors.groups?.[index] : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as SkillsSectionErrors | undefined
+  const groupErrors = sectionErrors?.groups?.[index]
   const hasErrors = groupErrors !== undefined
 
   const label = group.title?.trim() || `Untitled Group`
@@ -195,8 +196,8 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
     formState: { errors },
   } = useResumeFieldContext()
 
-  const sectionErrors = getSectionErrors(errors, sectionIndex)
-  const sectionError = sectionErrors?.type === "skills" ? sectionErrors.groups?.message : undefined
+  const sectionErrors = getSectionErrors(errors, sectionIndex) as SkillsSectionErrors | undefined
+  const sectionError = sectionErrors?.groups?.message
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
