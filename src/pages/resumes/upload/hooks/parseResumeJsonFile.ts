@@ -69,6 +69,11 @@ function firstValidationMessage(error: z.ZodError): string {
   return "Invalid resume data."
 }
 
+function looksLikeCoverLetterExport(data: object): boolean {
+  const record = data as Record<string, unknown>
+  return typeof record.body === "string" && !("sections" in record)
+}
+
 /**
  * Parses resume JSON from raw text (file contents or ZIP entry).
  * Returns a discriminated result so batch imports can report per-file
@@ -86,6 +91,14 @@ export function parseResumeJsonText(text: string, fileName: string): ParseResume
   if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
     console.error("[parseResumeJsonText] Root is not an object", { fileName })
     return { success: false, error: "File does not contain a resume object." }
+  }
+
+  if (looksLikeCoverLetterExport(parsedData)) {
+    console.error("[parseResumeJsonText] Cover letter file uploaded as resume", { fileName })
+    return {
+      success: false,
+      error: "This looks like a cover letter export. Import it on the Cover Letters page instead.",
+    }
   }
 
   const hasId = "id" in parsedData && typeof (parsedData as Record<string, unknown>).id === "string"
