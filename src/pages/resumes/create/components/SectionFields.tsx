@@ -57,6 +57,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           institutions={section.institutions}
           onChange={(institutions) => onChange({ ...section, type: "education", institutions })}
+          clearErrors={clearErrors}
         />
       )
     case "skills":
