@@ -7,6 +7,7 @@ export interface CoverLetterExportPayload {
   id: CoverLetter["id"]
   title: string
   subject: CoverLetter["subject"]
+  date: CoverLetter["date"]
   body: string
   createdAt: string
   updatedAt: string
@@ -19,6 +20,7 @@ export function toCoverLetterExportPayload(letter: CoverLetter): CoverLetterExpo
     id: letter.id,
     title: letter.title.trim(),
     subject: letter.subject ?? null,
+    date: letter.date ?? null,
     body: letter.body,
     createdAt: letter.createdAt.toISOString(),
     updatedAt: letter.updatedAt.toISOString(),

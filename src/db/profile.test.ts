@@ -325,6 +325,7 @@ describe("importProfile", () => {
             id: "letter-1",
             title: "My Letter",
             subject: "Hello",
+            date: "2026-09-17",
             body: "<p>Dear team</p>",
             createdAt: "2026-01-03T10:00:00.000Z",
             updatedAt: "2026-01-04T10:00:00.000Z",
@@ -348,11 +349,15 @@ describe("importProfile", () => {
     const letter = letters.find((item) => item.id === "letter-1")
     expect(letter?.title).toBe("My Letter")
     expect(letter?.subject).toBe("Hello")
+    expect(letter?.date).toBe("2026-09-17")
     expect(letter?.body).toBe("<p>Dear team</p>")
     expect(letter?.createdAt).toEqual(new Date("2026-01-03T10:00:00.000Z"))
     expect(letter?.updatedAt).toEqual(new Date("2026-01-04T10:00:00.000Z"))
     expect(letter?.contact).toBeNull()
     expect(letter?.syncProfile).toBe(true)
+
+    const dateless = letters.find((item) => item.id === "letter-2")
+    expect(dateless?.date).toBeNull()
   })
 
   it("generates ids for cover letters missing one", async () => {

@@ -7,11 +7,13 @@ import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
 import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
+import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
 
 export const coverLetterFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
     subject: z.string().max(160, "Subject must be 160 characters or less").optional(),
+    date: z.string().optional(),
     body: z.string().min(1, "Body is required"),
     syncProfile: z.boolean(),
     fullName: z.string().optional(),
@@ -26,6 +28,14 @@ export const coverLetterFormSchema = z
         code: "custom",
         path: ["body"],
         message: "Body cannot be empty",
+      })
+    }
+
+    if ((data.date ?? "").trim() !== "" && !isValidCoverLetterDate(data.date ?? "")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["date"],
+        message: "Invalid date",
       })
     }
 
@@ -83,6 +93,7 @@ export function useCreateCoverLetterForm(profile?: Profile) {
     defaultValues: {
       title: "",
       subject: "",
+      date: "",
       body: "",
       syncProfile: true,
       ...(profile ? profileToContactValues(profile) : emptyContactValues()),
@@ -127,6 +138,7 @@ export function useCreateCoverLetterForm(profile?: Profile) {
         {
           title: data.title,
           subject: data.subject?.trim() ? data.subject.trim() : null,
+          date: data.date?.trim() ? data.date.trim() : null,
           body: sanitizeCoverLetterBody(data.body),
         },
         {

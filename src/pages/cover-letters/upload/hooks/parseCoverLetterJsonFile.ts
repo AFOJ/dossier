@@ -36,6 +36,7 @@ function convertPayloadToCoverLetter(
     id: letterId,
     title: payload.title,
     subject: payload.subject ?? null,
+    date: payload.date ?? null,
     body: sanitizeCoverLetterBody(payload.body),
     createdAt: now,
     updatedAt: now,

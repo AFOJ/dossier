@@ -165,6 +165,7 @@ export const coverLetterSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),
   subject: z.string().max(160, "Subject must be 160 characters or less").optional().nullable(),
+  date: z.string().optional().nullable(),
   body: z.string().min(1, "Body is required"),
   createdAt: z.iso.datetime().optional(),
   updatedAt: z.iso.datetime().optional(),
@@ -178,6 +179,7 @@ export const coverLetterPayloadSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),
   subject: z.string().max(160).optional().nullable(),
+  date: z.string().optional().nullable(),
   contact: contactSchema.nullable().optional(),
   body: z.string().min(1, "Body is required"),
 })
