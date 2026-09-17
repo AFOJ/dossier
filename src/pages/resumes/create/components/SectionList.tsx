@@ -1,5 +1,6 @@
 import { memo, useState } from "react"
 import { useWatch, type Control } from "react-hook-form"
+import type { UseFormClearErrors } from "react-hook-form"
 import {
   DndContext,
   KeyboardSensor,
@@ -32,10 +33,11 @@ type SectionRowProps = {
   index: number
   updateSection: (index: number, section: ResumeSectionData) => void
   removeSection: (index: number) => void
+  clearErrors: UseFormClearErrors<ResumeFormData>
 }
 
 function SectionRowImpl(props: Readonly<SectionRowProps>) {
-  const { section, index, updateSection, removeSection } = props
+  const { section, index, updateSection, removeSection, clearErrors } = props
 
   const {
     formState: { errors },
@@ -73,6 +75,7 @@ function SectionRowImpl(props: Readonly<SectionRowProps>) {
         label={label}
         index={index}
         onChange={(next) => updateSection(index, next)}
+        clearErrors={clearErrors}
       />
     </SectionCard>
   )
@@ -85,10 +88,11 @@ type SectionListProps = {
   updateSection: (index: number, section: ResumeSectionData) => void
   reorderSection: (fromIndex: number, targetIndex: number) => void
   removeSection: (index: number) => void
+  clearErrors: UseFormClearErrors<ResumeFormData>
 }
 
 export function SectionList(props: Readonly<SectionListProps>) {
-  const { control, updateSection, reorderSection, removeSection } = props
+  const { control, updateSection, reorderSection, removeSection, clearErrors } = props
 
   const formSections = useWatch({ control, name: "sections" })
   const sections = (formSections ?? []) as FormSection[]
@@ -153,6 +157,7 @@ export function SectionList(props: Readonly<SectionListProps>) {
               index={index}
               updateSection={updateSection}
               removeSection={removeSection}
+              clearErrors={clearErrors}
             />
           ))}
 

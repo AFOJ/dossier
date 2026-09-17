@@ -1,5 +1,7 @@
 import { useRouteLoaderData } from "react-router-dom"
 import { FormProvider } from "react-hook-form"
+import type { UseFormClearErrors } from "react-hook-form"
+import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import type { Resume } from "@/db/db"
@@ -16,7 +18,8 @@ export default function EditResumePage() {
   return <EditResumeForm key={resume.id} resume={resume} />
 }
 
-function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
+function EditResumeForm(props: Readonly<{ resume: Resume }>) {
+  const { resume } = props
   const {
     form,
     onSubmit,
@@ -30,6 +33,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
     updateSection,
     setSyncProfile,
   } = useEditResumeForm(resume)
+  const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   return (
     <section className="flex flex-col gap-6">
@@ -67,6 +71,7 @@ function EditResumeForm({ resume }: Readonly<{ resume: Resume }>) {
             updateSection={updateSection}
             reorderSection={reorderSection}
             removeSection={removeSection}
+            clearErrors={clearErrors}
           />
 
           <SectionAddMenu onSelect={addSection} />

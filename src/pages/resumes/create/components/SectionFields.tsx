@@ -9,18 +9,20 @@ import { ListItemsEditor } from "@/pages/resumes/create/components/ListSectionFi
 import {
   getSectionErrors,
   useResumeFieldContext,
-  type ParagraphSectionErrors,
+  type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import type { UseFormClearErrors } from "react-hook-form"
 
 type SectionFieldsProps = {
   section: ResumeSectionData
   label: string
   index: number
   onChange: (section: ResumeSectionData) => void
+  clearErrors: UseFormClearErrors<ResumeFormData>
 }
 
 function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
-  const { section, label, index, onChange } = props
+  const { section, label, index, onChange, clearErrors } = props
   const {
     formState: { errors },
   } = useResumeFieldContext()
@@ -31,7 +33,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
 
   switch (section.type) {
     case "paragraph": {
-      const textError = (sectionErrors as ParagraphSectionErrors).text?.message
+      const textError = sectionErrors?.type === "paragraph" ? sectionErrors.text?.message : undefined
 
       return (
         <Field label="Paragraph" inputId={textInputId} error={textError}>
@@ -62,6 +64,7 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           groups={section.groups}
           onChange={(groups) => onChange({ ...section, type: "skills", groups })}
+          clearErrors={clearErrors}
         />
       )
     case "experience":

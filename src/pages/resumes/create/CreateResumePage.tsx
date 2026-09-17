@@ -1,11 +1,15 @@
 import { FormProvider } from "react-hook-form"
+import type { UseFormClearErrors } from "react-hook-form"
 import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
 import { SectionList } from "@/pages/resumes/create/components/SectionList"
-import { useCreateResumeForm } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import {
+  useCreateResumeForm,
+  type ResumeFormData,
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 export default function CreateResumePage() {
   const { profile } = useProtectedRouteData()
@@ -20,6 +24,7 @@ export default function CreateResumePage() {
     updateSection,
     setSyncProfile,
   } = useCreateResumeForm(profile)
+  const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   usePageTitle("Create Resume")
 
@@ -59,6 +64,7 @@ export default function CreateResumePage() {
             updateSection={updateSection}
             reorderSection={reorderSection}
             removeSection={removeSection}
+            clearErrors={clearErrors}
           />
 
           <SectionAddMenu onSelect={addSection} />
