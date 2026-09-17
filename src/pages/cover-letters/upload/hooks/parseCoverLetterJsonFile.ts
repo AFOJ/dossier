@@ -65,6 +65,11 @@ function firstValidationMessage(error: z.ZodError): string {
   return "Invalid cover letter data."
 }
 
+function looksLikeResumeExport(data: object): boolean {
+  const record = data as Record<string, unknown>
+  return Array.isArray(record.sections) && typeof record.body !== "string"
+}
+
 export function parseCoverLetterJsonText(text: string, fileName: string): ParseCoverLetterResult {
   let parsedData: unknown
   try {
@@ -77,6 +82,14 @@ export function parseCoverLetterJsonText(text: string, fileName: string): ParseC
   if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
     console.error("[parseCoverLetterJsonText] Root is not an object", { fileName })
     return { success: false, error: "File does not contain a cover letter object." }
+  }
+
+  if (looksLikeResumeExport(parsedData)) {
+    console.error("[parseCoverLetterJsonText] Resume file uploaded as cover letter", { fileName })
+    return {
+      success: false,
+      error: "This looks like a resume export. Import it on the Resumes page instead.",
+    }
   }
 
   const hasId = "id" in parsedData && typeof (parsedData as Record<string, unknown>).id === "string"

@@ -56,4 +56,24 @@ describe("parseResumeJsonText", () => {
       expect(result.error).toContain("Title is required")
     }
   })
+
+  it("points cover letter exports to the Cover Letters page", () => {
+    const coverLetterExport = {
+      id: "fd7d755a-1f6e-4982-9f8b-e93bbe8d5d29",
+      title: "Frontend Engineer - PayZeep",
+      subject: null,
+      body: "<p>Good day,</p>",
+      syncProfile: false,
+      contact: { full_name: "OJ Abba" },
+    }
+    const result = parseResumeJsonText(
+      JSON.stringify(coverLetterExport),
+      "dossier-cover-letter-export.json",
+    )
+
+    expect(result).toEqual({
+      success: false,
+      error: "This looks like a cover letter export. Import it on the Cover Letters page instead.",
+    })
+  })
 })
