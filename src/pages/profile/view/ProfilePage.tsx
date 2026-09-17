@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { FormProvider } from "react-hook-form"
-import { Button, Divider, Heading1, Subheading } from "@/components/ui"
+import { Button, Divider, FormSubmitBar, Heading1, Subheading } from "@/components/ui"
 import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { exportProfile } from "@/db/profile"
@@ -41,22 +41,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-20">
       <header>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-col gap-1">
-            <Heading1>Profile</Heading1>
-            <Subheading>This information is reused across all your career documents.</Subheading>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button type="button" intent="secondary" onClick={handleExport} disabled={isExporting}>
-              {isExporting ? "Exporting..." : "Export data"}
-            </Button>
-            <Button type="button" onClick={() => deleteModal.open(undefined)}>
-              Delete
-            </Button>
-          </div>
+        <div className="flex flex-col gap-1">
+          <Heading1>Profile</Heading1>
+          <Subheading>This information is reused across all your career documents.</Subheading>
         </div>
       </header>
 
@@ -73,16 +62,31 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
-            {isDirty && (
-              <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
-                Revert
+          <FormSubmitBar innerClassName="justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                intent="secondary"
+                onClick={handleExport}
+                disabled={isExporting}
+              >
+                {isExporting ? "Exporting..." : "Export data"}
               </Button>
-            )}
-            <Button type="submit" disabled={!isDirty || isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
+              <Button type="button" onClick={() => deleteModal.open(undefined)}>
+                Delete
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              {isDirty && (
+                <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
+                  Revert
+                </Button>
+              )}
+              <Button type="submit" disabled={!isDirty || isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save changes"}
+              </Button>
+            </div>
+          </FormSubmitBar>
         </form>
       </FormProvider>
     </section>

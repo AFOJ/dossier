@@ -1,6 +1,6 @@
 import { FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
-import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
@@ -29,7 +29,7 @@ export default function CreateResumePage() {
   usePageTitle("Create Resume")
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-20">
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Create Resume</Heading1>
@@ -75,11 +75,11 @@ export default function CreateResumePage() {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <FormSubmitBar>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create resume"}
             </Button>
-          </div>
+          </FormSubmitBar>
         </form>
       </FormProvider>
     </section>

@@ -1,7 +1,7 @@
 import { Suspense, lazy } from "react"
 import { useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
-import { Button, Divider, Field, Heading1, Input, Subheading } from "@/components/ui"
+import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import type { CoverLetter } from "@/db/db"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
@@ -28,7 +28,7 @@ function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLette
     useEditCoverLetterForm(coverLetter)
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-20">
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Edit cover letter</Heading1>
@@ -107,7 +107,7 @@ function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLette
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <FormSubmitBar>
             {isDirty && (
               <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
                 Revert
@@ -116,7 +116,7 @@ function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLette
             <Button type="submit" disabled={!isDirty || isSubmitting}>
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
-          </div>
+          </FormSubmitBar>
         </form>
       </FormProvider>
     </section>
