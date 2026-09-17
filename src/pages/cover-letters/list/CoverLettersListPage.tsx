@@ -51,6 +51,7 @@ export default function CoverLettersListPage() {
         {
           title: `Copy of ${letter.title}`,
           subject: letter.subject,
+          date: letter.date,
           body: letter.body,
         },
         {

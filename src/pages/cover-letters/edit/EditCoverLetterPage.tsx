@@ -71,6 +71,15 @@ function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLette
           </Field>
 
           <Field
+            label="Date"
+            inputId="cover-letter-date"
+            description="Leave empty to omit the date."
+            error={form.formState.errors.date?.message}
+          >
+            <Input id="cover-letter-date" type="date" {...form.register("date")} />
+          </Field>
+
+          <Field
             label="Body"
             inputId="cover-letter-body"
             required

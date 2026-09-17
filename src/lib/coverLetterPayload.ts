@@ -1,5 +1,6 @@
 import { getProfile } from "@/db/profile"
 import type { CoverLetter } from "@/db/db"
+import { formatCoverLetterDate } from "@/lib/coverLetterDate"
 
 export interface CoverLetterPayloadLink {
   label: string
@@ -17,6 +18,7 @@ export interface CoverLetterPayloadContact {
 export interface CoverLetterPayload {
   title: string
   subject?: string
+  date?: string
   body: string
   contact?: CoverLetterPayloadContact
 }
@@ -25,12 +27,19 @@ export async function toCoverLetterPayload(letter: CoverLetter): Promise<CoverLe
   const contact =
     letter.syncProfile === false ? letter.contact : ((await getProfile()) ?? letter.contact)
 
-  return {
+  const payload: CoverLetterPayload = {
     title: letter.title.trim(),
     subject: letter.subject ?? undefined,
     body: letter.body,
     contact: toContactPayload(contact),
   }
+
+  const date = formatCoverLetterDate(letter.date)
+  if (date) {
+    payload.date = date
+  }
+
+  return payload
 }
 
 function toContactPayload(contact: CoverLetter["contact"]): CoverLetterPayloadContact | undefined {

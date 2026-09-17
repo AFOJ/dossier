@@ -58,6 +58,7 @@ export default function UploadCoverLetterPage() {
       {
         title: incoming.title,
         subject: incoming.subject,
+        date: incoming.date,
         body: incoming.body,
       },
       {
@@ -77,6 +78,7 @@ export default function UploadCoverLetterPage() {
       await updateCoverLetter(existingId, {
         title: incoming.title,
         subject: incoming.subject,
+        date: incoming.date,
         body: incoming.body,
         syncProfile: incoming.syncProfile,
         contact: incoming.contact,
@@ -86,6 +88,7 @@ export default function UploadCoverLetterPage() {
         {
           title: `Copy of ${incoming.title}`,
           subject: incoming.subject,
+          date: incoming.date,
           body: incoming.body,
         },
         {
