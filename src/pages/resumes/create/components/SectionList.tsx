@@ -28,6 +28,7 @@ import {
   type FormSection,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 
 type SectionRowProps = {
   section: FormSection
@@ -98,6 +99,8 @@ export function SectionList(props: Readonly<SectionListProps>) {
   const formSections = useWatch({ control, name: "sections" })
   const sections = (formSections ?? []) as FormSection[]
 
+  const containerRef = useFocusLastRow(sections.length)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -151,7 +154,7 @@ export function SectionList(props: Readonly<SectionListProps>) {
         items={sections.map((section, i) => itemKey(section, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-4">
+        <div ref={containerRef} className="flex flex-col gap-4">
           {sections.map((section, index) => (
             <SectionRow
               key={itemKey(section, index)}

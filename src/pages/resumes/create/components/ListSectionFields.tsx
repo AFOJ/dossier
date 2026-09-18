@@ -32,6 +32,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { DragDropHorizontalIcon, ArrowDownIcon, Trash } from "@hugeicons/core-free-icons"
 import { useState, memo } from "react"
 import { CSS } from "@dnd-kit/utilities"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 import { cn } from "@/utils"
 
 type ListItemRowProps = {
@@ -72,6 +73,7 @@ function SortableListItemCard(props: Readonly<SortableListItemCardProps>) {
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
@@ -236,6 +238,8 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
   const sectionErrors = getSectionErrors(errors, sectionIndex) as ListSectionErrors | undefined
   const sectionError = sectionErrors?.items?.message
 
+  const containerRef = useFocusLastRow(items.length)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -288,7 +292,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
         items={items.map((item, i) => itemKey(item, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {sectionError && (
             <p role="alert" className="text-sm text-red-700">
               {sectionError}
@@ -314,9 +318,10 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
 
           <AddItemButton
             label="Add item"
-            onAdd={() =>
-              onChange([...items, withKey({ title: "", url: "", description: "", date: "" })])
-            }
+            onAdd={() => {
+              const item = withKey({ title: "", url: "", description: "", date: "" })
+              onChange([...items, item])
+            }}
           />
         </div>
       </SortableContext>

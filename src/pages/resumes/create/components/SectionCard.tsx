@@ -42,6 +42,7 @@ export function SectionCard(props: Readonly<SectionCardProps>) {
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",

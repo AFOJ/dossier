@@ -32,6 +32,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { DragDropHorizontalIcon, ArrowDownIcon, Trash } from "@hugeicons/core-free-icons"
 import { useState, memo } from "react"
 import { CSS } from "@dnd-kit/utilities"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 import { cn } from "@/utils"
 
 type SortableInstitutionCardProps = {
@@ -63,6 +64,7 @@ function SortableInstitutionCard(props: Readonly<SortableInstitutionCardProps>) 
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
@@ -265,6 +267,8 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
   const sectionErrors = getSectionErrors(errors, sectionIndex) as EducationSectionErrors | undefined
   const sectionError = sectionErrors?.institutions?.message
 
+  const containerRef = useFocusLastRow(institutions.length)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -315,7 +319,7 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
         items={institutions.map((inst, i) => itemKey(inst, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {sectionError && (
             <p role="alert" className="text-sm text-red-700">
               {sectionError}
@@ -341,18 +345,16 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
 
           <AddItemButton
             label="Add school"
-            onAdd={() =>
-              onChange([
-                ...institutions,
-                withKey({
-                  name: "",
-                  degree: "",
-                  start_date: "",
-                  end_date: "",
-                  location: "",
-                }),
-              ])
-            }
+            onAdd={() => {
+              const institution = withKey({
+                name: "",
+                degree: "",
+                start_date: "",
+                end_date: "",
+                location: "",
+              })
+              onChange([...institutions, institution])
+            }}
           />
         </div>
       </SortableContext>

@@ -155,6 +155,15 @@ describe("CreateProfilePage", () => {
     expect(screen.queryByRole("button", { name: "Move link 1 down" })).not.toBeInTheDocument()
   })
 
+  it("focuses the label input when a social link is added", async () => {
+    const { user } = setup()
+
+    await user.click(screen.getByRole("button", { name: /add social link/i }))
+
+    const labels = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
+    expect(labels[labels.length - 1]).toHaveFocus()
+  })
+
   it("disables the submit button while the save is in flight and re-enables it after", async () => {
     let resolvePromise!: (value: number) => void
     vi.mocked(upsertProfile).mockImplementation(

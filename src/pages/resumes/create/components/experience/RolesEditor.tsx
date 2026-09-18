@@ -29,6 +29,7 @@ import {
 import { RoleFields } from "@/pages/resumes/create/components/experience/RoleFields"
 import { SortableRoleCard } from "@/pages/resumes/create/components/experience/SortableRoleCard"
 import { BulletsEditor } from "@/pages/resumes/create/components/experience/BulletsEditor"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 
 type RolesEditorProps = {
   sectionIndex: number
@@ -49,6 +50,8 @@ export function RolesEditor(props: Readonly<RolesEditorProps>) {
     ExperienceSectionErrors | undefined
   const companyErrors = sectionErrors?.companies?.[companyIndex]
   const rolesError = companyErrors?.roles?.message
+
+  const containerRef = useFocusLastRow(roles.length)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -100,7 +103,7 @@ export function RolesEditor(props: Readonly<RolesEditorProps>) {
         items={roles.map((role, i) => itemKey(role, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {rolesError && (
             <p role="alert" className="text-sm text-red-700">
               {rolesError}
@@ -156,19 +159,17 @@ export function RolesEditor(props: Readonly<RolesEditorProps>) {
 
           <AddItemButton
             label="Add role"
-            onAdd={() =>
-              onChange([
-                ...roles,
-                withKey({
-                  job_title: "",
-                  employment_type: undefined,
-                  location: undefined,
-                  start_date: undefined,
-                  end_date: "",
-                  bullets: [],
-                }),
-              ])
-            }
+            onAdd={() => {
+              const role = withKey({
+                job_title: "",
+                employment_type: undefined,
+                location: undefined,
+                start_date: undefined,
+                end_date: "",
+                bullets: [],
+              })
+              onChange([...roles, role])
+            }}
           />
         </div>
       </SortableContext>

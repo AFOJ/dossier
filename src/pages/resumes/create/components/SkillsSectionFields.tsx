@@ -32,6 +32,7 @@ import { DragDropHorizontalIcon, ArrowDownIcon, Trash } from "@hugeicons/core-fr
 import { useState, memo } from "react"
 import { CSS } from "@dnd-kit/utilities"
 import { useSortable } from "@dnd-kit/sortable"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 import { cn } from "@/utils"
 
 type GroupItem = SkillGroup
@@ -65,6 +66,7 @@ function SortableGroupCard(props: Readonly<SortableGroupCardProps>) {
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
@@ -200,6 +202,8 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
   const sectionErrors = getSectionErrors(errors, sectionIndex) as SkillsSectionErrors | undefined
   const sectionError = sectionErrors?.groups?.message
 
+  const containerRef = useFocusLastRow(groups.length)
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -250,7 +254,7 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
         items={groups.map((group, i) => itemKey(group, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {sectionError && (
             <p role="alert" className="text-sm text-red-700">
               {sectionError}
@@ -275,7 +279,10 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
 
           <AddItemButton
             label="Add skill group"
-            onAdd={() => onChange([...groups, withKey({ title: "", items: [] })])}
+            onAdd={() => {
+              const group = withKey({ title: "", items: [] })
+              onChange([...groups, group])
+            }}
           />
         </div>
       </SortableContext>

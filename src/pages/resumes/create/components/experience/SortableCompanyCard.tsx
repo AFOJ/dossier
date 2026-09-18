@@ -35,6 +35,7 @@ export function SortableCompanyCard(props: Readonly<SortableCompanyCardProps>) {
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex flex-col rounded-[10px] border border-gray-200 bg-white",
