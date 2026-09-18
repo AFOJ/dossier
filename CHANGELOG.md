@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/AFOJ/dossier/compare/dossier-v1.4.0...dossier-v1.5.0) (2026-09-18)
+
+
+### Features
+
+* add landing page ([#29](https://github.com/AFOJ/dossier/issues/29)) ([6fb7876](https://github.com/AFOJ/dossier/commit/6fb7876916faf39934f68e2b81f8c0397b067928))
+* add optional date to cover letters ([#33](https://github.com/AFOJ/dossier/issues/33)) ([387cf51](https://github.com/AFOJ/dossier/commit/387cf5129516f59817d29d8f460360bcf40f60cf))
+* implement drag-and-drop reordering for sections ([dbb5b53](https://github.com/AFOJ/dossier/commit/dbb5b5376e076d69218ee30007ccfde97ca29a5c))
+
+
+### Bug Fixes
+
+* point wrong-type exports to the correct import page ([#32](https://github.com/AFOJ/dossier/issues/32)) ([ec0ae89](https://github.com/AFOJ/dossier/commit/ec0ae89d28f5e90e7358afa27bcb4959f5bc50a4))
+
 ## [1.4.0](https://github.com/AFOJ/dossier/compare/dossier-v1.3.0...dossier-v1.4.0) (2026-09-15)
 
 
