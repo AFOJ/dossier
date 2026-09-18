@@ -28,6 +28,7 @@ import {
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { BulletFields } from "@/pages/resumes/create/components/experience/BulletFields"
 import { SortableBulletCard } from "@/pages/resumes/create/components/experience/SortableBulletCard"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 
 type BulletsEditorProps = {
   sectionIndex: number
@@ -50,6 +51,8 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
     ExperienceSectionErrors | undefined
   const companyErrors = sectionErrors?.companies?.[companyIndex]
   const roleErrors = companyErrors?.roles?.[roleIndex]
+
+  const containerRef = useFocusLastRow(bullets.length)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -104,7 +107,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         items={bullets.map((bullet, i) => itemKey(bullet, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {bullets.map((bullet, index) => {
             const bulletErrors = roleErrors?.bullets?.[index]
             const hasErrors = bulletErrors !== undefined
@@ -139,7 +142,12 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
             )
           })}
 
-          <BulletAddMenu onAdd={(bullet) => onChange([...bullets, withKey(bullet)])} />
+          <BulletAddMenu
+            onAdd={(bullet) => {
+              const keyed = withKey(bullet)
+              onChange([...bullets, keyed])
+            }}
+          />
         </div>
       </SortableContext>
     </DndContext>

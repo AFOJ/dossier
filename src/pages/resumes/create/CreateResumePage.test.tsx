@@ -209,3 +209,97 @@ describe("CreateResumePage", () => {
     expect(createResume).not.toHaveBeenCalled()
   })
 })
+
+describe("adding content focuses the first field", () => {
+  async function addSectionViaMenu(user: ReturnType<typeof userEvent.setup>, label: string) {
+    await user.click(screen.getByRole("button", { name: /Add section/i }))
+    await user.click(await screen.findByRole("menuitem", { name: new RegExp(`^${label}`) }))
+  }
+
+  it("focuses the section title input when a new section is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+
+    expect(screen.getByLabelText(/^Section title/)).toHaveFocus()
+  })
+
+  it("focuses the new company name when a company is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add company" }))
+
+    const companies = screen.getAllByLabelText(/^Company/)
+    expect(companies[companies.length - 1]).toHaveFocus()
+  })
+
+  it("focuses the new job title when a role is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+
+    const titles = screen.getAllByLabelText(/^Job title/)
+    expect(titles[titles.length - 1]).toHaveFocus()
+  })
+
+  it("focuses the new bullet text when a simple bullet is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+
+    expect(screen.getByRole("textbox", { name: "Untitled Role bullet 1" })).toHaveFocus()
+  })
+
+  it("focuses the new bullet heading when a titled bullet is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Titled bullet/ }))
+
+    expect(screen.getByRole("textbox", { name: /^Heading/ })).toHaveFocus()
+  })
+
+  it("focuses the new school name when a school is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Education")
+    await user.click(screen.getByRole("button", { name: "Add school" }))
+
+    expect(screen.getByLabelText(/^School/)).toHaveFocus()
+  })
+
+  it("focuses the new group title when a skill group is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Skills")
+    await user.click(screen.getByRole("button", { name: "Add skill group" }))
+
+    const titles = screen.getAllByLabelText(/^Group title/)
+    expect(titles[titles.length - 1]).toHaveFocus()
+  })
+
+  it("focuses the new item title when a list item is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "List")
+    await user.click(screen.getByRole("button", { name: "Add item" }))
+
+    const titles = screen.getAllByPlaceholderText("Project name")
+    expect(titles[titles.length - 1]).toHaveFocus()
+  })
+})

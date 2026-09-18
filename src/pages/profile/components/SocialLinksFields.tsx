@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { Button, Field, Heading2, Input } from "@/components/ui"
 import { useFieldArray, useWatch } from "react-hook-form"
 import { useProfileFieldContext } from "@/pages/profile/schema"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 import { cn } from "@/utils"
 
 export function SocialLinksFields() {
@@ -30,6 +31,7 @@ export function SocialLinksFields() {
     name: "socials",
   })
   const socials = useWatch({ control, name: "socials" })
+  const containerRef = useFocusLastRow(fields.length)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -82,7 +84,7 @@ export function SocialLinksFields() {
           items={fields.map((field) => field.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="flex flex-col gap-3">
+          <div ref={containerRef} className="flex flex-col gap-3">
             {fields.map((field, index) => (
               <SocialLinkRow
                 key={field.id}
@@ -130,6 +132,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
   return (
     <div
       ref={setNodeRef}
+      data-row=""
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn("flex items-center gap-2", isDragging && "relative z-10 opacity-50")}
     >

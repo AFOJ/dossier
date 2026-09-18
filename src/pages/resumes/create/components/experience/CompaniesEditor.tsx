@@ -29,6 +29,7 @@ import {
 import { CompanyFields } from "@/pages/resumes/create/components/experience/CompanyFields"
 import { SortableCompanyCard } from "@/pages/resumes/create/components/experience/SortableCompanyCard"
 import { RolesEditor } from "@/pages/resumes/create/components/experience/RolesEditor"
+import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 
 type CompaniesEditorProps = {
   sectionIndex: number
@@ -47,6 +48,8 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
   const sectionErrors = getSectionErrors(errors, sectionIndex) as
     ExperienceSectionErrors | undefined
   const sectionError = sectionErrors?.companies?.message
+
+  const containerRef = useFocusLastRow(companies.length)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -99,7 +102,7 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
         items={companies.map((company, i) => itemKey(company, i))}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
           {sectionError && (
             <p role="alert" className="text-sm text-red-700">
               {sectionError}
@@ -152,17 +155,15 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
 
           <AddItemButton
             label="Add company"
-            onAdd={() =>
-              onChange([
-                ...companies,
-                withKey({
-                  company_name: "",
-                  start_date: "",
-                  end_date: undefined,
-                  roles: [],
-                }),
-              ])
-            }
+            onAdd={() => {
+              const company = withKey({
+                company_name: "",
+                start_date: "",
+                end_date: undefined,
+                roles: [],
+              })
+              onChange([...companies, company])
+            }}
           />
         </div>
       </SortableContext>
