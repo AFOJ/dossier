@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/AFOJ/dossier/compare/dossier-v1.5.0...dossier-v1.5.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* focus first input when adding content ([#34](https://github.com/AFOJ/dossier/issues/34)) ([ee3c5f0](https://github.com/AFOJ/dossier/commit/ee3c5f023b2d08b9b509c4b40b98bdace858d1ee))
+
 ## [1.5.0](https://github.com/AFOJ/dossier/compare/dossier-v1.4.0...dossier-v1.5.0) (2026-09-18)
 
 
