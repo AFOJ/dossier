@@ -37,6 +37,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     id: "resume-1",
     title: "My Resume",
     sections: [{ type: "paragraph", text: "Intro", title: "Summary" }],
+    tagIds: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     syncProfile: true,
@@ -155,6 +156,7 @@ describe("useEditResumeForm", () => {
     expect(updateResume).toHaveBeenCalledWith("resume-1", {
       title: "Updated Title",
       sections: defaultSections,
+      tagIds: [],
       syncProfile: false,
       contact: {
         full_name: "Snapshot Person",

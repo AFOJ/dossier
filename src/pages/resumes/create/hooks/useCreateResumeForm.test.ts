@@ -36,6 +36,7 @@ describe("useCreateResumeForm", () => {
 
     expect(result.current.form.getValues()).toEqual({
       title: "",
+      tagIds: [],
       syncProfile: true,
       fullName: "",
       jobTitle: "",
@@ -178,7 +179,7 @@ describe("useCreateResumeForm", () => {
     expect(createResume).toHaveBeenCalledWith(
       "My Resume",
       [{ type: "paragraph", text: "Hello", title: "Summary" }],
-      { syncProfile: true, contact: null },
+      { tagIds: [], syncProfile: true, contact: null },
     )
     expect(mockToast.success).toHaveBeenCalledWith(
       "Resume created",
@@ -236,6 +237,7 @@ describe("useCreateResumeForm", () => {
     })
 
     expect(createResume).toHaveBeenCalledWith("My Resume", [], {
+      tagIds: [],
       syncProfile: false,
       contact: {
         full_name: "John Doe",
