@@ -1,12 +1,15 @@
-import { db, type Resume } from "@/db/db"
+import { db, type Resume, type Tag } from "@/db/db"
 import { clearProcessedEntityCache } from "@/db/entityCache"
+import { normaliseTagIds, sortTags } from "@/db/tag"
 import type { ResumeSection } from "@/db/types"
 import { DEFAULT_PAGE_SIZE, getPageMetadata, type PaginationInput } from "@/lib/pagination"
 
 const RESUME_TABLE = db.resumes
 
+export type ResumeQueryItem = Resume & { tags: Tag[] }
+
 type ResumeQueryResult = {
-  items: Resume[]
+  items: ResumeQueryItem[]
   pagination: ReturnType<typeof getPageMetadata>
 }
 
@@ -18,19 +21,36 @@ export async function queryResumes(
     page: options.page ?? 1,
     perPage: options.perPage ?? DEFAULT_PAGE_SIZE,
   }
-  const collection = query
-    ? RESUME_TABLE.orderBy("updatedAt")
-        .reverse()
-        .filter((resume) => resume.title.toLowerCase().includes(query))
-    : RESUME_TABLE.orderBy("updatedAt").reverse()
+  let collection = RESUME_TABLE.orderBy("updatedAt").reverse()
 
-  return db.transaction("r", RESUME_TABLE, async () => {
+  if (query) {
+    collection = collection.filter((resume) => resume.title.toLowerCase().includes(query))
+  }
+
+  return db.transaction("r", RESUME_TABLE, db.tags, async () => {
     const totalCount = await collection.count()
     const pagination = getPageMetadata(totalCount, requestedPagination)
-    const items = await collection
+    const rows = await collection
       .offset((pagination.page - 1) * pagination.perPage)
       .limit(pagination.perPage)
       .toArray()
+    const tagIds = [...new Set(rows.flatMap((resume) => normaliseTagIds(resume.tagIds)))]
+    const tags = await db.tags.bulkGet(tagIds)
+    const tagsById = new Map(
+      tags
+        .filter((tag): tag is Tag & { id: number } => tag?.id !== undefined)
+        .map((tag) => [tag.id, tag]),
+    )
+    const items = rows.map((resume) => {
+      const tagIds = normaliseTagIds(resume.tagIds)
+      return {
+        ...resume,
+        tagIds,
+        tags: sortTags(
+          tagIds.flatMap((tagId) => (tagsById.has(tagId) ? [tagsById.get(tagId)!] : [])),
+        ),
+      }
+    })
 
     return { items, pagination }
   })
@@ -38,6 +58,7 @@ export async function queryResumes(
 
 export interface CreateResumeOptions {
   id?: string
+  tagIds?: number[]
   syncProfile?: boolean
   contact?: Resume["contact"]
 }
@@ -54,6 +75,7 @@ export async function createResume(
     id,
     title,
     sections,
+    tagIds: normaliseTagIds(options.tagIds),
     createdAt: now,
     updatedAt: now,
     syncProfile: options.syncProfile ?? true,
@@ -64,26 +86,27 @@ export async function createResume(
 }
 
 export async function getResume(id: string): Promise<Resume | undefined> {
-  return RESUME_TABLE.get(id)
+  const resume = await RESUME_TABLE.get(id)
+  return resume ? { ...resume, tagIds: normaliseTagIds(resume.tagIds) } : undefined
 }
 
 export async function getAllResumes(): Promise<Resume[]> {
-  return RESUME_TABLE.orderBy("updatedAt").reverse().toArray()
+  const resumes = await RESUME_TABLE.orderBy("updatedAt").reverse().toArray()
+  return resumes.map((resume) => ({ ...resume, tagIds: normaliseTagIds(resume.tagIds) }))
 }
 
 export async function updateResume(
   id: string,
-  changes: Partial<Pick<Resume, "title" | "sections" | "syncProfile" | "contact">>,
+  changes: Partial<Pick<Resume, "title" | "sections" | "tagIds" | "syncProfile" | "contact">>,
 ): Promise<void> {
-  await RESUME_TABLE.update(id, {
-    ...changes,
-    updatedAt: new Date(),
-  })
-  try {
+  await db.transaction("rw", RESUME_TABLE, db.entityCache, async () => {
+    await RESUME_TABLE.update(id, {
+      ...changes,
+      ...(changes.tagIds === undefined ? {} : { tagIds: normaliseTagIds(changes.tagIds) }),
+      updatedAt: new Date(),
+    })
     await clearProcessedEntityCache({ entityType: "resume", entityId: id })
-  } catch (error) {
-    console.error("Failed to clear resume cache:", error)
-  }
+  })
 }
 
 export async function deleteResume(id: string): Promise<void> {

@@ -136,6 +136,22 @@ export const coverLetterExportContactSchema = z.object({
   location: z.string().nullable(),
 })
 
+export const tagIdSchema = z.number().int().positive()
+
+export const tagIdsSchema = z
+  .array(tagIdSchema)
+  .refine((tagIds) => new Set(tagIds).size === tagIds.length, "Tag IDs must be unique")
+
+export const tagSchema = z.object({
+  id: tagIdSchema,
+  name: z.string().min(1).max(50),
+  description: z.string().max(240).optional().nullable(),
+  normalizedName: z.string().min(1),
+  colour: z.string().regex(/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+})
+
 export const resumeSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),

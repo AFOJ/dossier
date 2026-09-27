@@ -12,11 +12,13 @@ import {
   InvalidExportFileError,
 } from "@/db/profile"
 import { createResume, getAllResumes } from "@/db/resume"
+import { createTag } from "@/db/tag"
 
 const PDF = () => new Blob(["%PDF-fake"], { type: "application/pdf" })
 
 beforeEach(async () => {
   await db.profiles.clear()
+  await db.tags.clear()
   await db.resumes.clear()
   await db.coverLetters.clear()
   await db.entityCache.clear()
@@ -122,6 +124,7 @@ describe("exportProfile", () => {
         id: crypto.randomUUID(),
         title: "Resume 1",
         sections: [],
+        tagIds: [],
         createdAt: new Date("2026-01-01T10:00:00Z"),
         updatedAt: new Date("2026-01-01T10:00:00Z"),
       },
@@ -129,6 +132,7 @@ describe("exportProfile", () => {
         id: crypto.randomUUID(),
         title: "Resume 2",
         sections: [{ type: "paragraph", title: "Introduction", text: "Hello" }],
+        tagIds: [],
         createdAt: new Date("2026-01-02T10:00:00Z"),
         updatedAt: new Date("2026-01-02T10:00:00Z"),
       },
@@ -136,7 +140,7 @@ describe("exportProfile", () => {
 
     const data = await exportProfile()
 
-    expect(data.version).toBe(1)
+    expect(data.version).toBe(2)
     expect(data.exportedAt).toEqual(expect.any(String))
     expect(data.profile).toEqual({
       full_name: "John Doe",
@@ -157,6 +161,7 @@ describe("exportProfile", () => {
         id: crypto.randomUUID(),
         title: "Letter 1",
         body: "<p>Hi</p>",
+        tagIds: [],
         createdAt: new Date("2026-01-01T10:00:00Z"),
         updatedAt: new Date("2026-01-01T10:00:00Z"),
         syncProfile: true,
@@ -167,6 +172,7 @@ describe("exportProfile", () => {
         title: "Letter 2",
         subject: "Hello",
         body: "<p>Yo</p>",
+        tagIds: [],
         createdAt: new Date("2026-01-02T10:00:00Z"),
         updatedAt: new Date("2026-01-02T10:00:00Z"),
       },
@@ -216,11 +222,14 @@ describe("exportProfile", () => {
 describe("importProfile", () => {
   beforeEach(async () => {
     await db.profiles.clear()
+    await db.tags.clear()
     await db.resumes.clear()
+    await db.coverLetters.clear()
+    await db.entityCache.clear()
   })
 
   const validExport = {
-    version: 1,
+    version: 2,
     exportedAt: "2026-08-23T00:00:00.000Z",
     profile: {
       full_name: "John Doe",
@@ -230,6 +239,7 @@ describe("importProfile", () => {
       location: null,
       links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     },
+    tags: [],
     resumes: [
       {
         id: "resume-1",
@@ -279,10 +289,12 @@ describe("importProfile", () => {
             ],
           },
         ],
+        tagIds: [],
         createdAt: "2026-01-01T10:00:00.000Z",
         updatedAt: "2026-01-02T10:00:00.000Z",
       },
     ],
+    coverLetters: [],
   }
 
   it("restores the profile and resumes from a valid export", async () => {
@@ -327,6 +339,7 @@ describe("importProfile", () => {
             subject: "Hello",
             date: "2026-09-17",
             body: "<p>Dear team</p>",
+            tagIds: [],
             createdAt: "2026-01-03T10:00:00.000Z",
             updatedAt: "2026-01-04T10:00:00.000Z",
             syncProfile: true,
@@ -336,6 +349,7 @@ describe("importProfile", () => {
             id: "letter-2",
             title: "Other Letter",
             body: "<p>Hi</p>",
+            tagIds: [],
             createdAt: "2026-01-05T10:00:00.000Z",
             updatedAt: "2026-01-05T10:00:00.000Z",
           },
@@ -368,6 +382,7 @@ describe("importProfile", () => {
           {
             title: "My Letter",
             body: "<p>Hi</p>",
+            tagIds: [],
             createdAt: "2026-01-03T10:00:00.000Z",
             updatedAt: "2026-01-03T10:00:00.000Z",
           },
@@ -385,6 +400,7 @@ describe("importProfile", () => {
       id: "stale-letter",
       title: "Old Letter",
       body: "<p>Old</p>",
+      tagIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -397,6 +413,7 @@ describe("importProfile", () => {
             id: "letter-1",
             title: "My Letter",
             body: "<p>Hi</p>",
+            tagIds: [],
             createdAt: "2026-01-03T10:00:00.000Z",
             updatedAt: "2026-01-03T10:00:00.000Z",
           },
@@ -445,6 +462,7 @@ describe("importProfile", () => {
             id: letterId,
             title: "Imported Letter",
             body: "<p>fresh</p>",
+            tagIds: [],
             createdAt: "2020-01-01T00:00:00.000Z",
             updatedAt: "2020-01-01T00:00:00.000Z",
           },
@@ -462,11 +480,13 @@ describe("importProfile", () => {
     ).toBeNull()
   })
 
-  it("imports exports written before cover letters were supported", async () => {
-    // validExport predates the coverLetters field and has no such key.
-    await importProfile(JSON.stringify(validExport))
-
-    expect(await db.coverLetters.count()).toBe(0)
+  it("rejects the previous backup format instead of adding a tag fallback", async () => {
+    await expect(importProfile(JSON.stringify({ ...validExport, version: 1 }))).rejects.toThrow(
+      InvalidExportFileError,
+    )
+    await expect(
+      importProfile(JSON.stringify({ ...validExport, legacyTagLinks: [] })),
+    ).rejects.toThrow(InvalidExportFileError)
   })
 
   it("rejects invalid JSON", async () => {
@@ -506,6 +526,7 @@ describe("importProfile", () => {
       id: "stale-resume",
       title: "Old Resume",
       sections: [],
+      tagIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -567,5 +588,87 @@ describe("importProfile", () => {
 
     expect(await db.profiles.count()).toBe(0)
     expect(await db.resumes.count()).toBe(0)
+  })
+
+  it("round-trips the tag catalog, direct IDs, and exact tag timestamps", async () => {
+    await upsertProfile({ ...baseProfile, links: [] })
+    const tagId = await createTag({ name: "Remote", description: "Remote work", colour: "#abc" })
+    const resumeId = await createResume("Tagged resume", [], { tagIds: [tagId] })
+    const letterId = await createCoverLetter(
+      { title: "Tagged letter", body: "<p>Hello</p>" },
+      { tagIds: [tagId] },
+    )
+    const createdAt = new Date("2025-01-02T03:04:05.000Z")
+    const updatedAt = new Date("2025-02-03T04:05:06.000Z")
+    await db.tags.update(tagId, { createdAt, updatedAt })
+    await db.resumes.update(resumeId, { tagIds: [tagId] })
+    await db.coverLetters.update(letterId, { tagIds: [tagId] })
+
+    const backup = JSON.stringify(await exportProfile())
+    await deleteProfile()
+    await importProfile(backup)
+
+    const tag = await db.tags.get(tagId)
+    expect(tag?.name).toBe("Remote")
+    expect(tag?.createdAt).toEqual(createdAt)
+    expect(tag?.updatedAt).toEqual(updatedAt)
+    expect((await db.resumes.get(resumeId))?.tagIds).toEqual([tagId])
+    expect((await db.coverLetters.get(letterId))?.tagIds).toEqual([tagId])
+  })
+
+  it("removes unknown tag IDs during profile import", async () => {
+    const tag = {
+      id: 7,
+      name: "Remote",
+      description: "",
+      normalizedName: "remote",
+      colour: "#ABC",
+      createdAt: "2025-01-02T03:04:05.000Z",
+      updatedAt: "2025-02-03T04:05:06.000Z",
+    }
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        tags: [tag],
+        resumes: [{ ...validExport.resumes[0], tagIds: [7, 999] }],
+        coverLetters: [
+          {
+            id: "letter-1",
+            title: "Tagged letter",
+            body: "<p>Hello</p>",
+            tagIds: [7, 999],
+            createdAt: "2025-01-02T03:04:05.000Z",
+            updatedAt: "2025-02-03T04:05:06.000Z",
+          },
+        ],
+      }),
+    )
+
+    expect((await db.resumes.toArray())[0]?.tagIds).toEqual([7])
+    expect((await db.coverLetters.toArray())[0]?.tagIds).toEqual([7])
+  })
+
+  it("rejects duplicate catalog IDs and normalised names transactionally", async () => {
+    const tag = {
+      id: 7,
+      name: "Remote",
+      description: "",
+      normalizedName: "remote",
+      colour: "#ABC",
+      createdAt: "2025-01-02T03:04:05.000Z",
+      updatedAt: "2025-02-03T04:05:06.000Z",
+    }
+    const duplicateName = { ...tag, id: 8, name: "  REMOTE ", normalizedName: "wrong" }
+    const invalid = {
+      ...validExport,
+      tags: [tag, duplicateName],
+      resumes: [],
+      coverLetters: [],
+    }
+
+    await upsertProfile({ ...baseProfile, links: [] })
+    await expect(importProfile(JSON.stringify(invalid))).rejects.toThrow(InvalidExportFileError)
+    expect(await getProfile()).not.toBeNull()
+    expect(await db.tags.count()).toBe(0)
   })
 })

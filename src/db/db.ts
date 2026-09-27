@@ -12,10 +12,21 @@ export interface Profile {
   links: Link[]
 }
 
+export interface Tag {
+  id?: number
+  name: string
+  description?: string
+  normalizedName: string
+  colour: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface Resume {
   id?: string
   title: string
   sections: ResumeSection[]
+  tagIds: number[]
   createdAt: Date
   updatedAt: Date
   syncProfile?: boolean
@@ -48,6 +59,7 @@ export interface CoverLetter {
   subject?: string | null
   date?: string | null
   body: string
+  tagIds: number[]
   createdAt: Date
   updatedAt: Date
   syncProfile?: boolean
@@ -56,6 +68,7 @@ export interface CoverLetter {
 
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
+  tags!: Table<Tag, number>
   resumes!: Table<Resume, string>
   coverLetters!: Table<CoverLetter, string>
   entityCache!: Table<EntityCacheEntry, string>
@@ -83,6 +96,14 @@ export class DossierDatabase extends Dexie {
     this.version(5).stores({
       resumeCache: null,
       coverLetterCache: null,
+      entityCache: "id, entityType, entityId",
+    })
+
+    this.version(6).stores({
+      profiles: "++id",
+      tags: "++id, &normalizedName",
+      resumes: "id, updatedAt, *tagIds",
+      coverLetters: "id, updatedAt, *tagIds",
       entityCache: "id, entityType, entityId",
     })
   }

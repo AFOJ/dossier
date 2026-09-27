@@ -7,15 +7,19 @@ import {
   updateCoverLetter,
   deleteCoverLetter,
 } from "@/db/coverLetter"
-import { db } from "@/db/db"
+import { db, type CoverLetter } from "@/db/db"
+import { getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
+import { createTag } from "@/db/tag"
 import { describe, it, expect, beforeEach } from "vitest"
 
 const delay = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms))
 
 beforeEach(async () => {
   await db.profiles.clear()
+  await db.tags.clear()
   await db.resumes.clear()
   await db.coverLetters.clear()
+  await db.entityCache.clear()
 })
 
 describe("CoverLetter Service", () => {
@@ -80,6 +84,85 @@ describe("CoverLetter Service", () => {
         return letter.title
       }),
     ).toEqual(["Backend Role"])
+  })
+
+  it("persists direct tag IDs and hydrates sorted tags", async () => {
+    const remoteId = await createTag({ name: "Remote", colour: "#abc" })
+    const backendId = await createTag({ name: "Backend", colour: "#def" })
+    await createCoverLetter(
+      { title: "Remote application", body: "<p>One</p>" },
+      { tagIds: [remoteId] },
+    )
+    await delay(5)
+    await createCoverLetter(
+      { title: "Backend application", body: "<p>Two</p>", subject: "Acme" },
+      { tagIds: [backendId] },
+    )
+    await delay(5)
+    await createCoverLetter(
+      { title: "Other application", body: "<p>Three</p>" },
+      { tagIds: [remoteId, backendId] },
+    )
+
+    const result = await queryCoverLetters({
+      query: "application",
+      page: 1,
+      perPage: 10,
+    })
+
+    expect(result.items.map((letter) => letter.title)).toEqual([
+      "Other application",
+      "Backend application",
+      "Remote application",
+    ])
+    expect(result.items[0]?.tags.map((tag) => tag.name)).toEqual(["Backend", "Remote"])
+
+    const combined = await queryCoverLetters({
+      query: "acme",
+      page: 1,
+      perPage: 10,
+    })
+    expect(combined.items.map((letter) => letter.title)).toEqual(["Backend application"])
+  })
+
+  it("normalises records without direct tag IDs at the read boundary", async () => {
+    await db.coverLetters.add({
+      id: "legacy-letter",
+      title: "Existing letter",
+      body: "<p>Hello</p>",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as CoverLetter)
+
+    const result = await queryCoverLetters({ query: "existing", page: 1, perPage: 10 })
+
+    expect(result.items[0]?.tagIds).toEqual([])
+    expect(result.items[0]?.tags).toEqual([])
+  })
+
+  it("bumps the entity timestamp and invalidates its PDF cache for tag assignments", async () => {
+    const id = await createCoverLetter({ title: "Letter", body: "<p>Hello</p>" }, { tagIds: [] })
+    const before = await getCoverLetter(id)
+    await saveProcessedEntity({
+      entityType: "coverLetter",
+      entityId: id,
+      blob: new Blob(["%PDF-fake"], { type: "application/pdf" }),
+      processedAt: new Date(),
+    })
+    await delay(10)
+
+    await updateCoverLetter(id, { tagIds: [3, 3, 0] })
+    const after = await getCoverLetter(id)
+
+    expect(after?.tagIds).toEqual([3])
+    expect(after?.updatedAt.getTime()).toBeGreaterThan(before!.updatedAt.getTime())
+    expect(
+      await getValidProcessedEntity({
+        entityType: "coverLetter",
+        entityId: id,
+        entityUpdatedAt: after!.updatedAt,
+      }),
+    ).toBeNull()
   })
 
   it("returns the effective pagination with its page slice", async () => {
