@@ -9,6 +9,8 @@ const fullResume = {
   updatedAt: "2026-02-01T00:00:00.000Z",
   syncProfile: false,
   contact: null,
+  tagIds: [1],
+  tags: [{ id: 1, name: "Remote" }],
 }
 
 describe("parseResumeJsonText", () => {
@@ -20,6 +22,7 @@ describe("parseResumeJsonText", () => {
       expect(result.resumeId).toBe("123e4567-e89b-12d3-a456-426614174000")
       expect(result.resume.title).toBe("Frontend Engineer")
       expect(result.resume.createdAt).toEqual(new Date("2026-01-01T00:00:00.000Z"))
+      expect(result.resume.tagIds).toEqual([])
     }
   })
 

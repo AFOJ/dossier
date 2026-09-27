@@ -22,6 +22,7 @@ function makeResumeJson(overrides: Record<string, unknown> = {}): string {
     id: crypto.randomUUID(),
     title: "Untitled",
     sections: [],
+    tagIds: [],
     ...overrides,
   })
 }
@@ -124,6 +125,7 @@ describe("UploadResumePage", () => {
       id: "44444444-4444-4444-8444-444444444444",
       title: "Existing Resume",
       sections: [],
+      tagIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       syncProfile: true,
@@ -161,6 +163,7 @@ describe("UploadResumePage", () => {
         id,
         title: `Existing ${id}`,
         sections: [],
+        tagIds: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         syncProfile: true,

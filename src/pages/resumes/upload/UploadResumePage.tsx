@@ -56,6 +56,7 @@ export default function UploadResumePage() {
   const importFreshResume = async (incomingResume: Resume, incomingResumeId: string) => {
     await createResume(incomingResume.title, incomingResume.sections, {
       id: incomingResumeId,
+      tagIds: [],
       syncProfile: incomingResume.syncProfile,
       contact: incomingResume.contact,
     })
@@ -70,11 +71,13 @@ export default function UploadResumePage() {
       await updateResume(existingId, {
         title: incomingResume.title,
         sections: incomingResume.sections,
+        tagIds: [],
         syncProfile: incomingResume.syncProfile,
         contact: incomingResume.contact,
       })
     } else {
       await createResume(`Copy of ${incomingResume.title}`, incomingResume.sections, {
+        tagIds: [],
         syncProfile: incomingResume.syncProfile,
         contact: incomingResume.contact,
       })

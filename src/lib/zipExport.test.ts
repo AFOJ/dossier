@@ -15,6 +15,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     id: crypto.randomUUID(),
     title: "Untitled",
     sections: [],
+    tagIds: [],
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-02-01T00:00:00.000Z"),
     syncProfile: true,

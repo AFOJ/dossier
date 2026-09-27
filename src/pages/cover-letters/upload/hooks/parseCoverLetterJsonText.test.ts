@@ -10,6 +10,8 @@ const fullCoverLetter = {
   updatedAt: "2026-02-01T00:00:00.000Z",
   syncProfile: false,
   contact: null,
+  tagIds: [1],
+  tags: [{ id: 1, name: "Remote" }],
 }
 
 describe("parseCoverLetterJsonText", () => {
@@ -20,6 +22,7 @@ describe("parseCoverLetterJsonText", () => {
     if (result.success) {
       expect(result.letterId).toBe("123e4567-e89b-12d3-a456-426614174000")
       expect(result.letter.title).toBe("Backend Engineer Application")
+      expect(result.letter.tagIds).toEqual([])
     }
   })
 

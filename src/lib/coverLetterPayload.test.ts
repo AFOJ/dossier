@@ -9,6 +9,7 @@ function buildLetter(overrides: Partial<CoverLetter> = {}): CoverLetter {
     subject: null,
     date: null,
     body: "<p>Hello</p>",
+    tagIds: [],
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-02-01T00:00:00.000Z"),
     syncProfile: false,
@@ -22,6 +23,13 @@ describe("toCoverLetterPayload date", () => {
     const payload = await toCoverLetterPayload(buildLetter({ date: "2026-09-17" }))
 
     expect(payload.date).toContain("2026")
+  })
+
+  it("omits tag metadata from the rendering payload", async () => {
+    const payload = await toCoverLetterPayload(buildLetter({ tagIds: [1] }))
+
+    expect(payload).not.toHaveProperty("tagIds")
+    expect(payload).not.toHaveProperty("tags")
   })
 
   it("omits the date when unset so old behaviour is preserved", async () => {

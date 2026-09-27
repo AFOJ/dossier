@@ -9,6 +9,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     id: "resume-1",
     title: "  Frontend Engineer  ",
     sections: [{ type: "paragraph", title: "Summary", text: "Summary" }],
+    tagIds: [],
     contact: null,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-02"),
@@ -29,6 +30,13 @@ describe("toResumePayload", () => {
       title: "Frontend Engineer",
       sections: [{ type: "paragraph", title: "Summary", text: "Summary" }],
     })
+  })
+
+  it("omits tag metadata from the rendering payload", async () => {
+    const payload = await toResumePayload(makeResume({ tagIds: [1] }))
+
+    expect(payload).not.toHaveProperty("tagIds")
+    expect(payload).not.toHaveProperty("tags")
   })
 
   it("omits contact when there is nothing to resolve it from", async () => {
@@ -201,7 +209,7 @@ describe("toResumePayload", () => {
     })
   })
 
-  it("normalizes experience companies to the backend contract", async () => {
+  it("normalises experience companies to the backend contract", async () => {
     const payload = await toResumePayload(
       makeResume({
         sections: [

@@ -136,9 +136,10 @@ describe("ProfilePage", () => {
   it("exports the profile and resumes as a downloaded JSON file", async () => {
     const user = userEvent.setup()
     const exportData = {
-      version: 1 as const,
+      version: 2 as const,
       exportedAt: "2026-08-23T00:00:00.000Z",
       profile,
+      tags: [],
       resumes: [],
       coverLetters: [],
     }
