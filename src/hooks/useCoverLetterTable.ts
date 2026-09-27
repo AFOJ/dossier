@@ -10,7 +10,7 @@ const SEARCH_DEBOUNCE_MS = 250
 
 type CoverLetterQueryResult = Awaited<ReturnType<typeof queryCoverLetters>>
 
-type TaggedCoverLetterQueryResult = {
+type CoverLetterQueryState = {
   key: string
   result: CoverLetterQueryResult
 }
@@ -35,7 +35,7 @@ export function useCoverLetterTable() {
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set())
-  }, [])
+  }, [setSelectedIds])
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>, replace = false) => {
@@ -66,7 +66,7 @@ export function useCoverLetterTable() {
   const totalDbCount = useLiveQuery(() => db.coverLetters.count(), [])
 
   const queryKey = `${committedQuery}\u0000${requestedPage}\u0000${requestedPerPage}`
-  const taggedResult = useLiveQuery<TaggedCoverLetterQueryResult>(async () => {
+  const taggedResult = useLiveQuery<CoverLetterQueryState>(async () => {
     return {
       key: queryKey,
       result: await queryCoverLetters({
@@ -104,21 +104,27 @@ export function useCoverLetterTable() {
   const selectedCount = selectedIds.size
   const isAllSelected = pageItems.length > 0 && pageItems.every((l) => selectedIds.has(l.id!))
 
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }, [])
+  const toggleSelect = useCallback(
+    (id: string) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(id)) {
+          next.delete(id)
+        } else {
+          next.add(id)
+        }
+        return next
+      })
+    },
+    [setSelectedIds],
+  )
 
-  const selectAll = useCallback((ids: string[]) => {
-    setSelectedIds(new Set(ids))
-  }, [])
+  const selectAll = useCallback(
+    (ids: string[]) => {
+      setSelectedIds(new Set(ids))
+    },
+    [setSelectedIds],
+  )
 
   const setQuery = useCallback(
     (value: string) => {
@@ -130,13 +136,13 @@ export function useCoverLetterTable() {
         updateParams({ query: trimmed === "" ? null : trimmed, page: null }, true)
       }, SEARCH_DEBOUNCE_MS)
     },
-    [clearSelection, updateParams],
+    [clearSelection, setInputQuery, updateParams],
   )
 
   const setPage = useCallback(
     (value: number) => {
-      const normalized = toPositiveInteger(value, DEFAULT_PAGE)
-      updateParams({ page: normalized === DEFAULT_PAGE ? null : String(normalized) })
+      const normalised = toPositiveInteger(value, DEFAULT_PAGE)
+      updateParams({ page: normalised === DEFAULT_PAGE ? null : String(normalised) })
       clearSelection()
     },
     [clearSelection, updateParams],
@@ -144,9 +150,9 @@ export function useCoverLetterTable() {
 
   const setPerPage = useCallback(
     (value: number) => {
-      const normalized = toPositiveInteger(value, DEFAULT_PAGE_SIZE)
+      const normalised = toPositiveInteger(value, DEFAULT_PAGE_SIZE)
       updateParams({
-        perPage: normalized === DEFAULT_PAGE_SIZE ? null : String(normalized),
+        perPage: normalised === DEFAULT_PAGE_SIZE ? null : String(normalised),
         page: null,
       })
       clearSelection()

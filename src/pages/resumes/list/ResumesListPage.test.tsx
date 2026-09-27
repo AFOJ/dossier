@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import ResumesListPage from "@/pages/resumes/list/ResumesListPage"
 import { createResume, deleteResume } from "@/db/resume"
-import type { Resume } from "@/db/db"
+import type { ResumeQueryItem } from "@/db/resume"
 import type { ResumeSection } from "@/db/types"
 import { useResumeTable } from "@/hooks/useResumeTable"
 import { useBulkResumeActions } from "@/hooks/useBulkResumeActions"
@@ -83,11 +83,13 @@ function makeTableState(overrides: Partial<TableState> = {}): TableState {
   }
 }
 
-function makeResume(overrides: Partial<Resume> = {}): Resume {
+function makeResume(overrides: Partial<ResumeQueryItem> = {}): ResumeQueryItem {
   return {
     id: crypto.randomUUID(),
     title: "Untitled",
     sections: [],
+    tagIds: [],
+    tags: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     syncProfile: true,
@@ -243,6 +245,7 @@ describe("ResumesListPage", () => {
 
     await waitFor(() => {
       expect(createResume).toHaveBeenCalledWith("Copy of Frontend Engineer", sections, {
+        tagIds: [],
         syncProfile: true,
         contact: null,
       })

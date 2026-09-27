@@ -5,7 +5,8 @@ import {
   EyeIcon,
   FileExportIcon,
 } from "@hugeicons/core-free-icons"
-import type { Resume } from "@/db/db"
+import type { ResumeQueryItem } from "@/db/resume"
+import { tagColourToCss, tagTextColour } from "@/db/tag"
 import {
   EntityTable,
   QuickAction,
@@ -14,17 +15,17 @@ import {
 } from "@/components/table"
 
 type ResumesTableProps = {
-  resumes: Resume[]
+  resumes: ResumeQueryItem[]
   page: number
   perPage: number
   totalPages: number
   totalCount: number
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
-  onPreview: (resume: Resume) => void
-  onExport: (resume: Resume) => void
-  onDuplicate: (resume: Resume) => void
-  onDelete: (resume: Resume) => void
+  onPreview: (resume: ResumeQueryItem) => void
+  onExport: (resume: ResumeQueryItem) => void
+  onDuplicate: (resume: ResumeQueryItem) => void
+  onDelete: (resume: ResumeQueryItem) => void
   selectedIds: Set<string>
   isAllSelected: boolean
   isIndeterminate: boolean
@@ -33,16 +34,34 @@ type ResumesTableProps = {
   onClearSelection: () => void
 }
 
-const columns: EntityTableColumn<Resume>[] = [
+const columns: EntityTableColumn<ResumeQueryItem>[] = [
   {
     key: "title",
     header: "Resume title",
     cellClassName: "w-full px-4 py-3 text-left cursor-pointer",
     renderCell: (resume) => {
       return (
-        <span className="block text-sm font-medium text-gray-900 hover:text-gray-600">
-          {resume.title}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-gray-900 hover:text-gray-600">
+            {resume.title}
+          </span>
+          {resume.tags.length > 0 && (
+            <div className="flex min-w-0 flex-wrap gap-1">
+              {resume.tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                  style={{
+                    backgroundColor: tagColourToCss(tag.colour),
+                    color: tagTextColour(tag.colour),
+                  }}
+                >
+                  <span className="truncate">{tag.name}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       )
     },
   },
