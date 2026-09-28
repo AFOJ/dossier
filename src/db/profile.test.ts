@@ -480,13 +480,27 @@ describe("importProfile", () => {
     ).toBeNull()
   })
 
-  it("rejects the previous backup format instead of adding a tag fallback", async () => {
-    await expect(importProfile(JSON.stringify({ ...validExport, version: 1 }))).rejects.toThrow(
-      InvalidExportFileError,
+  it("restores backups written before tag support", async () => {
+    // Pre-tag backups have no `tags` array and no `tagIds` on documents;
+    // pre-cover-letter backups have no `coverLetters` at all. Both defaults
+    // must land as empty so an old file still restores in full.
+    await importProfile(
+      JSON.stringify({
+        version: 1,
+        exportedAt: validExport.exportedAt,
+        profile: validExport.profile,
+        resumes: [{ ...validExport.resumes[0], tagIds: undefined }],
+      }),
     )
-    await expect(
-      importProfile(JSON.stringify({ ...validExport, legacyTagLinks: [] })),
-    ).rejects.toThrow(InvalidExportFileError)
+
+    expect((await getProfile())?.full_name).toBe("John Doe")
+    expect(await db.tags.count()).toBe(0)
+    expect(await db.coverLetters.count()).toBe(0)
+
+    const restored = await db.resumes.toArray()
+    expect(restored).toHaveLength(1)
+    expect(restored[0]?.title).toBe("My Resume")
+    expect(restored[0]?.tagIds).toEqual([])
   })
 
   it("rejects invalid JSON", async () => {
@@ -494,9 +508,14 @@ describe("importProfile", () => {
   })
 
   it("rejects JSON that does not match the export schema", async () => {
+    // `.strict()` still rejects unknown keys, and a non-numeric version is
+    // not a number, so neither can slip past the loosened version field.
     await expect(importProfile(JSON.stringify({ version: 1, nope: true }))).rejects.toThrow(
       InvalidExportFileError,
     )
+    await expect(
+      importProfile(JSON.stringify({ ...validExport, legacyTagLinks: [] })),
+    ).rejects.toThrow(InvalidExportFileError)
   })
 
   it("rejects exports with unknown resume section types", async () => {

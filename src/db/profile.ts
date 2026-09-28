@@ -114,72 +114,83 @@ export async function exportProfile(): Promise<ExportFile> {
 
 export const exportFileSchema = z
   .object({
-    version: z.literal(2),
+    // Any numeric version is accepted so future formats do not need a code
+    // change here. Backups written before tags existed omit `tags` and document
+    // `tagIds`, which the defaults below turn into empty arrays. The strict
+    // objects still reject anything whose shape we do not recognise.
+    version: z.number().int(),
     exportedAt: z.string(),
     profile: exportContactSchema,
-    tags: z.array(tagSchema.strict()).superRefine((tags, ctx) => {
-      const ids = new Set<number>()
-      const normalisedNames = new Set<string>()
+    tags: z
+      .array(tagSchema.strict())
+      .superRefine((tags, ctx) => {
+        const ids = new Set<number>()
+        const normalisedNames = new Set<string>()
 
-      tags.forEach((tag, index) => {
-        if (ids.has(tag.id)) {
-          ctx.addIssue({
-            code: "custom",
-            path: [index, "id"],
-            message: "Tag IDs must be unique",
-          })
-        }
-        ids.add(tag.id)
+        tags.forEach((tag, index) => {
+          if (ids.has(tag.id)) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "id"],
+              message: "Tag IDs must be unique",
+            })
+          }
+          ids.add(tag.id)
 
-        const normalisedName = normaliseTagName(tag.name)
-        const storedNormalisedName = tag.normalizedName.trim().toLowerCase()
-        if (storedNormalisedName !== normalisedName) {
-          ctx.addIssue({
-            code: "custom",
-            path: [index, "normalizedName"],
-            message: "Normalised tag name does not match the name",
-          })
-        }
-        if (normalisedNames.has(storedNormalisedName)) {
-          ctx.addIssue({
-            code: "custom",
-            path: [index, "normalizedName"],
-            message: "Tag names must be unique",
-          })
-        }
-        normalisedNames.add(storedNormalisedName)
+          const normalisedName = normaliseTagName(tag.name)
+          const storedNormalisedName = tag.normalizedName.trim().toLowerCase()
+          if (storedNormalisedName !== normalisedName) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "normalizedName"],
+              message: "Normalised tag name does not match the name",
+            })
+          }
+          if (normalisedNames.has(storedNormalisedName)) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "normalizedName"],
+              message: "Tag names must be unique",
+            })
+          }
+          normalisedNames.add(storedNormalisedName)
+        })
       })
-    }),
-    resumes: z.array(
-      z
-        .object({
-          id: z.string().optional(),
-          title: z.string(),
-          sections: z.array(resumeSectionSchema),
-          tagIds: tagIdsSchema,
-          createdAt: z.iso.datetime(),
-          updatedAt: z.iso.datetime(),
-          syncProfile: z.boolean().optional(),
-          contact: exportContactSchema.nullish(),
-        })
-        .strict(),
-    ),
-    coverLetters: z.array(
-      z
-        .object({
-          id: z.string().optional(),
-          title: z.string(),
-          subject: z.string().nullable().optional(),
-          date: z.string().nullable().optional(),
-          body: z.string(),
-          tagIds: tagIdsSchema,
-          createdAt: z.iso.datetime(),
-          updatedAt: z.iso.datetime(),
-          syncProfile: z.boolean().optional(),
-          contact: coverLetterExportContactSchema.nullish(),
-        })
-        .strict(),
-    ),
+      .default([]),
+    resumes: z
+      .array(
+        z
+          .object({
+            id: z.string().optional(),
+            title: z.string(),
+            sections: z.array(resumeSectionSchema),
+            tagIds: tagIdsSchema.default([]),
+            createdAt: z.iso.datetime(),
+            updatedAt: z.iso.datetime(),
+            syncProfile: z.boolean().optional(),
+            contact: exportContactSchema.nullish(),
+          })
+          .strict(),
+      )
+      .default([]),
+    coverLetters: z
+      .array(
+        z
+          .object({
+            id: z.string().optional(),
+            title: z.string(),
+            subject: z.string().nullable().optional(),
+            date: z.string().nullable().optional(),
+            body: z.string(),
+            tagIds: tagIdsSchema.default([]),
+            createdAt: z.iso.datetime(),
+            updatedAt: z.iso.datetime(),
+            syncProfile: z.boolean().optional(),
+            contact: coverLetterExportContactSchema.nullish(),
+          })
+          .strict(),
+      )
+      .default([]),
   })
   .strict()
 
