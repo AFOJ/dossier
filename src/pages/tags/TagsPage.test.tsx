@@ -27,7 +27,7 @@ function renderPage() {
 describe("TagsPage", () => {
   it("searches, selects, and bulk deletes tags through the shared table", async () => {
     const alphaId = await createTag({ name: "Alpha", description: "First", colour: "#abc" })
-    await createTag({ name: "Beta", description: "Second", colour: "#def" })
+    const betaId = await createTag({ name: "Beta", description: "Second", colour: "#def" })
     const user = userEvent.setup()
 
     renderPage()
@@ -54,8 +54,9 @@ describe("TagsPage", () => {
     ).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Delete 1 tag" }))
 
-    await waitFor(async () => expect(await db.tags.get(alphaId)).toBeDefined())
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    expect(await db.tags.get(betaId)).toBeUndefined()
+    expect(await db.tags.get(alphaId)).toBeDefined()
     expect(await db.tags.count()).toBe(1)
   })
 })
