@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/AFOJ/dossier/compare/dossier-v1.5.0...dossier-v1.6.0) (2026-09-28)
+
+
+### Features
+
+* add a tag management page for resumes and cover letters ([#36](https://github.com/AFOJ/dossier/issues/36)) ([504405a](https://github.com/AFOJ/dossier/commit/504405ac806601419afd5cf5c1e0b2d2065046f2))
+
+
+### Bug Fixes
+
+* focus first input when adding content ([#34](https://github.com/AFOJ/dossier/issues/34)) ([ee3c5f0](https://github.com/AFOJ/dossier/commit/ee3c5f023b2d08b9b509c4b40b98bdace858d1ee))
+
 ## [1.5.0](https://github.com/AFOJ/dossier/compare/dossier-v1.4.0...dossier-v1.5.0) (2026-09-18)
 
 
