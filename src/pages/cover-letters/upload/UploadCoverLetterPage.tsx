@@ -63,6 +63,7 @@ export default function UploadCoverLetterPage() {
       },
       {
         id: incomingId,
+        tagIds: [],
         syncProfile: incoming.syncProfile,
         contact: incoming.contact,
       },
@@ -80,6 +81,7 @@ export default function UploadCoverLetterPage() {
         subject: incoming.subject,
         date: incoming.date,
         body: incoming.body,
+        tagIds: [],
         syncProfile: incoming.syncProfile,
         contact: incoming.contact,
       })
@@ -92,6 +94,7 @@ export default function UploadCoverLetterPage() {
           body: incoming.body,
         },
         {
+          tagIds: [],
           syncProfile: incoming.syncProfile,
           contact: incoming.contact,
         },

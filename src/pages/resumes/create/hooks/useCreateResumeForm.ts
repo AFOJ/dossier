@@ -14,6 +14,7 @@ const isMonthValue = (value: string) => /^\d{4}-\d{2}$/.test(value)
 export const resumeFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
+    tagIds: z.array(z.number().int().positive()),
     syncProfile: z.boolean(),
     fullName: z.string().optional(),
     jobTitle: z.string().optional(),
@@ -536,6 +537,7 @@ export function useCreateResumeForm(profile?: Profile) {
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
       title: "",
+      tagIds: [],
       syncProfile: true,
       ...(profile
         ? toContactValues(profile)
@@ -593,6 +595,7 @@ export function useCreateResumeForm(profile?: Profile) {
           }
 
       await createResume(data.title, data.sections, {
+        tagIds: data.tagIds,
         syncProfile: data.syncProfile,
         contact,
       })

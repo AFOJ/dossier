@@ -38,6 +38,7 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
 
       await updateCoverLetter(letter.id!, {
         title: data.title,
+        tagIds: data.tagIds,
         subject: data.subject?.trim() ? data.subject.trim() : null,
         date: data.date?.trim() ? data.date.trim() : null,
         body: sanitizeCoverLetterBody(data.body),
@@ -102,6 +103,7 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
 function toEditValues(letter: CoverLetter, profile?: Profile): CoverLetterFormData {
   return {
     title: letter.title,
+    tagIds: letter.tagIds,
     subject: letter.subject ?? "",
     date: letter.date ?? "",
     body: letter.body,

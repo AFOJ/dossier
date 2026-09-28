@@ -3,6 +3,7 @@ import { useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
 import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { TagCombobox } from "@/components/tags"
 import type { CoverLetter } from "@/db/db"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useEditCoverLetterForm } from "@/pages/cover-letters/edit/hooks/useEditCoverLetterForm"
@@ -49,6 +50,21 @@ function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLette
               id="cover-letter-title"
               placeholder="Backend Engineer Application"
               {...form.register("title")}
+            />
+          </Field>
+
+          <Field label="Tags" inputId="cover-letter-tags">
+            <Controller
+              control={form.control}
+              name="tagIds"
+              render={({ field }) => (
+                <TagCombobox
+                  value={field.value}
+                  onChange={field.onChange}
+                  id="cover-letter-tags"
+                  ariaLabel="Cover letter tags"
+                />
+              )}
             />
           </Field>
 

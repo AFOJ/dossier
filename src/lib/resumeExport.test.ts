@@ -7,6 +7,7 @@ function makeResume(overrides: Partial<Resume> = {}): Resume {
     id: crypto.randomUUID(),
     title: "Untitled",
     sections: [],
+    tagIds: [],
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-02-01T00:00:00.000Z"),
     syncProfile: true,
@@ -22,6 +23,13 @@ describe("toResumeExportPayload", () => {
     expect(payload.title).toBe("Frontend Engineer")
     expect(payload.createdAt).toBe("2026-01-01T00:00:00.000Z")
     expect(payload.updatedAt).toBe("2026-02-01T00:00:00.000Z")
+  })
+
+  it("omits tag metadata", () => {
+    const payload = toResumeExportPayload(makeResume({ tagIds: [1] }))
+
+    expect(payload).not.toHaveProperty("tagIds")
+    expect(payload).not.toHaveProperty("tags")
   })
 
   it("passes through id, sections, sync flag, and contact", () => {

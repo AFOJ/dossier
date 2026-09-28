@@ -1,7 +1,8 @@
-import { FormProvider } from "react-hook-form"
+import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
@@ -50,6 +51,21 @@ export default function CreateResumePage() {
               id="resume-title"
               placeholder="Data Analyst Resume"
               {...form.register("title")}
+            />
+          </Field>
+
+          <Field label="Tags" inputId="resume-tags">
+            <Controller
+              control={form.control}
+              name="tagIds"
+              render={({ field }) => (
+                <TagCombobox
+                  value={field.value}
+                  onChange={field.onChange}
+                  id="resume-tags"
+                  ariaLabel="Resume tags"
+                />
+              )}
             />
           </Field>
 

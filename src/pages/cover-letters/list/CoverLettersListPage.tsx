@@ -6,6 +6,7 @@ import { downloadJson, getExportFilename } from "@/lib/download"
 import { toCoverLetterExportPayload } from "@/lib/coverLetterExport"
 import { Heading1, Subheading } from "@/components/ui"
 import { CoverLetterListContent } from "@/pages/cover-letters/list/components/CoverLetterListContent"
+import type { CoverLetterQueryItem } from "@/db/coverLetter"
 import { slugify } from "@/utils"
 import { Toolbar } from "@/pages/cover-letters/list/components/Toolbar"
 import { useModal } from "@/components/modal"
@@ -13,7 +14,6 @@ import { usePageTitle } from "@/hooks/usePageTitle"
 import { useCoverLetterTable } from "@/hooks/useCoverLetterTable"
 import { useBulkCoverLetterActions } from "@/hooks/useBulkCoverLetterActions"
 import { useToast } from "@/components/toast"
-import type { CoverLetter } from "@/db/db"
 
 export default function CoverLettersListPage() {
   const table = useCoverLetterTable()
@@ -33,9 +33,9 @@ export default function CoverLettersListPage() {
 
   usePageTitle("Cover Letters")
 
-  const handlePreview = (letter: CoverLetter) => previewModal.open(letter)
+  const handlePreview = (letter: CoverLetterQueryItem) => previewModal.open(letter)
 
-  const handleExport = async (letter: CoverLetter) => {
+  const handleExport = async (letter: CoverLetterQueryItem) => {
     try {
       const filename = getExportFilename("cover-letter", new Date(), slugify(letter.title))
       downloadJson(filename, toCoverLetterExportPayload(letter))
@@ -45,7 +45,7 @@ export default function CoverLettersListPage() {
     }
   }
 
-  const handleDuplicate = async (letter: CoverLetter) => {
+  const handleDuplicate = async (letter: CoverLetterQueryItem) => {
     try {
       await createCoverLetter(
         {
@@ -55,6 +55,7 @@ export default function CoverLettersListPage() {
           body: letter.body,
         },
         {
+          tagIds: letter.tagIds,
           syncProfile: letter.syncProfile ?? (letter.contact ? false : true),
           contact: letter.contact ?? null,
         },

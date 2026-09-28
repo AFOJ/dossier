@@ -109,7 +109,7 @@ export function EntityTable<Item>(props: Readonly<EntityTableProps<Item>>) {
                   </th>
                 )
               })}
-              <th className="px-4 py-3 text-right">Quick actions</th>
+              <th className="whitespace-nowrap px-4 py-3 text-right">Quick actions</th>
             </tr>
           </thead>
           <tbody>

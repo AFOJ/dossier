@@ -1,21 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useLiveQuery } from "dexie-react-hooks"
-import { db } from "@/db/db"
-import { queryCoverLetters } from "@/db/coverLetter"
+import type { Tag } from "@/db/db"
+import { listTags } from "@/db/tag"
 import { DEFAULT_PAGE_SIZE, getPageMetadata, toPositiveInteger } from "@/lib/pagination"
 
 const DEFAULT_PAGE = 1
 const SEARCH_DEBOUNCE_MS = 250
+const EMPTY_TAGS: Tag[] = []
 
-type CoverLetterQueryResult = Awaited<ReturnType<typeof queryCoverLetters>>
-
-type CoverLetterQueryState = {
-  key: string
-  result: CoverLetterQueryResult
-}
-
-export function useCoverLetterTable() {
+export function useTagsTable() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const committedQuery = (searchParams.get("query") ?? "").trim()
@@ -23,7 +17,7 @@ export function useCoverLetterTable() {
   const requestedPerPage = toPositiveInteger(Number(searchParams.get("perPage")), DEFAULT_PAGE_SIZE)
 
   const [query, setInputQuery] = useState(committedQuery)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const commitTimer = useRef<number | undefined>(undefined)
 
   const [prevCommitted, setPrevCommitted] = useState(committedQuery)
@@ -33,15 +27,11 @@ export function useCoverLetterTable() {
     setSelectedIds(new Set())
   }
 
-  const clearSelection = useCallback(() => {
-    setSelectedIds(new Set())
-  }, [setSelectedIds])
-
   const updateParams = useCallback(
     (updates: Record<string, string | null>, replace = false) => {
       setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
+        (previous) => {
+          const next = new URLSearchParams(previous)
           for (const [key, value] of Object.entries(updates)) {
             if (value === null) {
               next.delete(key)
@@ -63,51 +53,52 @@ export function useCoverLetterTable() {
     }
   }, [committedQuery])
 
-  const totalDbCount = useLiveQuery(() => db.coverLetters.count(), [])
-
-  const queryKey = `${committedQuery}\u0000${requestedPage}\u0000${requestedPerPage}`
-  const taggedResult = useLiveQuery<CoverLetterQueryState>(async () => {
-    return {
-      key: queryKey,
-      result: await queryCoverLetters({
-        query: committedQuery,
-        page: requestedPage,
-        perPage: requestedPerPage,
-      }),
+  const tags = useLiveQuery(() => listTags(), [])
+  const filteredTags = useMemo(() => {
+    const source = tags ?? EMPTY_TAGS
+    const normalisedQuery = committedQuery.toLowerCase()
+    if (normalisedQuery === "") {
+      return source
     }
-  }, [queryKey])
+    return source.filter((tag) => {
+      return (
+        tag.name.toLowerCase().includes(normalisedQuery) ||
+        (tag.description ?? "").toLowerCase().includes(normalisedQuery)
+      )
+    })
+  }, [committedQuery, tags])
 
-  const result = taggedResult?.key === queryKey ? taggedResult.result : undefined
-
-  const displayResult = result ?? taggedResult?.result
-  const isRefreshing = displayResult !== result
-
-  const pagination =
-    displayResult?.pagination ??
-    getPageMetadata(0, { page: requestedPage, perPage: requestedPerPage })
+  const pagination = getPageMetadata(filteredTags.length, {
+    page: requestedPage,
+    perPage: requestedPerPage,
+  })
+  const pageItems = filteredTags.slice(
+    (pagination.page - 1) * pagination.perPage,
+    pagination.page * pagination.perPage,
+  )
 
   useEffect(() => {
-    if (result && requestedPage !== pagination.page) {
+    if (tags && requestedPage !== pagination.page) {
       updateParams(
         { page: pagination.page === DEFAULT_PAGE ? null : String(pagination.page) },
         true,
       )
     }
-  }, [pagination.page, requestedPage, result, updateParams])
-
-  const isLoading = displayResult === undefined
-  const isSearching = query.trim() !== committedQuery
-  const isInitialLoading = isLoading || totalDbCount === undefined
-
-  const pageItems = displayResult?.items ?? []
+  }, [pagination.page, requestedPage, tags, updateParams])
 
   const selectedCount = selectedIds.size
-  const isAllSelected = pageItems.length > 0 && pageItems.every((l) => selectedIds.has(l.id!))
+  const isAllSelected =
+    pageItems.length > 0 &&
+    pageItems.every((tag) => tag.id !== undefined && selectedIds.has(String(tag.id)))
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set())
+  }, [setSelectedIds])
 
   const toggleSelect = useCallback(
     (id: string) => {
-      setSelectedIds((prev) => {
-        const next = new Set(prev)
+      setSelectedIds((previous) => {
+        const next = new Set(previous)
         if (next.has(id)) {
           next.delete(id)
         } else {
@@ -163,9 +154,8 @@ export function useCoverLetterTable() {
   return {
     query,
     resultQuery: committedQuery,
-    isSearchPending: isSearching,
-    isInitialLoading,
-    totalDbCount,
+    isSearchPending: query.trim() !== committedQuery,
+    totalDbCount: tags?.length,
     setQuery,
     page: pagination.page,
     setPage,
@@ -174,8 +164,7 @@ export function useCoverLetterTable() {
     totalCount: pagination.totalCount,
     totalPages: pagination.totalPages,
     pageItems,
-    isLoading,
-    isRefreshing,
+    isLoading: tags === undefined,
     selectedIds,
     selectedCount,
     isAllSelected,

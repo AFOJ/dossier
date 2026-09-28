@@ -1,7 +1,7 @@
 import { FileAddIcon } from "@hugeicons/core-free-icons"
 import { IsometricCircleX, IsometricLibraryAdd } from "@/components/illustrations"
 import { ButtonLink, Heading3, Subheading } from "@/components/ui"
-import type { CoverLetter } from "@/db/db"
+import type { CoverLetterQueryItem } from "@/db/coverLetter"
 import { type useCoverLetterTable } from "@/hooks/useCoverLetterTable"
 import { CoverLettersTable } from "@/pages/cover-letters/list/components/CoverLettersTable"
 import { TableSkeleton } from "@/components/table"
@@ -10,10 +10,10 @@ type CoverLetterTableState = ReturnType<typeof useCoverLetterTable>
 
 type CoverLetterListContentProps = {
   table: CoverLetterTableState
-  onPreview: (letter: CoverLetter) => void
-  onExport: (letter: CoverLetter) => void
-  onDuplicate: (letter: CoverLetter) => void
-  onDelete: (letter: CoverLetter) => void
+  onPreview: (letter: CoverLetterQueryItem) => void
+  onExport: (letter: CoverLetterQueryItem) => void
+  onDuplicate: (letter: CoverLetterQueryItem) => void
+  onDelete: (letter: CoverLetterQueryItem) => void
 }
 
 export function CoverLetterListContent(props: Readonly<CoverLetterListContentProps>) {
@@ -23,7 +23,7 @@ export function CoverLetterListContent(props: Readonly<CoverLetterListContentPro
     return (
       <TableSkeleton
         headers={["Cover letter title", "Created", "Last updated"]}
-        actionButtonCount={4}
+        actionButtonCount={5}
         ariaLabel="Loading cover letters"
       />
     )

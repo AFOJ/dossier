@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react"
 import { Controller, FormProvider } from "react-hook-form"
 import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useCreateCoverLetterForm } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
@@ -43,6 +44,21 @@ export default function CreateCoverLetterPage() {
               id="cover-letter-title"
               placeholder="Backend Engineer Application"
               {...form.register("title")}
+            />
+          </Field>
+
+          <Field label="Tags" inputId="cover-letter-tags">
+            <Controller
+              control={form.control}
+              name="tagIds"
+              render={({ field }) => (
+                <TagCombobox
+                  value={field.value}
+                  onChange={field.onChange}
+                  id="cover-letter-tags"
+                  ariaLabel="Cover letter tags"
+                />
+              )}
             />
           </Field>
 

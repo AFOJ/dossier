@@ -40,6 +40,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
       await updateResume(resume.id!, {
         title: data.title,
         sections: data.sections,
+        tagIds: data.tagIds,
         syncProfile: data.syncProfile,
         contact: data.syncProfile
           ? null
@@ -114,6 +115,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 function toEditValues(resume: Resume, profile?: Profile): ResumeFormData {
   return {
     title: resume.title,
+    tagIds: resume.tagIds,
     syncProfile: resume.syncProfile ?? true,
     ...contactDefaults(resume, profile),
     sections: resume.sections.map((section) => ({

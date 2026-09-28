@@ -1,7 +1,7 @@
 import { FileAddIcon } from "@hugeicons/core-free-icons"
 import { IsometricCircleX, IsometricLibraryAdd } from "@/components/illustrations"
 import { ButtonLink, Heading3, Subheading } from "@/components/ui"
-import type { Resume } from "@/db/db"
+import type { ResumeQueryItem } from "@/db/resume"
 import { type useResumeTable } from "@/hooks/useResumeTable"
 import { ResumesTable } from "@/pages/resumes/list/components/ResumesTable"
 import { TableSkeleton } from "@/components/table"
@@ -10,10 +10,10 @@ type ResumeTableState = ReturnType<typeof useResumeTable>
 
 type ResumeListContentProps = {
   table: ResumeTableState
-  onPreview: (resume: Resume) => void
-  onExport: (resume: Resume) => void
-  onDuplicate: (resume: Resume) => void
-  onDelete: (resume: Resume) => void
+  onPreview: (resume: ResumeQueryItem) => void
+  onExport: (resume: ResumeQueryItem) => void
+  onDuplicate: (resume: ResumeQueryItem) => void
+  onDelete: (resume: ResumeQueryItem) => void
 }
 
 export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
@@ -23,7 +23,7 @@ export function ResumeListContent(props: Readonly<ResumeListContentProps>) {
     return (
       <TableSkeleton
         headers={["Resume title", "Created", "Last updated"]}
-        actionButtonCount={4}
+        actionButtonCount={5}
         ariaLabel="Loading resumes"
       />
     )

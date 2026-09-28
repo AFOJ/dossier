@@ -111,7 +111,7 @@ describe("CreateResumePage", () => {
       expect(createResume).toHaveBeenCalledWith(
         "My Resume",
         [{ type: "paragraph", text: "Seasoned engineer.", title: "Summary" }],
-        { syncProfile: true, contact: null },
+        { tagIds: [], syncProfile: true, contact: null },
       )
     })
     expect(await screen.findByText("Resumes list")).toBeInTheDocument()
@@ -195,9 +195,14 @@ describe("CreateResumePage", () => {
     renderPage()
 
     await addSectionViaMenu(user, "Paragraph")
-    await user.type(screen.getByRole("textbox", { name: "Untitled Section (Paragraph) text" }), "Hello")
+    await user.type(
+      screen.getByRole("textbox", { name: "Untitled Section (Paragraph) text" }),
+      "Hello",
+    )
 
-    await user.click(screen.getByRole("button", { name: "Collapse Untitled Section (Paragraph) section" }))
+    await user.click(
+      screen.getByRole("button", { name: "Collapse Untitled Section (Paragraph) section" }),
+    )
     expect(screen.getByLabelText(/^Section title/)).not.toBeVisible()
 
     await user.type(screen.getByLabelText(/^Title/), "My Resume")

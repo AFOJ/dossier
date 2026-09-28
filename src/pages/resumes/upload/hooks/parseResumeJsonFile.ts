@@ -29,6 +29,7 @@ function convertPayloadToResume(
     id: resumeId,
     title: payload.title,
     sections: payload.sections as Resume["sections"],
+    tagIds: [],
     createdAt: now,
     updatedAt: now,
     // Payloads carry no sync flag. Freeze an imported contact (unsynced)
@@ -51,6 +52,7 @@ function toResumeWithDates(validResume: z.infer<typeof resumeSchema>): Resume {
     : null
   return {
     ...validResume,
+    tagIds: [],
     createdAt: validResume.createdAt ? new Date(validResume.createdAt) : new Date(),
     updatedAt: validResume.updatedAt ? new Date(validResume.updatedAt) : new Date(),
     // Preserve an explicit sync flag. When the flag is missing (older

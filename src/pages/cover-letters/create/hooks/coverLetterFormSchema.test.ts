@@ -4,6 +4,7 @@ import { coverLetterFormSchema } from "@/pages/cover-letters/create/hooks/useCre
 const base = {
   title: "Backend Engineer Application",
   body: "<p>Hello</p>",
+  tagIds: [],
   syncProfile: true,
 }
 

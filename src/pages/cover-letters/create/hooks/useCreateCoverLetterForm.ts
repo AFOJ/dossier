@@ -12,6 +12,7 @@ import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
 export const coverLetterFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
+    tagIds: z.array(z.number().int().positive()),
     subject: z.string().max(160, "Subject must be 160 characters or less").optional(),
     date: z.string().optional(),
     body: z.string().min(1, "Body is required"),
@@ -92,6 +93,7 @@ export function useCreateCoverLetterForm(profile?: Profile) {
     resolver: zodResolver(coverLetterFormSchema),
     defaultValues: {
       title: "",
+      tagIds: [],
       subject: "",
       date: "",
       body: "",
@@ -142,6 +144,7 @@ export function useCreateCoverLetterForm(profile?: Profile) {
           body: sanitizeCoverLetterBody(data.body),
         },
         {
+          tagIds: data.tagIds,
           syncProfile: data.syncProfile,
           contact,
         },

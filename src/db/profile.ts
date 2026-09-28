@@ -1,12 +1,15 @@
 import { z } from "zod"
-import { db, type CoverLetter, type Profile, type Resume } from "@/db/db"
+import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import {
   coverLetterExportContactSchema,
   resumeSectionSchema,
   exportContactSchema,
+  tagIdsSchema,
+  tagSchema,
 } from "@/db/schemas"
+import { listTags, normaliseTagColour, normaliseTagDescription, normaliseTagName } from "@/db/tag"
 import { getAllResumes } from "@/db/resume"
 
 export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> {
@@ -51,17 +54,28 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function deleteProfile(): Promise<void> {
-  await db.transaction("rw", db.profiles, db.resumes, db.entityCache, async () => {
-    await db.resumes.clear()
-    await db.profiles.clear()
-    await db.entityCache.clear()
-  })
+  await db.transaction(
+    "rw",
+    db.profiles,
+    db.tags,
+    db.resumes,
+    db.coverLetters,
+    db.entityCache,
+    async () => {
+      await db.resumes.clear()
+      await db.coverLetters.clear()
+      await db.tags.clear()
+      await db.profiles.clear()
+      await db.entityCache.clear()
+    },
+  )
 }
 
 export interface ExportFile {
-  version: 1
+  version: 2
   exportedAt: string
   profile: Omit<Profile, "id">
+  tags: Tag[]
   resumes: Resume[]
   coverLetters: CoverLetter[]
 }
@@ -82,57 +96,103 @@ export async function exportProfile(): Promise<ExportFile> {
     links: profile.links,
   }
 
-  const resumes = await getAllResumes()
-  const coverLetters = await getAllCoverLetters()
+  const [tags, resumes, coverLetters] = await Promise.all([
+    listTags(),
+    getAllResumes(),
+    getAllCoverLetters(),
+  ])
 
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     profile: profileData,
+    tags,
     resumes,
     coverLetters,
   }
 }
 
-export const exportFileSchema = z.object({
-  version: z.literal(1),
-  exportedAt: z.string(),
-  profile: exportContactSchema,
-  resumes: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        title: z.string(),
-        sections: z.array(resumeSectionSchema),
-        createdAt: z.iso.datetime(),
-        updatedAt: z.iso.datetime(),
-        syncProfile: z.boolean().optional(),
-        // Synced resumes persist contact: null (the live profile is the
-        // source of truth), so null must be accepted alongside omitted.
-        contact: exportContactSchema.nullish(),
-      }),
-    )
-    .default([]),
-  coverLetters: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        title: z.string(),
-        subject: z.string().nullable().optional(),
-        date: z.string().nullable().optional(),
-        body: z.string(),
-        createdAt: z.iso.datetime(),
-        updatedAt: z.iso.datetime(),
-        syncProfile: z.boolean().optional(),
-        // Synced cover letters persist contact: null (the live profile is the
-        // source of truth), so null must be accepted alongside omitted.
-        contact: coverLetterExportContactSchema.nullish(),
-      }),
-    )
-    // Absent in exports written before cover letters were included; importing
-    // an older file must still work and simply restore none.
-    .default([]),
-})
+export const exportFileSchema = z
+  .object({
+    // Any numeric version is accepted so future formats do not need a code
+    // change here. Backups written before tags existed omit `tags` and document
+    // `tagIds`, which the defaults below turn into empty arrays. The strict
+    // objects still reject anything whose shape we do not recognise.
+    version: z.number().int(),
+    exportedAt: z.string(),
+    profile: exportContactSchema,
+    tags: z
+      .array(tagSchema.strict())
+      .superRefine((tags, ctx) => {
+        const ids = new Set<number>()
+        const normalisedNames = new Set<string>()
+
+        tags.forEach((tag, index) => {
+          if (ids.has(tag.id)) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "id"],
+              message: "Tag IDs must be unique",
+            })
+          }
+          ids.add(tag.id)
+
+          const normalisedName = normaliseTagName(tag.name)
+          const storedNormalisedName = tag.normalizedName.trim().toLowerCase()
+          if (storedNormalisedName !== normalisedName) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "normalizedName"],
+              message: "Normalised tag name does not match the name",
+            })
+          }
+          if (normalisedNames.has(storedNormalisedName)) {
+            ctx.addIssue({
+              code: "custom",
+              path: [index, "normalizedName"],
+              message: "Tag names must be unique",
+            })
+          }
+          normalisedNames.add(storedNormalisedName)
+        })
+      })
+      .default([]),
+    resumes: z
+      .array(
+        z
+          .object({
+            id: z.string().optional(),
+            title: z.string(),
+            sections: z.array(resumeSectionSchema),
+            tagIds: tagIdsSchema.default([]),
+            createdAt: z.iso.datetime(),
+            updatedAt: z.iso.datetime(),
+            syncProfile: z.boolean().optional(),
+            contact: exportContactSchema.nullish(),
+          })
+          .strict(),
+      )
+      .default([]),
+    coverLetters: z
+      .array(
+        z
+          .object({
+            id: z.string().optional(),
+            title: z.string(),
+            subject: z.string().nullable().optional(),
+            date: z.string().nullable().optional(),
+            body: z.string(),
+            tagIds: tagIdsSchema.default([]),
+            createdAt: z.iso.datetime(),
+            updatedAt: z.iso.datetime(),
+            syncProfile: z.boolean().optional(),
+            contact: coverLetterExportContactSchema.nullish(),
+          })
+          .strict(),
+      )
+      .default([]),
+  })
+  .strict()
 
 export class InvalidExportFileError extends Error {
   constructor() {
@@ -156,50 +216,71 @@ export async function importProfile(fileContent: string): Promise<void> {
     throw new InvalidExportFileError()
   }
 
-  const { profile, resumes, coverLetters } = result.data
+  const { profile, tags, resumes, coverLetters } = result.data
+  const knownTagIds = new Set(tags.map((tag) => tag.id))
 
-  await db.transaction("rw", db.profiles, db.resumes, db.coverLetters, db.entityCache, async () => {
-    await upsertProfile(profile)
+  const restoredTags: Tag[] = tags.map((tag) => ({
+    id: tag.id,
+    name: tag.name.trim(),
+    description: normaliseTagDescription(tag.description ?? undefined),
+    normalizedName: normaliseTagName(tag.name),
+    colour: normaliseTagColour(tag.colour),
+    createdAt: new Date(tag.createdAt),
+    updatedAt: new Date(tag.updatedAt),
+  }))
 
-    const restoredResumes: Resume[] = resumes.map((resume) => {
-      const contact = resume.contact ?? null
-      return {
-        id: resume.id ?? crypto.randomUUID(),
-        title: resume.title,
-        sections: resume.sections,
-        createdAt: new Date(resume.createdAt),
-        updatedAt: new Date(resume.updatedAt),
-        syncProfile: resume.syncProfile ?? (contact ? false : true),
-        contact,
-      }
-    })
-
-    const restoredCoverLetters: CoverLetter[] = coverLetters.map((letter) => ({
-      id: letter.id ?? crypto.randomUUID(),
-      title: letter.title,
-      subject: letter.subject ?? null,
-      date: letter.date ?? null,
-      body: letter.body,
-      createdAt: new Date(letter.createdAt),
-      updatedAt: new Date(letter.updatedAt),
-      syncProfile: letter.syncProfile ?? true,
-      contact: letter.contact ?? null,
-    }))
-
-    await db.resumes.clear()
-    await db.coverLetters.clear()
-    // Import replaces the profile and every entity table wholesale, so all
-    // processed-PDF cache entries are potentially stale (an imported entity can
-    // reuse a pre-import id with an older/equal updatedAt). Clear the whole
-    // cache rather than trying to enumerate which entries need eviction.
-    await db.entityCache.clear()
-
-    if (restoredResumes.length > 0) {
-      await db.resumes.bulkPut(restoredResumes)
-    }
-
-    if (restoredCoverLetters.length > 0) {
-      await db.coverLetters.bulkPut(restoredCoverLetters)
+  const restoredResumes: Resume[] = resumes.map((resume) => {
+    const contact = resume.contact ?? null
+    return {
+      id: resume.id ?? crypto.randomUUID(),
+      title: resume.title,
+      sections: resume.sections,
+      tagIds: resume.tagIds.filter((tagId) => knownTagIds.has(tagId)),
+      createdAt: new Date(resume.createdAt),
+      updatedAt: new Date(resume.updatedAt),
+      syncProfile: resume.syncProfile ?? (contact ? false : true),
+      contact,
     }
   })
+
+  const restoredCoverLetters: CoverLetter[] = coverLetters.map((coverLetter) => ({
+    id: coverLetter.id ?? crypto.randomUUID(),
+    title: coverLetter.title,
+    subject: coverLetter.subject ?? null,
+    date: coverLetter.date ?? null,
+    body: coverLetter.body,
+    tagIds: coverLetter.tagIds.filter((tagId) => knownTagIds.has(tagId)),
+    createdAt: new Date(coverLetter.createdAt),
+    updatedAt: new Date(coverLetter.updatedAt),
+    syncProfile: coverLetter.syncProfile ?? true,
+    contact: coverLetter.contact ?? null,
+  }))
+
+  await db.transaction(
+    "rw",
+    db.profiles,
+    db.tags,
+    db.resumes,
+    db.coverLetters,
+    db.entityCache,
+    async () => {
+      await db.profiles.clear()
+      await db.tags.clear()
+      await db.resumes.clear()
+      await db.coverLetters.clear()
+      await db.entityCache.clear()
+
+      await db.profiles.add(profile)
+
+      if (restoredTags.length > 0) {
+        await db.tags.bulkPut(restoredTags)
+      }
+      if (restoredResumes.length > 0) {
+        await db.resumes.bulkPut(restoredResumes)
+      }
+      if (restoredCoverLetters.length > 0) {
+        await db.coverLetters.bulkPut(restoredCoverLetters)
+      }
+    },
+  )
 }
