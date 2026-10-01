@@ -470,7 +470,15 @@ export const withKey = <T extends object>(value: T): T & { _key: string } =>
   }) as WithKey<T>
 
 export function itemKey(item: unknown, index: number): string {
-  return (item as { _key?: string })._key ?? String(index)
+  const key = (item as { _key?: string })._key
+
+  if (key === undefined && import.meta.env.DEV) {
+    throw new Error(
+      `Resume list item at index ${index} is missing its _key. Editors must merge into the existing item (onChange({ ...item, ...patch })) rather than rebuilding it, or wrap the replacement in replaceKeyed.`,
+    )
+  }
+
+  return key ?? String(index)
 }
 
 export function replaceKeyed<T>(items: readonly T[], index: number, next: T): T[] {

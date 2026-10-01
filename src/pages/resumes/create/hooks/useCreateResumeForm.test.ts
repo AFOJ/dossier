@@ -776,3 +776,15 @@ describe("replaceKeyed", () => {
     expect(next[1]).toBe(second)
   })
 })
+
+describe("itemKey", () => {
+  it("returns the item's key", () => {
+    expect(itemKey({ _key: "key-a" }, 0)).toBe("key-a")
+  })
+
+  it("throws in development when the key is missing", () => {
+    expect(() => itemKey({ text: "no key here" }, 3)).toThrowError(
+      /Resume list item at index 3 is missing its _key/,
+    )
+  })
+})
