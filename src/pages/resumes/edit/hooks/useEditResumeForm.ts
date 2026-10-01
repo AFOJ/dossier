@@ -35,7 +35,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
   })
   const { record, clear: clearHistory } = history
 
-  const revert = useCallback(() => {
+  const discard = useCallback(() => {
     form.reset(defaultValues)
     clearHistory()
   }, [clearHistory, defaultValues, form])
@@ -110,7 +110,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     form,
     isDirty,
     isSubmitting,
-    revert,
+    discard,
     onSubmit,
     addSection,
     removeSection,

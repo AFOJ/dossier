@@ -2,8 +2,19 @@ import { useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
-import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
+import {
+  Button,
+  Divider,
+  Field,
+  FormSubmitBar,
+  Heading1,
+  Input,
+  Subheading,
+  Tooltip,
+} from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
+import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
 import { TagCombobox } from "@/components/tags"
 import type { Resume } from "@/db/db"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
@@ -27,14 +38,22 @@ function EditResumeForm(props: Readonly<{ resume: Resume }>) {
     isSubmitting,
     formError,
     isDirty,
-    revert,
+    discard,
     addSection,
     removeSection,
     reorderSection,
     updateSection,
     setSyncProfile,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    nextUndoLabel,
+    nextRedoLabel,
   } = useEditResumeForm(resume)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
+
+  useUndoHotkeys({ onUndo: undo, onRedo: redo, canUndo, canRedo })
 
   return (
     <section className="flex flex-col gap-6 pb-20">
@@ -99,11 +118,27 @@ function EditResumeForm(props: Readonly<{ resume: Resume }>) {
           )}
 
           <FormSubmitBar>
-            {isDirty && (
-              <Button type="button" intent="secondary" onClick={revert} disabled={isSubmitting}>
-                Revert
-              </Button>
-            )}
+            <HistoryButtons
+              canUndo={canUndo}
+              canRedo={canRedo}
+              undoLabel={nextUndoLabel}
+              redoLabel={nextRedoLabel}
+              onUndo={undo}
+              onRedo={redo}
+              disabled={isSubmitting}
+            />
+            <Tooltip content={isDirty ? "Discard changes" : "No changes to discard"}>
+              <span className="inline-block">
+                <Button
+                  type="button"
+                  intent="secondary"
+                  onClick={discard}
+                  disabled={!isDirty || isSubmitting}
+                >
+                  Discard changes
+                </Button>
+              </span>
+            </Tooltip>
             <Button type="submit" disabled={!isDirty || isSubmitting}>
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>

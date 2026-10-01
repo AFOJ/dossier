@@ -57,7 +57,7 @@ function renderPage() {
 }
 
 async function addSectionViaMenu(user: ReturnType<typeof userEvent.setup>, label: string) {
-  await user.click(screen.getByRole("button", { name: /Add section/i }))
+  await user.click(screen.getByRole("button", { name: /^Add section$/i }))
   await user.click(await screen.findByRole("menuitem", { name: new RegExp(`^${label}`) }))
 }
 
@@ -216,11 +216,6 @@ describe("CreateResumePage", () => {
 })
 
 describe("adding content focuses the first field", () => {
-  async function addSectionViaMenu(user: ReturnType<typeof userEvent.setup>, label: string) {
-    await user.click(screen.getByRole("button", { name: /Add section/i }))
-    await user.click(await screen.findByRole("menuitem", { name: new RegExp(`^${label}`) }))
-  }
-
   it("focuses the section title input when a new section is added", async () => {
     const user = userEvent.setup()
     renderPage()
@@ -354,5 +349,139 @@ describe("adding content focuses the first field", () => {
 
     const titles = screen.getAllByPlaceholderText("Project name")
     expect(titles[titles.length - 1]).toHaveFocus()
+  })
+})
+
+describe("undoing structural changes", () => {
+  async function addParagraphWithText(user: ReturnType<typeof userEvent.setup>, text: string) {
+    await addSectionViaMenu(user, "Paragraph")
+    await user.type(screen.getByLabelText(/^Paragraph/), text)
+  }
+
+  async function deleteOnlySection(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: /^Remove .* section$/i }))
+  }
+
+  it("restores a deleted section, content and all", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addParagraphWithText(user, "A long summary of my work.")
+    await deleteOnlySection(user)
+
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    expect(screen.getByLabelText(/^Paragraph/)).toHaveValue("A long summary of my work.")
+    expect(screen.queryByText(/No sections yet/i)).not.toBeInTheDocument()
+  })
+
+  it("re-applies a delete on redo", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addParagraphWithText(user, "Temporary")
+    await deleteOnlySection(user)
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    await user.click(screen.getByRole("button", { name: "Redo" }))
+
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+  })
+
+  it("undoes more than one action in reverse order", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+    await addSectionViaMenu(user, "Experience")
+    expect(screen.getAllByLabelText(/^Section title/)).toHaveLength(2)
+
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+    expect(screen.getAllByLabelText(/^Section title/)).toHaveLength(1)
+
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+  })
+
+  it("keeps the history buttons present but disabled with an empty history", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled()
+
+    await addSectionViaMenu(user, "Paragraph")
+
+    expect(screen.getByRole("button", { name: "Undo" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled()
+  })
+
+  it("names the next action in the undo tooltip", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+    await deleteOnlySection(user)
+
+    await user.hover(screen.getByRole("button", { name: "Undo" }))
+
+    expect(await screen.findByText("Undo delete section")).toBeInTheDocument()
+  })
+
+  it("explains the disabled state in the undo tooltip", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.hover(screen.getByRole("button", { name: "Undo" }))
+
+    expect(await screen.findByText("Nothing to undo")).toBeInTheDocument()
+  })
+
+  it("does not record an entry for a plain text edit", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    // addParagraphWithMenu adds the section, then the text is typed into it.
+    await addParagraphWithText(user, "Some typing")
+
+    // One add, one undo — typing must not add entries of its own, so nothing
+    // is left to undo (redo of the add is still available).
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled()
+  })
+
+  it("undoes with the keyboard shortcut", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addParagraphWithText(user, "Keyboard undo")
+    await deleteOnlySection(user)
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+
+    await user.keyboard("{Control>}z{/Control}")
+
+    expect(screen.getByLabelText(/^Paragraph/)).toHaveValue("Keyboard undo")
+  })
+
+  it("leaves the keyboard shortcut alone while a text field is focused", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addParagraphWithText(user, "Keep me")
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: /^Remove .*Experience.* section$/i }))
+
+    expect(screen.getAllByLabelText(/^Section title/)).toHaveLength(1)
+
+    // Focus a text field, then press the shortcut. Native text undo owns this
+    // keystroke, so the deleted section must not come back.
+    await user.click(screen.getByLabelText(/^Section title/))
+    await user.keyboard("{Control>}z{/Control}")
+
+    expect(screen.getAllByLabelText(/^Section title/)).toHaveLength(1)
   })
 })

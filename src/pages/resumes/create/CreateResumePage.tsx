@@ -2,6 +2,8 @@ import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
+import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
 import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
@@ -24,10 +26,18 @@ export default function CreateResumePage() {
     reorderSection,
     updateSection,
     setSyncProfile,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    nextUndoLabel,
+    nextRedoLabel,
   } = useCreateResumeForm(profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   usePageTitle("Create Resume")
+
+  useUndoHotkeys({ onUndo: undo, onRedo: redo, canUndo, canRedo })
 
   return (
     <section className="flex flex-col gap-6 pb-20">
@@ -92,6 +102,15 @@ export default function CreateResumePage() {
           )}
 
           <FormSubmitBar>
+            <HistoryButtons
+              canUndo={canUndo}
+              canRedo={canRedo}
+              undoLabel={nextUndoLabel}
+              redoLabel={nextRedoLabel}
+              onUndo={undo}
+              onRedo={redo}
+              disabled={isSubmitting}
+            />
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create resume"}
             </Button>
