@@ -13,7 +13,7 @@ export function Tooltip(props: Readonly<TooltipProps>) {
     <BaseTooltip.Root>
       <BaseTooltip.Trigger render={children} />
       <BaseTooltip.Portal>
-        <BaseTooltip.Positioner sideOffset={6}>
+        <BaseTooltip.Positioner sideOffset={6} className="z-50">
           <BaseTooltip.Popup className="rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-sm">
             {content}
           </BaseTooltip.Popup>
