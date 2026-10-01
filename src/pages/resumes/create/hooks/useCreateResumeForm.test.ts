@@ -192,6 +192,45 @@ describe("useCreateResumeForm", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/resumes")
   })
 
+  it("never persists the _key identity fields", async () => {
+    const { result } = renderHook(() => useCreateResumeForm())
+
+    act(() => {
+      result.current.form.setValue("title", "My Resume")
+      result.current.addSection("experience")
+      result.current.updateSection(0, {
+        type: "experience",
+        title: "Experience",
+        companies: [
+          {
+            company_name: "Spotify",
+            start_date: "2020-01",
+            end_date: "2024-06",
+            roles: [
+              {
+                job_title: "Data Analyst",
+                start_date: "2020-01",
+                end_date: "2022-05",
+                bullets: [{ type: "text", text: "Shipped things" }],
+              },
+            ],
+          },
+        ],
+      })
+    })
+
+    // The form really is holding keys at this point.
+    expect(JSON.stringify(result.current.form.getValues("sections"))).toContain("_key")
+
+    await act(async () => {
+      await result.current.onSubmit()
+    })
+
+    const sections = vi.mocked(createResume).mock.calls[0][1]
+
+    expect(JSON.stringify(sections)).not.toContain("_key")
+  })
+
   it("shows an error toast when creation fails", async () => {
     vi.mocked(createResume).mockRejectedValueOnce(new Error("Boom"))
 

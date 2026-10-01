@@ -6,6 +6,7 @@ import { useToast } from "@/components/toast"
 import type { Profile, Resume } from "@/db/db"
 import type { ResumeSection } from "@/db/types"
 import { updateResume } from "@/db/resume"
+import { useUndoHistory } from "@/hooks/useUndoHistory"
 import {
   createSectionMutations,
   emptyContactValues,
@@ -28,9 +29,16 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 
   const isDirty = form.formState.isDirty
 
+  const history = useUndoHistory<FormSection[]>({
+    read: () => getValues("sections") as FormSection[],
+    apply: (sections) => setValue("sections", sections, { shouldDirty: true }),
+  })
+  const { record, clear: clearHistory } = history
+
   const revert = useCallback(() => {
     form.reset(defaultValues)
-  }, [form, defaultValues])
+    clearHistory()
+  }, [clearHistory, defaultValues, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
@@ -57,6 +65,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
       // Reset to the raw (keyed) current values so the form is pristine
       // without losing the identity keys used for stable list rendering.
       form.reset(form.getValues())
+      clearHistory()
       toast.success("Resume saved", `"${data.title}" has been saved.`)
       navigate("/resumes")
     } catch (error) {
@@ -75,8 +84,8 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const { setValue, getValues, clearErrors } = form
 
   const { addSection, removeSection, reorderSection, updateSection } = useMemo(
-    () => createSectionMutations({ setValue, getValues, clearErrors }),
-    [setValue, getValues, clearErrors],
+    () => createSectionMutations({ setValue, getValues, clearErrors, record }),
+    [setValue, getValues, clearErrors, record],
   )
 
   const setSyncProfile = useCallback(
@@ -109,6 +118,12 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     updateSection,
     setSyncProfile,
     formError: form.formState.errors.root?.message,
+    undo: history.undo,
+    redo: history.redo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
+    nextUndoLabel: history.nextUndoLabel,
+    nextRedoLabel: history.nextRedoLabel,
   }
 }
 
