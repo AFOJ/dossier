@@ -22,6 +22,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type ExperienceSectionErrors,
   type ResumeFormData,
@@ -133,9 +134,7 @@ export function RolesEditor(props: Readonly<RolesEditorProps>) {
                     roleIndex={index}
                     role={role}
                     roleErrors={roleErrors}
-                    onChange={(next) =>
-                      onChange(roles.map((current, i) => (i === index ? next : current)))
-                    }
+                    onChange={(next) => onChange(replaceKeyed(roles, index, next))}
                   />
                   <BulletsEditor
                     sectionIndex={sectionIndex}

@@ -1,6 +1,10 @@
 import { renderHook, act, waitFor } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { useCreateResumeForm } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import {
+  itemKey,
+  replaceKeyed,
+  useCreateResumeForm,
+} from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { createResume } from "@/db/resume"
 
 vi.mock("@/db/resume", () => ({
@@ -730,5 +734,45 @@ describe("useCreateResumeForm", () => {
           ?.message,
       ).toBe("End date is required")
     })
+  })
+})
+
+describe("replaceKeyed", () => {
+  type Keyed = { _key?: string; text: string }
+
+  const first: Keyed = { _key: "key-a", text: "one" }
+  const second: Keyed = { _key: "key-b", text: "two" }
+
+  it("keeps the existing key when the replacement omits it", () => {
+    const items = [first, second]
+
+    const next = replaceKeyed(items, 1, { text: "changed" })
+
+    expect(next[1]).toEqual({ _key: "key-b", text: "changed" })
+  })
+
+  it("keeps the existing key when the replacement carries a different one", () => {
+    const items = [first, second]
+
+    const next = replaceKeyed(items, 0, { _key: "stale", text: "changed" })
+
+    expect(next[0]).toEqual({ _key: "key-a", text: "changed" })
+  })
+
+  it("never changes the key of the item at the edited index", () => {
+    const items = [first, second]
+
+    const next = replaceKeyed(items, 1, { text: "changed" })
+
+    expect(itemKey(next[1], 1)).toBe(itemKey(items[1], 1))
+    expect(itemKey(next[0], 0)).toBe(itemKey(items[0], 0))
+  })
+
+  it("leaves untouched items untouched", () => {
+    const items = [first, second]
+
+    const next = replaceKeyed(items, 0, { text: "changed" })
+
+    expect(next[1]).toBe(second)
   })
 })

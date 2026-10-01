@@ -22,6 +22,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type ExperienceSectionErrors,
   type ResumeFormData,
@@ -134,9 +135,7 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                   index={index}
                   roleLabel={roleLabel}
                   bulletErrors={bulletErrors}
-                  onChange={(next) =>
-                    onChange(bullets.map((current, i) => (i === index ? next : current)))
-                  }
+                  onChange={(next) => onChange(replaceKeyed(bullets, index, next))}
                 />
               </SortableBulletCard>
             )

@@ -24,6 +24,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type ListSectionErrors,
   type ResumeFormData,
@@ -305,9 +306,7 @@ export function ListItemsEditor(props: Readonly<ListItemsEditorProps>) {
               sectionIndex={sectionIndex}
               item={item}
               index={index}
-              onChange={(next) =>
-                onChange(items.map((current, i) => (i === index ? next : current)))
-              }
+              onChange={(next) => onChange(replaceKeyed(items, index, next))}
               onRemove={() => {
                 clearErrors(`sections.${sectionIndex}.items.${index}`)
                 onChange(items.filter((_, i) => i !== index))

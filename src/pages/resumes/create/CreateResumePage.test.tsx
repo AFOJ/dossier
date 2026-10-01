@@ -276,6 +276,45 @@ describe("adding content focuses the first field", () => {
     expect(screen.getByRole("textbox", { name: /^Heading/ })).toHaveFocus()
   })
 
+  it("keeps a pre-filled bullet text field focused while typing", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+
+    const bulletText = screen.getByRole("textbox", { name: "Untitled Role bullet 1" })
+    await user.type(bulletText, "Shipped the thing")
+
+    expect(bulletText).toHaveValue("Shipped the thing")
+    expect(screen.getByRole("textbox", { name: "Untitled Role bullet 1" })).toBe(bulletText)
+    expect(document.activeElement).toBe(bulletText)
+  })
+
+  it("keeps nested pre-filled fields focused while typing", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+
+    const companies = screen.getAllByLabelText(/^Company/)
+    const company = companies[companies.length - 1]
+    await user.type(company, "Spotify")
+    expect(companies[companies.length - 1]).toBe(company)
+    expect(document.activeElement).toBe(company)
+
+    const titles = screen.getAllByLabelText(/^Job title/)
+    const jobTitle = titles[titles.length - 1]
+    await user.type(jobTitle, "Data Analyst")
+    expect(titles[titles.length - 1]).toBe(jobTitle)
+    expect(document.activeElement).toBe(jobTitle)
+  })
+
   it("focuses the new school name when a school is added", async () => {
     const user = userEvent.setup()
     renderPage()

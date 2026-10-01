@@ -473,6 +473,12 @@ export function itemKey(item: unknown, index: number): string {
   return (item as { _key?: string })._key ?? String(index)
 }
 
+export function replaceKeyed<T>(items: readonly T[], index: number, next: T): T[] {
+  return items.map((current, i) =>
+    i === index ? ({ ...next, _key: itemKey(current, i) } as T) : current,
+  )
+}
+
 const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
   paragraph: () => withKey({ type: "paragraph", title: "", text: "" }),
   education: () => withKey({ type: "education", title: "", institutions: [] }),

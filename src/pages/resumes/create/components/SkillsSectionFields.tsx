@@ -23,6 +23,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type SkillsSectionErrors,
   type ResumeFormData,
@@ -267,9 +268,7 @@ export function GroupsEditor(props: Readonly<GroupsEditorProps>) {
               sectionIndex={sectionIndex}
               group={group}
               index={index}
-              onChange={(next) =>
-                onChange(groups.map((current, i) => (i === index ? next : current)))
-              }
+              onChange={(next) => onChange(replaceKeyed(groups, index, next))}
               onRemove={() => {
                 clearErrors(`sections.${sectionIndex}.groups.${index}`)
                 onChange(groups.filter((_, i) => i !== index))
