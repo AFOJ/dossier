@@ -775,6 +775,14 @@ describe("replaceKeyed", () => {
 
     expect(next[1]).toBe(second)
   })
+
+  it("refuses to paper over an item that has no key", () => {
+    const items: Keyed[] = [{ text: "orphan" }]
+
+    expect(() => replaceKeyed(items, 0, { text: "changed" })).toThrowError(
+      /Resume list item at index 0 is missing a valid _key/,
+    )
+  })
 })
 
 describe("itemKey", () => {
@@ -784,7 +792,19 @@ describe("itemKey", () => {
 
   it("throws in development when the key is missing", () => {
     expect(() => itemKey({ text: "no key here" }, 3)).toThrowError(
-      /Resume list item at index 3 is missing its _key/,
+      /Resume list item at index 3 is missing a valid _key/,
+    )
+  })
+
+  it("throws in development when the key is null", () => {
+    expect(() => itemKey({ _key: null }, 0)).toThrowError(
+      /Resume list item at index 0 is missing a valid _key/,
+    )
+  })
+
+  it("throws in development when the key is an empty string", () => {
+    expect(() => itemKey({ _key: "" }, 0)).toThrowError(
+      /Resume list item at index 0 is missing a valid _key/,
     )
   })
 })
