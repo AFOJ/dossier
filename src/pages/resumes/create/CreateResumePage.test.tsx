@@ -276,43 +276,52 @@ describe("adding content focuses the first field", () => {
     expect(screen.getByRole("textbox", { name: /^Heading/ })).toHaveFocus()
   })
 
-  it("keeps a pre-filled bullet text field focused while typing", async () => {
+  it("keeps every nested list field focused while typing", async () => {
     const user = userEvent.setup()
     renderPage()
 
     await addSectionViaMenu(user, "Experience")
+    await addSectionViaMenu(user, "Education")
+    await addSectionViaMenu(user, "Skills")
+    await addSectionViaMenu(user, "List")
+
     await user.click(screen.getByRole("button", { name: "Add role" }))
     await user.click(screen.getByRole("button", { name: "Add bullet" }))
     await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+    await user.click(screen.getByRole("button", { name: "Add school" }))
 
-    const bulletText = screen.getByRole("textbox", { name: "Untitled Role bullet 1" })
-    await user.type(bulletText, "Shipped the thing")
+    const last = (items: HTMLElement[]) => items[items.length - 1]
 
-    expect(bulletText).toHaveValue("Shipped the thing")
-    expect(screen.getByRole("textbox", { name: "Untitled Role bullet 1" })).toBe(bulletText)
-    expect(document.activeElement).toBe(bulletText)
-  })
+    // Every editor below funnels through `updateSection`, so one pass over all of
+    // them covers each place a dropped `_key` would remount the row being edited.
+    // A single character is enough: a lost key remounts the row on the first
+    // keystroke, and it keeps the test cheap enough to stay stable in a full run.
+    const cases = [
+      { name: "bullet text", field: () => screen.getByRole("textbox", { name: /bullet 1$/ }) },
+      { name: "company", field: () => last(screen.getAllByLabelText(/^Company/)) },
+      { name: "role job title", field: () => last(screen.getAllByLabelText(/^Job title/)) },
+      { name: "school", field: () => last(screen.getAllByLabelText(/^School/)) },
+      { name: "skill group title", field: () => last(screen.getAllByLabelText(/^Group title/)) },
+      {
+        name: "list item title",
+        field: () => last(screen.getAllByPlaceholderText("Project name")),
+      },
+    ]
 
-  it("keeps nested pre-filled fields focused while typing", async () => {
-    const user = userEvent.setup()
-    renderPage()
+    for (const { name, field } of cases) {
+      const element = field()
 
-    await addSectionViaMenu(user, "Experience")
-    await user.click(screen.getByRole("button", { name: "Add role" }))
-    await user.click(screen.getByRole("button", { name: "Add bullet" }))
-    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+      await user.type(element, "X")
 
-    const companies = screen.getAllByLabelText(/^Company/)
-    const company = companies[companies.length - 1]
-    await user.type(company, "Spotify")
-    expect(companies[companies.length - 1]).toBe(company)
-    expect(document.activeElement).toBe(company)
-
-    const titles = screen.getAllByLabelText(/^Job title/)
-    const jobTitle = titles[titles.length - 1]
-    await user.type(jobTitle, "Data Analyst")
-    expect(titles[titles.length - 1]).toBe(jobTitle)
-    expect(document.activeElement).toBe(jobTitle)
+      // waitFor lets React commit before we inspect; a dropped key remounts the
+      // row asynchronously. Soft assertions keep one broken editor from masking
+      // the rest.
+      await waitFor(() => {
+        expect.soft(element, `${name} lost its typed value`).toHaveValue("X")
+        expect.soft(field(), `${name} was remounted mid-typing`).toBe(element)
+        expect.soft(document.activeElement, `${name} lost focus mid-typing`).toBe(element)
+      })
+    }
   })
 
   it("focuses the new school name when a school is added", async () => {
