@@ -470,7 +470,22 @@ export const withKey = <T extends object>(value: T): T & { _key: string } =>
   }) as WithKey<T>
 
 export function itemKey(item: unknown, index: number): string {
-  return (item as { _key?: string })._key ?? String(index)
+  const key = (item as { _key?: unknown })._key
+  const hasValidKey = typeof key === "string" && key.length > 0
+
+  if (!hasValidKey && import.meta.env.DEV) {
+    throw new Error(
+      `Resume list item at index ${index} is missing a valid _key. Editors must merge into the existing item (onChange({ ...item, ...patch })) rather than rebuilding it, or wrap the replacement in replaceKeyed.`,
+    )
+  }
+
+  return hasValidKey ? key : String(index)
+}
+
+export function replaceKeyed<T>(items: readonly T[], index: number, next: T): T[] {
+  return items.map((current, i) =>
+    i === index ? ({ ...next, _key: itemKey(current, i) } as T) : current,
+  )
 }
 
 const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {

@@ -22,6 +22,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type ExperienceSectionErrors,
   type ResumeFormData,
@@ -131,9 +132,7 @@ export function CompaniesEditor(props: Readonly<CompaniesEditorProps>) {
                     companyIndex={index}
                     company={company}
                     companyErrors={companyErrors}
-                    onChange={(next) =>
-                      onChange(companies.map((current, i) => (i === index ? next : current)))
-                    }
+                    onChange={(next) => onChange(replaceKeyed(companies, index, next))}
                   />
                   <RolesEditor
                     sectionIndex={sectionIndex}

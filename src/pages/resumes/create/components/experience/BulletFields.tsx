@@ -13,7 +13,8 @@ type BulletFieldsProps = {
 export function BulletFields(props: Readonly<BulletFieldsProps>) {
   const { bullet, index, roleLabel, bulletErrors, onChange } = props
 
-  const update = (patch: ExperienceCompanyRoleBullet) => onChange(patch)
+  const update = (patch: Partial<ExperienceCompanyRoleBullet>) =>
+    onChange({ ...bullet, ...patch } as ExperienceCompanyRoleBullet)
 
   const headingId = useId()
   const textId = useId()

@@ -24,6 +24,7 @@ import {
   getSectionErrors,
   useResumeFieldContext,
   itemKey,
+  replaceKeyed,
   withKey,
   type EducationSectionErrors,
   type ResumeFormData,
@@ -332,9 +333,7 @@ export function InstitutionsEditor(props: Readonly<InstitutionsEditorProps>) {
               sectionIndex={sectionIndex}
               institution={institution}
               index={index}
-              onChange={(next) =>
-                onChange(institutions.map((current, i) => (i === index ? next : current)))
-              }
+              onChange={(next) => onChange(replaceKeyed(institutions, index, next))}
               onRemove={() => {
                 clearErrors(`sections.${sectionIndex}.institutions.${index}`)
                 onChange(institutions.filter((_, i) => i !== index))
