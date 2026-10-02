@@ -11,6 +11,7 @@ import { useUndoHistory } from "@/hooks/useUndoHistory"
 import { resumeSectionSchema, type ResumeSectionData } from "@/db/schemas"
 import {
   describeSectionsChange,
+  replaySections,
   sectionsSignature,
 } from "@/pages/resumes/create/hooks/sectionsHistory"
 
@@ -589,7 +590,15 @@ export function useCreateResumeForm(profile?: Profile) {
   const history = useUndoHistory<FormSection[]>({
     // The form's declared type predates `_key`; at runtime sections are keyed.
     read: () => getValues("sections") as FormSection[],
-    apply: (sections) => setValue("sections", sections, { shouldDirty: true }),
+    apply: (sections) => {
+      setValue("sections", replaySections(sections, getValues("sections") as FormSection[]), {
+        shouldDirty: true,
+      })
+      // A snapshot carries no error state, and undo shifts indices, so the old
+      // paths no longer describe the same sections. Errors re-derive on the next
+      // interaction or submit.
+      clearErrors("sections")
+    },
   })
   const { record, clear: clearHistory } = history
 

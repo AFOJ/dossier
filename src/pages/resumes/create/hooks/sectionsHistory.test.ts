@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   describeSectionsChange,
+  replaySections,
   sectionsSignature,
 } from "@/pages/resumes/create/hooks/sectionsHistory"
 import type { FormSection } from "@/pages/resumes/create/hooks/useCreateResumeForm"
@@ -142,5 +143,219 @@ describe("describeSectionsChange", () => {
     const after = [section("a", { text: "two" })]
 
     expect(describeSectionsChange(before, after)).toBe("edit sections")
+  })
+})
+
+describe("replaySections", () => {
+  function paragraph(key: string, text: string) {
+    return { type: "paragraph", title: "", text, _key: key } as unknown as FormSection
+  }
+
+  function experience(key: string, companies: unknown[]): FormSection {
+    return { type: "experience", title: "", companies, _key: key } as unknown as FormSection
+  }
+
+  it("keeps text typed into a section after the recorded change", () => {
+    const target = [paragraph("a", "before")]
+    const live = [paragraph("a", "before plus more")]
+
+    expect(replaySections(target, live)[0]).toMatchObject({ text: "before plus more" })
+  })
+
+  it("restores an item that is missing from the live tree", () => {
+    const target = [paragraph("a", "kept"), paragraph("b", "restored")]
+    const live = [paragraph("a", "kept, edited")]
+
+    const result = replaySections(target, live)
+
+    expect(result).toHaveLength(2)
+    expect(result[1]).toMatchObject({ _key: "b", text: "restored" })
+  })
+
+  it("drops an item that only exists live", () => {
+    const target = [paragraph("a", "kept")]
+    const live = [paragraph("a", "kept"), paragraph("b", "added later")]
+
+    expect(replaySections(target, live)).toHaveLength(1)
+  })
+
+  it("adopts the target order while keeping live content", () => {
+    const target = [paragraph("b", "b"), paragraph("a", "a")]
+    const live = [paragraph("a", "a edited"), paragraph("b", "b edited")]
+
+    const result = replaySections(target, live)
+
+    expect(result.map((item) => item._key)).toEqual(["b", "a"])
+    expect(result[0]).toMatchObject({ text: "b edited" })
+  })
+
+  it("recurses into nested lists by identity", () => {
+    const target = [
+      experience("s1", [
+        {
+          company_name: "Spotify",
+          roles: [
+            {
+              job_title: "Dev",
+              bullets: [
+                { type: "text", text: "first", _key: "b1" },
+                { type: "text", text: "second", _key: "b2" },
+              ],
+              _key: "r1",
+            },
+          ],
+          _key: "c1",
+        },
+      ]),
+    ]
+
+    // The sibling bullet was edited after the change was recorded.
+    const live = [
+      experience("s1", [
+        {
+          company_name: "Spotify, renamed",
+          roles: [
+            {
+              job_title: "Dev, edited",
+              bullets: [
+                { type: "text", text: "first, edited", _key: "b1" },
+                { type: "text", text: "second", _key: "b2" },
+              ],
+              _key: "r1",
+            },
+          ],
+          _key: "c1",
+        },
+      ]),
+    ]
+
+    type Company = {
+      company_name: string
+      roles: { job_title: string; bullets: { text: string }[] }[]
+    }
+
+    const result = replaySections(target, live) as unknown as { companies: Company[] }[]
+    const company = result[0].companies[0]
+
+    expect(company.company_name).toBe("Spotify, renamed")
+    expect(company.roles[0].job_title).toBe("Dev, edited")
+    expect(company.roles[0].bullets.map((bullet) => bullet.text)).toEqual([
+      "first, edited",
+      "second",
+    ])
+  })
+
+  it("restores a nested bullet without disturbing its sibling", () => {
+    const target = [
+      experience("s1", [
+        {
+          company_name: "Spotify",
+          roles: [
+            {
+              job_title: "Dev",
+              bullets: [
+                { type: "text", text: "deleted later", _key: "b1" },
+                { type: "text", text: "sibling", _key: "b2" },
+              ],
+              _key: "r1",
+            },
+          ],
+          _key: "c1",
+        },
+      ]),
+    ]
+
+    const live = [
+      experience("s1", [
+        {
+          company_name: "Spotify",
+          roles: [
+            {
+              job_title: "Dev",
+              bullets: [{ type: "text", text: "sibling, edited", _key: "b2" }],
+              _key: "r1",
+            },
+          ],
+          _key: "c1",
+        },
+      ]),
+    ]
+
+    type Company = { roles: { bullets: { text: string }[] }[] }
+
+    const result = replaySections(target, live) as unknown as { companies: Company[] }[]
+
+    expect(result[0].companies[0].roles[0].bullets.map((bullet) => bullet.text)).toEqual([
+      "deleted later",
+      "sibling, edited",
+    ])
+  })
+
+  it("matches unkeyed skill entries by position", () => {
+    function skills(key: string, items: string[]): FormSection {
+      return {
+        type: "skills",
+        title: "",
+        groups: [{ title: "Web", items, _key: `${key}g1` }],
+        _key: key,
+      } as unknown as FormSection
+    }
+
+    const target = [skills("s1", ["React", "TypeScript"])]
+    const live = [skills("s1", ["React", "TypeScript", "Vitest"])]
+
+    const result = replaySections(target, live) as unknown as {
+      groups: { items: string[] }[]
+    }[]
+
+    // The extra skill was added after the recorded change, so it is dropped.
+    expect(result[0].groups[0].items).toEqual(["React", "TypeScript"])
+  })
+})
+
+describe("skill groups", () => {
+  function skillsSection(key: string, items: string[]): FormSection {
+    return {
+      type: "skills",
+      title: "",
+      groups: [{ title: "Web", items, _key: `${key}-g1` }],
+      _key: key,
+    } as unknown as FormSection
+  }
+
+  it("changes when a skill is added to a group", () => {
+    expect(sectionsSignature([skillsSection("s1", ["React"])])).not.toBe(
+      sectionsSignature([skillsSection("s1", ["React", "TypeScript"])]),
+    )
+  })
+
+  it("changes when a skill is removed from a group", () => {
+    expect(sectionsSignature([skillsSection("s1", ["React", "TypeScript"])])).not.toBe(
+      sectionsSignature([skillsSection("s1", ["React"])]),
+    )
+  })
+
+  it("ignores rewriting a skill without changing the count", () => {
+    expect(sectionsSignature([skillsSection("s1", ["React"])])).toBe(
+      sectionsSignature([skillsSection("s1", ["Vue"])]),
+    )
+  })
+
+  it("describes an added skill", () => {
+    expect(
+      describeSectionsChange(
+        [skillsSection("s1", ["React"])],
+        [skillsSection("s1", ["React", "TypeScript"])],
+      ),
+    ).toBe("add skill")
+  })
+
+  it("describes a removed skill", () => {
+    expect(
+      describeSectionsChange(
+        [skillsSection("s1", ["React", "TypeScript"])],
+        [skillsSection("s1", ["React"])],
+      ),
+    ).toBe("delete skill")
   })
 })

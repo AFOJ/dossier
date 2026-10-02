@@ -484,4 +484,70 @@ describe("undoing structural changes", () => {
 
     expect(screen.getAllByLabelText(/^Section title/)).toHaveLength(1)
   })
+
+  it("keeps edits made to another section after undoing a delete", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+    const paragraphs = () => screen.getAllByLabelText(/^Paragraph/)
+    await user.type(paragraphs()[0], "First body")
+
+    await addSectionViaMenu(user, "Paragraph")
+    await user.type(paragraphs()[1], "Second body")
+
+    // Remove the second section, then edit the first one further.
+    await user.click(screen.getAllByRole("button", { name: /^Remove .* section$/i })[1])
+    expect(paragraphs()).toHaveLength(1)
+
+    await user.type(paragraphs()[0], " and more")
+
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    // The section comes back, and the later edit to its sibling survives.
+    expect(paragraphs()).toHaveLength(2)
+    expect(paragraphs()[0]).toHaveValue("First body and more")
+    expect(paragraphs()[1]).toHaveValue("Second body")
+  })
+
+  it("keeps edits made to another bullet after undoing a bullet delete", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Experience")
+    await user.click(screen.getByRole("button", { name: "Add role" }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+    await user.click(screen.getByRole("button", { name: "Add bullet" }))
+    await user.click(await screen.findByRole("menuitem", { name: /Simple bullet/ }))
+
+    const bullets = () => screen.getAllByRole("textbox", { name: /bullet \d+$/ })
+    await user.type(bullets()[0], "alpha")
+    await user.type(bullets()[1], "beta")
+
+    await user.click(screen.getAllByRole("button", { name: /^Remove .* bullet$/i })[0])
+    expect(bullets()).toHaveLength(1)
+
+    await user.type(bullets()[0], " edited")
+
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    expect(bullets()).toHaveLength(2)
+    expect(bullets()[0]).toHaveValue("alpha")
+    expect(bullets()[1]).toHaveValue("beta edited")
+  })
+
+  it("records an undo entry when a skill is added", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Skills")
+
+    const skillBox = screen.getByPlaceholderText("Type a skill and press Enter")
+    await user.type(skillBox, "React{Enter}")
+
+    await user.hover(screen.getByRole("button", { name: "Undo" }))
+
+    expect(await screen.findByText("Undo add skill")).toBeInTheDocument()
+  })
 })

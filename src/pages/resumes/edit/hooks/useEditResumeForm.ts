@@ -14,6 +14,7 @@ import {
   type FormSection,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import { replaySections } from "@/pages/resumes/create/hooks/sectionsHistory"
 
 export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const toast = useToast()
@@ -31,7 +32,15 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 
   const history = useUndoHistory<FormSection[]>({
     read: () => getValues("sections") as FormSection[],
-    apply: (sections) => setValue("sections", sections, { shouldDirty: true }),
+    apply: (sections) => {
+      setValue("sections", replaySections(sections, getValues("sections") as FormSection[]), {
+        shouldDirty: true,
+      })
+      // A snapshot carries no error state, and undo shifts indices, so the old
+      // paths no longer describe the same sections. Errors re-derive on the next
+      // interaction or submit.
+      clearErrors("sections")
+    },
   })
   const { record, clear: clearHistory } = history
 

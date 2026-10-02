@@ -33,6 +33,10 @@ function makeResume(): Resume {
   }
 }
 
+// The route loader resolves asynchronously; the default 1000ms findBy budget is
+// tight when the whole suite runs in parallel.
+const READY = { timeout: 5_000 }
+
 function renderPage() {
   const router = createMemoryRouter(
     [
@@ -63,7 +67,7 @@ describe("EditResumePage submit bar", () => {
     renderPage()
 
     // Nothing to undo, redo or discard, but the controls stay put.
-    expect(await screen.findByRole("button", { name: "Undo" })).toBeDisabled()
+    expect(await screen.findByRole("button", { name: "Undo" }, READY)).toBeDisabled()
     expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled()
     expect(screen.getByRole("button", { name: /Discard changes/ })).toBeDisabled()
     expect(screen.getByRole("button", { name: /Save changes/ })).toBeDisabled()
@@ -73,7 +77,7 @@ describe("EditResumePage submit bar", () => {
     const user = userEvent.setup()
     renderPage()
 
-    const title = await screen.findByLabelText(/^Title/)
+    const title = await screen.findByLabelText(/^Title/, undefined, READY)
     await user.clear(title)
     await user.type(title, "Renamed")
 
@@ -90,16 +94,16 @@ describe("EditResumePage submit bar", () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.hover(await screen.findByRole("button", { name: /Discard changes/ }))
+    await user.hover(await screen.findByRole("button", { name: /Discard changes/ }, READY))
 
-    expect(await screen.findByText("No changes to discard")).toBeInTheDocument()
+    expect(await screen.findByText("No changes to discard", undefined, READY)).toBeInTheDocument()
   })
 
   it("undoes a deleted section from the edit page", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole("button", { name: /^Remove .* section$/i }))
+    await user.click(await screen.findByRole("button", { name: /^Remove .* section$/i }, READY))
     expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Undo" }))
@@ -120,7 +124,7 @@ describe("EditResumePage submit bar", () => {
     renderPage()
 
     // Deleting the only section leaves a valid, dirty form with an undo entry.
-    await user.click(await screen.findByRole("button", { name: /^Remove .* section$/i }))
+    await user.click(await screen.findByRole("button", { name: /^Remove .* section$/i }, READY))
     expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: /Save changes/ }))

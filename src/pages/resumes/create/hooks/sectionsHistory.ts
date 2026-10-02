@@ -11,21 +11,17 @@ import type { FormSection } from "@/pages/resumes/create/hooks/useCreateResumeFo
 
 type Keyed = { _key?: unknown }
 
-type Noun = "section" | "company" | "role" | "bullet" | "school" | "skill group" | "list item"
+type Noun =
+  "section" | "company" | "role" | "bullet" | "school" | "skill group" | "skill" | "list item"
 
-type ChildrenOf = (item: unknown) => { items: readonly unknown[]; noun: Noun }
-
-const NOUNS: Record<Noun, string> = {
-  section: "section",
-  company: "company",
-  role: "role",
-  bullet: "bullet",
-  school: "school",
-  "skill group": "skill group",
-  "list item": "list item",
+type ChildrenOf = (item: unknown) => {
+  /** Property on the parent that holds the children, so it can be written back. */
+  field: string
+  items: readonly unknown[]
+  noun: Noun
 }
 
-const NO_CHILDREN: ChildrenOf = () => ({ items: [], noun: "bullet" })
+const NO_CHILDREN: ChildrenOf = () => ({ field: "", items: [], noun: "skill" })
 
 const sectionChildren: ChildrenOf = (item) => {
   const section = item as {
@@ -38,26 +34,36 @@ const sectionChildren: ChildrenOf = (item) => {
 
   switch (section.type) {
     case "education":
-      return { items: section.institutions ?? [], noun: "school" }
+      return { field: "institutions", items: section.institutions ?? [], noun: "school" }
     case "skills":
-      return { items: section.groups ?? [], noun: "skill group" }
+      return { field: "groups", items: section.groups ?? [], noun: "skill group" }
     case "list":
-      return { items: section.items ?? [], noun: "list item" }
+      return { field: "items", items: section.items ?? [], noun: "list item" }
     case "experience":
-      return { items: section.companies ?? [], noun: "company" }
+      return { field: "companies", items: section.companies ?? [], noun: "company" }
     case "paragraph":
-      return { items: [], noun: "bullet" }
+      return { field: "", items: [], noun: "skill" }
   }
 }
 
 const companyChildren: ChildrenOf = (item) => ({
+  field: "roles",
   items: (item as { roles?: unknown[] }).roles ?? [],
   noun: "role",
 })
 
 const roleChildren: ChildrenOf = (item) => ({
+  field: "bullets",
   items: (item as { bullets?: unknown[] }).bullets ?? [],
   noun: "bullet",
+})
+
+// Skill entries are plain strings with no `_key`, so they are matched by
+// position instead of identity.
+const skillChildren: ChildrenOf = (item) => ({
+  field: "items",
+  items: (item as { items?: unknown[] }).items ?? [],
+  noun: "skill",
 })
 
 function childrenOfFor(noun: Noun): ChildrenOf {
@@ -68,14 +74,42 @@ function childrenOfFor(noun: Noun): ChildrenOf {
       return companyChildren
     case "role":
       return roleChildren
+    case "skill group":
+      return skillChildren
     default:
       return NO_CHILDREN
   }
 }
 
+const NOUNS: Record<Noun, string> = {
+  section: "section",
+  company: "company",
+  role: "role",
+  bullet: "bullet",
+  school: "school",
+  "skill group": "skill group",
+  skill: "skill",
+  "list item": "list item",
+}
+
 function keyOf(item: unknown): string {
   const key = (item as Keyed)._key
   return typeof key === "string" ? key : `~${String(key)}`
+}
+
+function hasKey(item: unknown): boolean {
+  return typeof (item as Keyed)._key === "string"
+}
+
+/**
+ * Keys for one level of the tree.
+ *
+ * Keyed items are identified by their `_key`. Unkeyed ones (skill strings) get
+ * a positional token instead, so a list of them still reads as length-sensitive
+ * rather than collapsing to a single indistinguishable entry.
+ */
+function keysAt(items: readonly unknown[]): string[] {
+  return items.map((item, index) => (hasKey(item) ? keyOf(item) : `#${index}`))
 }
 
 function plural(noun: Noun, count: number): string {
@@ -93,11 +127,11 @@ function plural(noun: Noun, count: number): string {
 function collectKeys(items: readonly unknown[], noun: Noun, out: string[]): void {
   const childrenOf = childrenOfFor(noun)
 
-  for (const item of items) {
-    out.push(keyOf(item))
+  out.push(...keysAt(items))
 
-    const childNoun = childrenOf(item).noun
-    collectKeys(childrenOf(item).items, childNoun, out)
+  for (const item of items) {
+    const child = childrenOf(item)
+    collectKeys(child.items, child.noun, out)
   }
 }
 
@@ -123,7 +157,11 @@ function countDelta(beforeKeys: string[], afterKeys: string[], noun: Noun): stri
     return `${removed === 1 ? "delete" : `delete ${removed}`} ${plural(noun, removed)}`
   }
 
-  return `${added === 1 ? "add" : `add ${added}`} ${plural(noun, added)}`
+  if (added > 0) {
+    return `${added === 1 ? "add" : `add ${added}`} ${plural(noun, added)}`
+  }
+
+  return "edit sections"
 }
 
 /**
@@ -137,8 +175,8 @@ function diffAtLevel(
   after: readonly unknown[],
   noun: Noun,
 ): string | null {
-  const beforeKeys = before.map(keyOf)
-  const afterKeys = after.map(keyOf)
+  const beforeKeys = keysAt(before)
+  const afterKeys = keysAt(after)
   const childrenOf = childrenOfFor(noun)
 
   const shared = Math.min(beforeKeys.length, afterKeys.length)
@@ -178,4 +216,62 @@ export function describeSectionsChange(
   after: readonly FormSection[],
 ): string {
   return diffAtLevel(before, after, "section") ?? "edit sections"
+}
+
+function replayList(target: readonly unknown[], live: readonly unknown[], noun: Noun): unknown[] {
+  const useIdentity = target.length > 0 && target.every(hasKey)
+
+  if (!useIdentity) {
+    // Unkeyed entries (skill strings) have no identity, so the target's length
+    // wins and live content is kept wherever the positions line up.
+    const merged = live.slice(0, target.length)
+
+    return target.length > live.length ? [...merged, ...target.slice(live.length)] : merged
+  }
+
+  const liveByKey = new Map<string, unknown>()
+  for (const item of live) {
+    liveByKey.set(keyOf(item), item)
+  }
+
+  const childrenOf = childrenOfFor(noun)
+
+  return target.map((item) => {
+    const matched = liveByKey.get(keyOf(item))
+
+    if (matched === undefined) {
+      return item
+    }
+
+    const targetChildren = childrenOf(item)
+    const liveChildren = childrenOf(matched)
+
+    if (targetChildren.field === "") {
+      return matched
+    }
+
+    return {
+      ...matched,
+      [targetChildren.field]: replayList(
+        targetChildren.items,
+        liveChildren.items,
+        targetChildren.noun,
+      ),
+    }
+  })
+}
+
+/**
+ * Rebuilds the target's structure while keeping the content of anything that
+ * still exists in `live`.
+ *
+ * Restoring a raw snapshot would discard text typed after the change was
+ * recorded — the snapshot is a whole-tree copy, so every unrelated edit made
+ * since then would be rolled back along with the structural change.
+ */
+export function replaySections(
+  target: readonly FormSection[],
+  live: readonly FormSection[],
+): FormSection[] {
+  return replayList(target, live, "section") as FormSection[]
 }
