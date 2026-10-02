@@ -115,6 +115,66 @@ describe("useUndoHistory", () => {
     expect(result.current.canUndo).toBe(false)
   })
 
+  it("unwinds two entries when undo is called twice in one tick", () => {
+    const { result, current, set } = setup("s0")
+
+    act(() => result.current.record("add section", "s0"))
+    act(() => set("s1"))
+    act(() => result.current.record("add section", "s1"))
+    act(() => set("s2"))
+
+    // No render between the two calls, so both must read the latest stack.
+    act(() => {
+      result.current.undo()
+      result.current.undo()
+    })
+
+    expect(current()).toBe("s0")
+  })
+
+  it("redoes two entries when redo is called twice in one tick", () => {
+    const { result, current, set } = setup("s0")
+
+    act(() => result.current.record("add section", "s0"))
+    act(() => set("s1"))
+    act(() => result.current.record("add section", "s1"))
+    act(() => set("s2"))
+
+    act(() => {
+      result.current.undo()
+      result.current.undo()
+    })
+    expect(current()).toBe("s0")
+
+    act(() => {
+      result.current.redo()
+      result.current.redo()
+    })
+
+    expect(current()).toBe("s2")
+  })
+
+  it("keeps every undone entry available for redo", () => {
+    const { result, current, set } = setup("s0")
+
+    act(() => result.current.record("add section", "s0"))
+    act(() => set("s1"))
+    act(() => result.current.record("add section", "s1"))
+    act(() => set("s2"))
+
+    act(() => {
+      result.current.undo()
+      result.current.undo()
+    })
+
+    expect(result.current.canRedo).toBe(true)
+
+    act(() => result.current.redo())
+    expect(current()).toBe("s1")
+    act(() => result.current.redo())
+    expect(current()).toBe("s2")
+  })
+
   it("empties both stacks on clear", () => {
     const { result, current, set } = setup("s0")
 

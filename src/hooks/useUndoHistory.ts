@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 const LIMIT = 50
 
@@ -36,15 +36,30 @@ export function useUndoHistory<T>(options: {
   const { read, apply } = options
   const [history, setHistory] = useState<History<T>>(EMPTY)
 
-  const record = useCallback((label: string, value: T) => {
-    setHistory((current) => ({
-      past: [...current.past, { label, value }].slice(-LIMIT),
-      future: [],
-    }))
+  // Mutations read and write this alongside state, so two calls landing in the
+  // same tick both act on the latest stack rather than a render-captured copy.
+  const historyRef = useRef<History<T>>(EMPTY)
+
+  const commit = useCallback((next: History<T>) => {
+    historyRef.current = next
+    setHistory(next)
   }, [])
 
+  const record = useCallback(
+    (label: string, value: T) => {
+      const current = historyRef.current
+      commit({
+        past: [...current.past, { label, value }].slice(-LIMIT),
+        future: [],
+      })
+    },
+    [commit],
+  )
+
   const undo = useCallback(() => {
-    const entry = history.past[history.past.length - 1]
+    const current = historyRef.current
+    const entry = current.past[current.past.length - 1]
+
     if (!entry) {
       return
     }
@@ -52,31 +67,33 @@ export function useUndoHistory<T>(options: {
     // Captured before `apply`, so redo replays the state the action produced.
     const inverse: UndoEntry<T> = { label: entry.label, value: read() }
 
-    apply(entry.value)
-    setHistory({
-      past: history.past.slice(0, -1),
-      future: [...history.future, inverse],
+    commit({
+      past: current.past.slice(0, -1),
+      future: [...current.future, inverse],
     })
-  }, [apply, history, read])
+    apply(entry.value)
+  }, [apply, commit, read])
 
   const redo = useCallback(() => {
-    const entry = history.future[history.future.length - 1]
+    const current = historyRef.current
+    const entry = current.future[current.future.length - 1]
+
     if (!entry) {
       return
     }
 
     const inverse: UndoEntry<T> = { label: entry.label, value: read() }
 
-    apply(entry.value)
-    setHistory({
-      past: [...history.past, inverse],
-      future: history.future.slice(0, -1),
+    commit({
+      past: [...current.past, inverse],
+      future: current.future.slice(0, -1),
     })
-  }, [apply, history, read])
+    apply(entry.value)
+  }, [apply, commit, read])
 
   const clear = useCallback(() => {
-    setHistory(EMPTY)
-  }, [])
+    commit(EMPTY)
+  }, [commit])
 
   return useMemo(
     () => ({
