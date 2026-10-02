@@ -7,7 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
+import { useUndoHistory } from "@/hooks/useUndoHistory"
 import { resumeSectionSchema, type ResumeSectionData } from "@/db/schemas"
+import {
+  describeSectionsChange,
+  replaySections,
+  sectionsSignature,
+} from "@/pages/resumes/create/hooks/sectionsHistory"
 
 const isMonthValue = (value: string) => /^\d{4}-\d{2}$/.test(value)
 
@@ -419,11 +425,22 @@ type SectionsApi = {
   setValue: (name: "sections", value: FormSection[], options?: object) => void
   getValues: (name: "sections") => FormSection[]
   clearErrors: UseFormClearErrors<ResumeFormData>
+  record: (label: string, sections: FormSection[]) => void
 }
 
-export function createSectionMutations({ setValue, getValues, clearErrors }: SectionsApi) {
+export function createSectionMutations({ setValue, getValues, clearErrors, record }: SectionsApi) {
+  // Every structural action lands here, and so does every keystroke. The key
+  // signature is what separates them: editing text cannot change the tree's
+  // shape, so only real adds, deletes and reorders are worth recording.
   const mutateSections = (mutate: (sections: FormSection[]) => FormSection[]) => {
-    setValue("sections", mutate(getValues("sections")), { shouldDirty: true })
+    const before = getValues("sections")
+    const after = mutate(before)
+
+    if (sectionsSignature(before) !== sectionsSignature(after)) {
+      record(describeSectionsChange(before, after), before)
+    }
+
+    setValue("sections", after, { shouldDirty: true })
   }
 
   return {
@@ -570,9 +587,24 @@ export function useCreateResumeForm(profile?: Profile) {
 
   const { setValue, getValues, clearErrors } = form
 
+  const history = useUndoHistory<FormSection[]>({
+    // The form's declared type predates `_key`; at runtime sections are keyed.
+    read: () => getValues("sections") as FormSection[],
+    apply: (sections) => {
+      setValue("sections", replaySections(sections, getValues("sections") as FormSection[]), {
+        shouldDirty: true,
+      })
+      // A snapshot carries no error state, and undo shifts indices, so the old
+      // paths no longer describe the same sections. Errors re-derive on the next
+      // interaction or submit.
+      clearErrors("sections")
+    },
+  })
+  const { record, clear: clearHistory } = history
+
   const { addSection, removeSection, reorderSection, updateSection } = useMemo(
-    () => createSectionMutations({ setValue, getValues, clearErrors }),
-    [setValue, getValues, clearErrors],
+    () => createSectionMutations({ setValue, getValues, clearErrors, record }),
+    [setValue, getValues, clearErrors, record],
   )
 
   const setSyncProfile = useCallback(
@@ -616,6 +648,7 @@ export function useCreateResumeForm(profile?: Profile) {
       })
 
       toast.success("Resume created", `"${data.title}" has been created.`)
+      clearHistory()
       navigate("/resumes")
     } catch (error) {
       form.setError("root", {
@@ -640,5 +673,9 @@ export function useCreateResumeForm(profile?: Profile) {
     reorderSection,
     updateSection,
     setSyncProfile,
+    undo: history.undo,
+    redo: history.redo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
   }
 }

@@ -106,7 +106,7 @@ describe("useEditResumeForm", () => {
     expect(result.current.form.getValues("fullName")).toBe("Snapshot Person")
   })
 
-  it("tracks dirty state and reverts to the saved values", () => {
+  it("tracks dirty state and discards back to the saved values", () => {
     const { result } = renderHook(() => useEditResumeForm(makeResume()))
 
     act(() => {
@@ -116,7 +116,7 @@ describe("useEditResumeForm", () => {
     expect(result.current.isDirty).toBe(true)
 
     act(() => {
-      result.current.revert()
+      result.current.discard()
     })
 
     expect(result.current.form.getValues("title")).toBe("My Resume")

@@ -6,6 +6,7 @@ import { useToast } from "@/components/toast"
 import type { Profile, Resume } from "@/db/db"
 import type { ResumeSection } from "@/db/types"
 import { updateResume } from "@/db/resume"
+import { useUndoHistory } from "@/hooks/useUndoHistory"
 import {
   createSectionMutations,
   emptyContactValues,
@@ -13,6 +14,7 @@ import {
   type FormSection,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
+import { replaySections } from "@/pages/resumes/create/hooks/sectionsHistory"
 
 export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const toast = useToast()
@@ -28,9 +30,24 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
 
   const isDirty = form.formState.isDirty
 
-  const revert = useCallback(() => {
+  const history = useUndoHistory<FormSection[]>({
+    read: () => getValues("sections") as FormSection[],
+    apply: (sections) => {
+      setValue("sections", replaySections(sections, getValues("sections") as FormSection[]), {
+        shouldDirty: true,
+      })
+      // A snapshot carries no error state, and undo shifts indices, so the old
+      // paths no longer describe the same sections. Errors re-derive on the next
+      // interaction or submit.
+      clearErrors("sections")
+    },
+  })
+  const { record, clear: clearHistory } = history
+
+  const discard = useCallback(() => {
     form.reset(defaultValues)
-  }, [form, defaultValues])
+    clearHistory()
+  }, [clearHistory, defaultValues, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
@@ -57,6 +74,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
       // Reset to the raw (keyed) current values so the form is pristine
       // without losing the identity keys used for stable list rendering.
       form.reset(form.getValues())
+      clearHistory()
       toast.success("Resume saved", `"${data.title}" has been saved.`)
       navigate("/resumes")
     } catch (error) {
@@ -75,8 +93,8 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
   const { setValue, getValues, clearErrors } = form
 
   const { addSection, removeSection, reorderSection, updateSection } = useMemo(
-    () => createSectionMutations({ setValue, getValues, clearErrors }),
-    [setValue, getValues, clearErrors],
+    () => createSectionMutations({ setValue, getValues, clearErrors, record }),
+    [setValue, getValues, clearErrors, record],
   )
 
   const setSyncProfile = useCallback(
@@ -101,7 +119,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     form,
     isDirty,
     isSubmitting,
-    revert,
+    discard,
     onSubmit,
     addSection,
     removeSection,
@@ -109,6 +127,10 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     updateSection,
     setSyncProfile,
     formError: form.formState.errors.root?.message,
+    undo: history.undo,
+    redo: history.redo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
   }
 }
 
