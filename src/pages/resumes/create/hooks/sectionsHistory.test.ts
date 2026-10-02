@@ -291,25 +291,42 @@ describe("replaySections", () => {
     ])
   })
 
-  it("matches unkeyed skill entries by position", () => {
-    function skills(key: string, items: string[]): FormSection {
-      return {
-        type: "skills",
-        title: "",
-        groups: [{ title: "Web", items, _key: `${key}g1` }],
-        _key: key,
-      } as unknown as FormSection
-    }
+  function skills(key: string, items: string[]): FormSection {
+    return {
+      type: "skills",
+      title: "",
+      groups: [{ title: "Web", items, _key: `${key}g1` }],
+      _key: key,
+    } as unknown as FormSection
+  }
 
-    const target = [skills("s1", ["React", "TypeScript"])]
-    const live = [skills("s1", ["React", "TypeScript", "Vitest"])]
+  function replayItems(targetItems: string[], liveItems: string[]) {
+    const result = replaySections(
+      [skills("s1", targetItems)],
+      [skills("s1", liveItems)],
+    ) as unknown as { groups: { items: string[] }[] }[]
 
-    const result = replaySections(target, live) as unknown as {
-      groups: { items: string[] }[]
-    }[]
+    return result[0].groups[0].items
+  }
 
-    // The extra skill was added after the recorded change, so it is dropped.
-    expect(result[0].groups[0].items).toEqual(["React", "TypeScript"])
+  it("drops unkeyed entries added after the recorded change", () => {
+    // The extra skill was added later, so it is dropped.
+    expect(replayItems(["React", "TypeScript"], ["React", "TypeScript", "Vitest"])).toEqual([
+      "React",
+      "TypeScript",
+    ])
+  })
+
+  it("restores a front-deleted entry without duplicating the survivor", () => {
+    // Matching survivors by position would return ["TypeScript", "TypeScript"].
+    expect(replayItems(["React", "TypeScript"], ["TypeScript"])).toEqual(["React", "TypeScript"])
+  })
+
+  it("drops later additions when an earlier entry was deleted", () => {
+    expect(replayItems(["React", "TypeScript"], ["TypeScript", "Vue"])).toEqual([
+      "React",
+      "TypeScript",
+    ])
   })
 })
 

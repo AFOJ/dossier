@@ -222,11 +222,16 @@ function replayList(target: readonly unknown[], live: readonly unknown[], noun: 
   const useIdentity = target.length > 0 && target.every(hasKey)
 
   if (!useIdentity) {
-    // Unkeyed entries (skill strings) have no identity, so the target's length
-    // wins and live content is kept wherever the positions line up.
-    const merged = live.slice(0, target.length)
+    // Unkeyed entries (skill strings) carry no identity, so survivors are matched
+    // by value against a pool that is consumed as it is used. Matching by
+    // position instead would assume live's entries sit at the front of target,
+    // which duplicates survivors whenever an earlier entry was deleted.
+    const pool = [...live]
 
-    return target.length > live.length ? [...merged, ...target.slice(live.length)] : merged
+    return target.map((item) => {
+      const index = pool.indexOf(item)
+      return index >= 0 ? pool.splice(index, 1)[0] : item
+    })
   }
 
   const liveByKey = new Map<string, unknown>()
