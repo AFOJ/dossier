@@ -48,8 +48,6 @@ function EditResumeForm(props: Readonly<{ resume: Resume }>) {
     redo,
     canUndo,
     canRedo,
-    nextUndoLabel,
-    nextRedoLabel,
   } = useEditResumeForm(resume)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
@@ -126,8 +124,6 @@ function EditResumeForm(props: Readonly<{ resume: Resume }>) {
             <HistoryButtons
               canUndo={canUndo}
               canRedo={canRedo}
-              undoLabel={nextUndoLabel}
-              redoLabel={nextRedoLabel}
               onUndo={undo}
               onRedo={redo}
               disabled={isSubmitting}

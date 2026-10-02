@@ -4,22 +4,17 @@ import { Button, Tooltip } from "@/components/ui"
 type HistoryButtonsProps = {
   canUndo: boolean
   canRedo: boolean
-  undoLabel: string | null
-  redoLabel: string | null
   onUndo: () => void
   onRedo: () => void
   disabled?: boolean
 }
 
 export function HistoryButtons(props: Readonly<HistoryButtonsProps>) {
-  const { canUndo, canRedo, undoLabel, redoLabel, onUndo, onRedo, disabled = false } = props
-
-  const undoContent = canUndo && undoLabel ? `Undo ${undoLabel}` : "Nothing to undo"
-  const redoContent = canRedo && redoLabel ? `Redo ${redoLabel}` : "Nothing to redo"
+  const { canUndo, canRedo, onUndo, onRedo, disabled = false } = props
 
   return (
     <div className="flex items-center gap-2">
-      <Tooltip content={undoContent}>
+      <Tooltip content={canUndo ? "Undo" : "Nothing to undo"}>
         <span className="inline-block">
           <Button
             type="button"
@@ -34,7 +29,7 @@ export function HistoryButtons(props: Readonly<HistoryButtonsProps>) {
         </span>
       </Tooltip>
 
-      <Tooltip content={redoContent}>
+      <Tooltip content={canRedo ? "Redo" : "Nothing to redo"}>
         <span className="inline-block">
           <Button
             type="button"

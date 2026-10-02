@@ -30,8 +30,6 @@ export default function CreateResumePage() {
     redo,
     canUndo,
     canRedo,
-    nextUndoLabel,
-    nextRedoLabel,
   } = useCreateResumeForm(profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
@@ -110,8 +108,6 @@ export default function CreateResumePage() {
             <HistoryButtons
               canUndo={canUndo}
               canRedo={canRedo}
-              undoLabel={nextUndoLabel}
-              redoLabel={nextRedoLabel}
               onUndo={undo}
               onRedo={redo}
               disabled={isSubmitting}

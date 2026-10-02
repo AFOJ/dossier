@@ -131,8 +131,6 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     redo: history.redo,
     canUndo: history.canUndo,
     canRedo: history.canRedo,
-    nextUndoLabel: history.nextUndoLabel,
-    nextRedoLabel: history.nextRedoLabel,
   }
 }
 

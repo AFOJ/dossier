@@ -418,7 +418,7 @@ describe("undoing structural changes", () => {
     expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled()
   })
 
-  it("names the next action in the undo tooltip", async () => {
+  it("shows the undo tooltip when there is something to undo", async () => {
     const user = userEvent.setup()
     renderPage()
 
@@ -427,7 +427,7 @@ describe("undoing structural changes", () => {
 
     await user.hover(screen.getByRole("button", { name: "Undo" }))
 
-    expect(await screen.findByText("Undo delete section")).toBeInTheDocument()
+    expect(await screen.findByText("Undo")).toBeInTheDocument()
   })
 
   it("explains the disabled state in the undo tooltip", async () => {
@@ -537,7 +537,7 @@ describe("undoing structural changes", () => {
     expect(bullets()[1]).toHaveValue("beta edited")
   })
 
-  it("records an undo entry when a skill is added", async () => {
+  it("undoes an added skill", async () => {
     const user = userEvent.setup()
     renderPage()
 
@@ -546,8 +546,13 @@ describe("undoing structural changes", () => {
     const skillBox = screen.getByPlaceholderText("Type a skill and press Enter")
     await user.type(skillBox, "React{Enter}")
 
-    await user.hover(screen.getByRole("button", { name: "Undo" }))
+    expect(screen.getByText("React")).toBeInTheDocument()
 
-    expect(await screen.findByText("Undo add skill")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Undo" }))
+
+    // The skill is gone, but the group it belonged to is untouched. Without an
+    // entry for the skill this undo would remove the whole section instead.
+    expect(screen.queryByText("React")).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/^Group title/)).toBeInTheDocument()
   })
 })
