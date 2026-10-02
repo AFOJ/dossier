@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import EditResumePage from "@/pages/resumes/edit/EditResumePage"
+import { updateResume } from "@/db/resume"
 import type { Resume } from "@/db/db"
 import { ModalProvider } from "@/components/modal"
 
@@ -104,5 +105,36 @@ describe("EditResumePage submit bar", () => {
     await user.click(screen.getByRole("button", { name: "Undo" }))
 
     expect(screen.getByLabelText(/^Paragraph/)).toHaveValue("Intro")
+  })
+
+  it("ignores the undo shortcut while a save is in flight", async () => {
+    const user = userEvent.setup()
+    let finishSave: (() => void) | undefined
+    vi.mocked(updateResume).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishSave = () => resolve()
+        }),
+    )
+
+    renderPage()
+
+    // Deleting the only section leaves a valid, dirty form with an undo entry.
+    await user.click(await screen.findByRole("button", { name: /^Remove .* section$/i }))
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /Save changes/ }))
+    expect(updateResume).toHaveBeenCalledTimes(1)
+
+    await user.keyboard("{Control>}z{/Control}")
+
+    // The in-flight save persists what was submitted, so the shortcut must not
+    // change the form out from under it.
+    expect(screen.getByText(/No sections yet/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled()
+
+    await act(async () => {
+      finishSave?.()
+    })
   })
 })

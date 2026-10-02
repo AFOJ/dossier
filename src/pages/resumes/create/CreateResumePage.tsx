@@ -37,7 +37,12 @@ export default function CreateResumePage() {
 
   usePageTitle("Create Resume")
 
-  useUndoHotkeys({ onUndo: undo, onRedo: redo, canUndo, canRedo })
+  useUndoHotkeys({
+    onUndo: undo,
+    onRedo: redo,
+    canUndo: canUndo && !isSubmitting,
+    canRedo: canRedo && !isSubmitting,
+  })
 
   return (
     <section className="flex flex-col gap-6 pb-20">
