@@ -13,10 +13,11 @@ import {
   Tooltip,
 } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
 import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
 import { TagCombobox } from "@/components/tags"
-import type { Resume } from "@/db/db"
+import type { Profile, Resume } from "@/db/db"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
 import { SectionList } from "@/pages/resumes/create/components/SectionList"
@@ -24,14 +25,15 @@ import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
 export default function EditResumePage() {
   const { resume } = useRouteLoaderData("resume-edit") as { resume: Resume }
+  const { profile } = useProtectedRouteData()
 
   usePageTitle("Edit Resume")
 
-  return <EditResumeForm key={resume.id} resume={resume} />
+  return <EditResumeForm key={resume.id} resume={resume} profile={profile} />
 }
 
-function EditResumeForm(props: Readonly<{ resume: Resume }>) {
-  const { resume } = props
+function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
+  const { resume, profile } = props
   const {
     form,
     onSubmit,
@@ -48,7 +50,7 @@ function EditResumeForm(props: Readonly<{ resume: Resume }>) {
     redo,
     canUndo,
     canRedo,
-  } = useEditResumeForm(resume)
+  } = useEditResumeForm(resume, profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   useUndoHotkeys({
