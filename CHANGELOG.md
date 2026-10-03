@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1](https://github.com/AFOJ/dossier/compare/dossier-v1.6.0...dossier-v1.6.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* keep resume list item keys stable while editing ([#37](https://github.com/AFOJ/dossier/issues/37)) ([077b857](https://github.com/AFOJ/dossier/commit/077b8579e551da89125f52e44f9a0a5c6508836e))
+* make resume structure changes recoverable ([#39](https://github.com/AFOJ/dossier/issues/39)) ([76599e7](https://github.com/AFOJ/dossier/commit/76599e704da424a713010fa56cdb4e8a9ca93955))
+* prefill contact details from the profile when editing a synced document ([#40](https://github.com/AFOJ/dossier/issues/40)) ([bcfb2c2](https://github.com/AFOJ/dossier/commit/bcfb2c27d4fa5f0db560092f658432a79d9cdae6))
+
 ## [1.6.0](https://github.com/AFOJ/dossier/compare/dossier-v1.5.0...dossier-v1.6.0) (2026-09-28)
 
 
