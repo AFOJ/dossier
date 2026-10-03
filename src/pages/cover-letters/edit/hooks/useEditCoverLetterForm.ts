@@ -8,12 +8,11 @@ import { updateCoverLetter } from "@/db/coverLetter"
 import { sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
 import {
   coverLetterFormSchema,
-  emptyContactValues,
   profileToContactValues,
   type CoverLetterFormData,
 } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
 
-export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
+export function useEditCoverLetterForm(letter: CoverLetter, profile: Profile) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -76,7 +75,7 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
     (sync: boolean) => {
       setValue("syncProfile", sync, { shouldDirty: true })
 
-      if (sync && profile) {
+      if (sync) {
         Object.entries(profileToContactValues(profile)).forEach(([key, value]) => {
           ;(
             form as unknown as {
@@ -100,7 +99,7 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile?: Profile) {
   }
 }
 
-function toEditValues(letter: CoverLetter, profile?: Profile): CoverLetterFormData {
+function toEditValues(letter: CoverLetter, profile: Profile): CoverLetterFormData {
   return {
     title: letter.title,
     tagIds: letter.tagIds,
@@ -112,7 +111,7 @@ function toEditValues(letter: CoverLetter, profile?: Profile): CoverLetterFormDa
   }
 }
 
-function contactDefaults(letter: CoverLetter, profile?: Profile) {
+function contactDefaults(letter: CoverLetter, profile: Profile) {
   if (letter.contact && !letter.syncProfile) {
     return {
       fullName: letter.contact.full_name,
@@ -123,5 +122,5 @@ function contactDefaults(letter: CoverLetter, profile?: Profile) {
     }
   }
 
-  return profile ? profileToContactValues(profile) : emptyContactValues()
+  return profileToContactValues(profile)
 }

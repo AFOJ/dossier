@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import EditResumePage from "@/pages/resumes/edit/EditResumePage"
 import { updateResume } from "@/db/resume"
-import type { Resume } from "@/db/db"
+import type { Profile, Resume } from "@/db/db"
 import { ModalProvider } from "@/components/modal"
 
 vi.mock("@/db/resume", () => ({
@@ -33,22 +33,44 @@ function makeResume(): Resume {
   }
 }
 
+// A real profile, so contact fields have something to prefill from.
+function makeProfile(): Profile {
+  return {
+    id: 1,
+    full_name: "Jane Roe",
+    role: "Farmer",
+    email: "jane@example.com",
+    phone: "555-0100",
+    location: "Cornfield",
+    links: [{ label: "GitHub", url: "https://github.com/jane" }],
+  }
+}
+
 // The route loader resolves asynchronously; the default 1000ms findBy budget is
 // tight when the whole suite runs in parallel.
 const READY = { timeout: 5_000 }
 
 function renderPage() {
+  // The edit route is nested under "protected" in the real app, which is where
+  // the page reads the profile from.
   const router = createMemoryRouter(
     [
       {
-        id: "resume-edit",
-        path: "/resumes/:resumeId/edit",
-        loader: () => ({ resume: makeResume() }),
-        element: (
-          <ModalProvider>
-            <EditResumePage />
-          </ModalProvider>
-        ),
+        id: "protected",
+        path: "/",
+        loader: () => ({ profile: makeProfile() }),
+        children: [
+          {
+            id: "resume-edit",
+            path: "/resumes/:resumeId/edit",
+            loader: () => ({ resume: makeResume() }),
+            element: (
+              <ModalProvider>
+                <EditResumePage />
+              </ModalProvider>
+            ),
+          },
+        ],
       },
       { path: "/resumes", element: <div>Resumes list</div> },
     ],
@@ -140,5 +162,29 @@ describe("EditResumePage submit bar", () => {
     await act(async () => {
       finishSave?.()
     })
+  })
+
+  it("prefills contact details from the active profile when sync is turned off", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    // makeResume() is synced with no stored contact, so revealing the fields
+    // must fall back to the profile rather than leaving them blank.
+    const syncSwitch = await screen.findByRole(
+      "switch",
+      { name: "Use my profile information" },
+      READY,
+    )
+    expect(syncSwitch).toBeChecked()
+
+    await user.click(syncSwitch)
+
+    expect(await screen.findByLabelText(/Full name/i)).toHaveValue("Jane Roe")
+    expect(screen.getByLabelText(/Job title/i)).toHaveValue("Farmer")
+    expect(screen.getByLabelText(/Location/i)).toHaveValue("Cornfield")
+    expect(screen.getByLabelText(/Phone/i)).toHaveValue("555-0100")
+    expect(screen.getByLabelText(/Email/i)).toHaveValue("jane@example.com")
+    expect(screen.getByPlaceholderText("Label (e.g. GitHub)")).toHaveValue("GitHub")
+    expect(screen.getByPlaceholderText("URL")).toHaveValue("https://github.com/jane")
   })
 })

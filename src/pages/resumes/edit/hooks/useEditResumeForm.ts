@@ -9,14 +9,13 @@ import { updateResume } from "@/db/resume"
 import { useUndoHistory } from "@/hooks/useUndoHistory"
 import {
   createSectionMutations,
-  emptyContactValues,
   resumeFormSchema,
   type FormSection,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { replaySections } from "@/pages/resumes/create/hooks/sectionsHistory"
 
-export function useEditResumeForm(resume: Resume, profile?: Profile) {
+export function useEditResumeForm(resume: Resume, profile: Profile) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -101,7 +100,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
     (sync: boolean) => {
       setValue("syncProfile", sync, { shouldDirty: true })
 
-      if (sync && profile) {
+      if (sync) {
         // Turning sync back on discards local edits in favour of the profile.
         Object.entries(profileToContactValues(profile)).forEach(([key, value]) => {
           ;(
@@ -134,7 +133,7 @@ export function useEditResumeForm(resume: Resume, profile?: Profile) {
   }
 }
 
-function toEditValues(resume: Resume, profile?: Profile): ResumeFormData {
+function toEditValues(resume: Resume, profile: Profile): ResumeFormData {
   return {
     title: resume.title,
     tagIds: resume.tagIds,
@@ -147,7 +146,7 @@ function toEditValues(resume: Resume, profile?: Profile): ResumeFormData {
   }
 }
 
-function contactDefaults(resume: Resume, profile?: Profile) {
+function contactDefaults(resume: Resume, profile: Profile) {
   if (resume.contact && !resume.syncProfile) {
     return {
       fullName: resume.contact.full_name,
@@ -162,7 +161,7 @@ function contactDefaults(resume: Resume, profile?: Profile) {
     }
   }
 
-  return profile ? profileToContactValues(profile) : emptyContactValues()
+  return profileToContactValues(profile)
 }
 
 function profileToContactValues(profile: Profile) {

@@ -106,8 +106,42 @@ describe("useEditResumeForm", () => {
     expect(result.current.form.getValues("fullName")).toBe("Snapshot Person")
   })
 
+  it("restores profile contact details when sync is turned back on", () => {
+    const resume = makeResume({
+      syncProfile: false,
+      contact: {
+        full_name: "Snapshot Person",
+        role: null,
+        email: null,
+        phone: null,
+        location: null,
+        links: [],
+      },
+    })
+
+    const { result } = renderHook(() => useEditResumeForm(resume, profile))
+
+    act(() => {
+      result.current.form.setValue("fullName", "Local Edit", { shouldDirty: true })
+      result.current.form.setValue("jobTitle", "Local Title", { shouldDirty: true })
+    })
+    expect(result.current.form.getValues("fullName")).toBe("Local Edit")
+
+    act(() => {
+      result.current.setSyncProfile(true)
+    })
+
+    expect(result.current.form.getValues("fullName")).toBe("John Doe")
+    expect(result.current.form.getValues("jobTitle")).toBe("Engineer")
+    expect(result.current.form.getValues("email")).toBe("john@doe.com")
+    // socials is a useFieldArray field, so it needs restoring too.
+    expect(result.current.form.getValues("socials")).toEqual([
+      { label: "GitHub", url: "https://github.com/johndoe" },
+    ])
+  })
+
   it("tracks dirty state and discards back to the saved values", () => {
-    const { result } = renderHook(() => useEditResumeForm(makeResume()))
+    const { result } = renderHook(() => useEditResumeForm(makeResume(), profile))
 
     act(() => {
       result.current.form.setValue("title", "Renamed", { shouldDirty: true })

@@ -3,8 +3,9 @@ import { useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
 import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { TagCombobox } from "@/components/tags"
-import type { CoverLetter } from "@/db/db"
+import type { CoverLetter, Profile } from "@/db/db"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useEditCoverLetterForm } from "@/pages/cover-letters/edit/hooks/useEditCoverLetterForm"
 
@@ -18,15 +19,19 @@ const RichTextEditor = lazy(() => {
 
 export default function EditCoverLetterPage() {
   const { coverLetter } = useRouteLoaderData("cover-letter-edit") as { coverLetter: CoverLetter }
+  const { profile } = useProtectedRouteData()
 
   usePageTitle("Edit Cover Letter")
 
-  return <EditCoverLetterForm key={coverLetter.id} coverLetter={coverLetter} />
+  return <EditCoverLetterForm key={coverLetter.id} coverLetter={coverLetter} profile={profile} />
 }
 
-function EditCoverLetterForm({ coverLetter }: Readonly<{ coverLetter: CoverLetter }>) {
+function EditCoverLetterForm({
+  coverLetter,
+  profile,
+}: Readonly<{ coverLetter: CoverLetter; profile: Profile }>) {
   const { form, onSubmit, isSubmitting, formError, isDirty, revert, setSyncProfile } =
-    useEditCoverLetterForm(coverLetter)
+    useEditCoverLetterForm(coverLetter, profile)
 
   return (
     <section className="flex flex-col gap-6 pb-20">
