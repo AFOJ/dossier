@@ -10,7 +10,6 @@ import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import { db, type Profile } from "@/db/db"
 import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilename } from "@/lib/download"
-import { RestoreFromExport } from "@/pages/profile/create/components/RestoreFromExport"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
 
@@ -27,7 +26,7 @@ export default function SettingsPage() {
       </header>
 
       <DocumentsSection />
-      <PrivacySection />
+      <DataSection />
       <BackupSection />
       <DangerZone />
     </section>
@@ -100,7 +99,7 @@ function DocumentsSection() {
   )
 }
 
-function PrivacySection() {
+function DataSection() {
   const [isClearing, setIsClearing] = useState(false)
   const cacheCount = useLiveQuery(() => db.entityCache.count(), [])
   const toast = useToast()
@@ -120,7 +119,7 @@ function PrivacySection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Heading2>Privacy</Heading2>
+      <Heading2>Data</Heading2>
 
       <Card className="gap-4">
         <div className="flex flex-col gap-1">
@@ -184,8 +183,6 @@ function BackupSection() {
           {isExporting ? "Exporting..." : "Export data"}
         </Button>
       </Card>
-
-      <RestoreFromExport />
     </div>
   )
 }

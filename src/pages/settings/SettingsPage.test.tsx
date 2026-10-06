@@ -66,7 +66,7 @@ describe("SettingsPage", () => {
 
     expect(await screen.findByText("Settings")).toBeInTheDocument()
     expect(screen.getByText("Documents")).toBeInTheDocument()
-    expect(screen.getByText("Privacy")).toBeInTheDocument()
+    expect(screen.getByText("Data")).toBeInTheDocument()
     expect(screen.getByText("Backup")).toBeInTheDocument()
     expect(screen.getByText("Danger zone")).toBeInTheDocument()
   })

@@ -5,10 +5,12 @@ import { upsertSettings } from "@/db/settings"
 import { useSettings } from "@/hooks/useSettings"
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { renderTitle } from "@/lib/titleFormat"
+import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 
 export function useSettingsForm(profile: Profile | undefined) {
   const { settings } = useSettings()
+  const toast = useToast()
 
   const form = useForm({
     resolver: zodResolver(appSettingsSchema),
@@ -20,9 +22,15 @@ export function useSettingsForm(profile: Profile | undefined) {
   const titleFormat = form.watch("defaultResumeTitleFormat")
 
   const onSubmit = form.handleSubmit(async (data) => {
-    await upsertSettings(data)
-    // Re-baseline so the saved values read as pristine rather than as edits.
-    form.reset(data)
+    try {
+      await upsertSettings(data)
+      // Re-baseline so the saved values read as pristine rather than as edits.
+      form.reset(data)
+      toast.success("Settings saved", "Your preferences have been updated.")
+    } catch (error) {
+      toast.error("Failed to save settings", "Please try again.")
+      console.error("Failed to save settings:", error)
+    }
   })
 
   return {
