@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { appSettingsSchema } from "@/db/schemas"
@@ -9,7 +10,7 @@ import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 
 export function useSettingsForm(profile: Profile | undefined) {
-  const { settings } = useSettings()
+  const { settings, isLoaded } = useSettings()
   const toast = useToast()
 
   const form = useForm({
@@ -20,6 +21,14 @@ export function useSettingsForm(profile: Profile | undefined) {
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   const titleFormat = form.watch("defaultResumeTitleFormat")
+
+  // When settings load (after initial load or when they change), reset the form
+  // to keep it in sync with the stored settings.
+  useEffect(() => {
+    if (isLoaded) {
+      form.reset(settings)
+    }
+  }, [settings, isLoaded])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
