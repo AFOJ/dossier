@@ -594,25 +594,25 @@ export function useCreateResumeForm(profile?: Profile, settings: Settings = DEFA
 
   const { setValue, getValues, clearErrors, reset } = form
 
-  // Pre-fill the title once the settings have arrived, but only while the field
-  // is untouched, so a resolved title never overwrites the user's typing.
-  //
-  // reset() rather than shouldDirty: isDirty compares against defaultValues,
-  // and the title default is "" because settings load after useForm(). Without
-  // re-baselining, simply opening the page would read as an unsaved edit and
-  // enable Save. This runs before any user interaction, so resetting cannot
-  // discard real input.
-  const appliedTitle = useRef(false)
-  useEffect(() => {
-    if (appliedTitle.current) return
-    if (getValues("title").trim() !== "") return
+  // Pre-fill the title from the format setting, but only while the field is
+// untouched. The effect re-runs whenever the format setting changes so that
+// changes made in the Settings page are reflected immediately.
+const appliedTitle = useRef(false)
+// Reset the guard when the format changes so we re-apply the new format.
+useEffect(() => {
+  appliedTitle.current = false
+}, [settings.defaultResumeTitleFormat])
 
-    appliedTitle.current = true
-    setValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
-    // getValues() with no argument reads every field, so this re-baselines the
-    // form without reaching for the form object itself.
-    reset(getValues())
-  }, [getValues, profile, reset, setValue, settings.defaultResumeTitleFormat])
+useEffect(() => {
+  if (appliedTitle.current) return
+  if (getValues("title").trim() !== "") return
+
+  appliedTitle.current = true
+  setValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
+  // getValues() with no argument reads every field, so this re-baselines the
+  // form without reaching for the form object itself.
+  reset(getValues())
+}, [getValues, profile, reset, setValue, form, settings.defaultResumeTitleFormat])
 
   const history = useUndoHistory<FormSection[]>({
     // The form's declared type predates `_key`; at runtime sections are keyed.

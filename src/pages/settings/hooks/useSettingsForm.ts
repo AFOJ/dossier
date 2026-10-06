@@ -28,7 +28,7 @@ export function useSettingsForm(profile: Profile | undefined) {
     if (isLoaded) {
       form.reset(settings)
     }
-  }, [settings, isLoaded])
+  }, [settings, isLoaded, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
