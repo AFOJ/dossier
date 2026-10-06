@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
+import { DEFAULT_SETTINGS, getSettings, upsertSettings } from "@/db/settings"
 import "fake-indexeddb/auto"
 import { db, type Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
@@ -140,7 +141,7 @@ describe("exportProfile", () => {
 
     const data = await exportProfile()
 
-    expect(data.version).toBe(2)
+    expect(data.version).toBe(3)
     expect(data.exportedAt).toEqual(expect.any(String))
     expect(data.profile).toEqual({
       full_name: "John Doe",
@@ -229,7 +230,7 @@ describe("importProfile", () => {
   })
 
   const validExport = {
-    version: 2,
+    version: 3,
     exportedAt: "2026-08-23T00:00:00.000Z",
     profile: {
       full_name: "John Doe",
@@ -240,6 +241,10 @@ describe("importProfile", () => {
       links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     },
     tags: [],
+    settings: {
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.name}",
+    },
     resumes: [
       {
         id: "resume-1",
@@ -501,6 +506,34 @@ describe("importProfile", () => {
     expect(restored).toHaveLength(1)
     expect(restored[0]?.title).toBe("My Resume")
     expect(restored[0]?.tagIds).toEqual([])
+  })
+
+  it("restores settings from a valid export", async () => {
+    await upsertSettings({ defaultSyncProfile: false, defaultResumeTitleFormat: "{profile.name}" })
+
+    await importProfile(JSON.stringify(validExport))
+
+    expect(await getSettings()).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.name}",
+    })
+  })
+
+  it("restores backups written before settings support", async () => {
+    // Pre-settings backups have no `settings` key at all, so the schema default
+    // must land as the defaults rather than leaving the row missing.
+    await importProfile(
+      JSON.stringify({
+        version: 2,
+        exportedAt: validExport.exportedAt,
+        profile: validExport.profile,
+        tags: [],
+        resumes: [],
+        coverLetters: [],
+      }),
+    )
+
+    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
   })
 
   it("rejects invalid JSON", async () => {

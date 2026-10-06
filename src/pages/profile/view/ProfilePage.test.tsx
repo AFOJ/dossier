@@ -1,5 +1,6 @@
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { deleteProfile, upsertProfile, exportProfile } from "@/db/profile"
+import { DEFAULT_SETTINGS } from "@/db/settings"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { downloadJson, getExportFilename } from "@/lib/download"
 import { ModalProvider } from "@/components/modal"
@@ -136,12 +137,13 @@ describe("ProfilePage", () => {
   it("exports the profile and resumes as a downloaded JSON file", async () => {
     const user = userEvent.setup()
     const exportData = {
-      version: 2 as const,
+      version: 3 as const,
       exportedAt: "2026-08-23T00:00:00.000Z",
       profile,
       tags: [],
       resumes: [],
       coverLetters: [],
+      settings: DEFAULT_SETTINGS,
     }
     vi.mocked(exportProfile).mockResolvedValueOnce(exportData)
     renderPage()
