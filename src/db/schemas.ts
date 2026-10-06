@@ -137,11 +137,18 @@ export const coverLetterExportContactSchema = z.object({
 })
 
 export const appSettingsSchema = z.object({
+  /** Whether new resumes and cover letters start synced to the profile. */
   defaultSyncProfile: z.boolean(),
-  // Bounded because settings round-trip through the export file, so an
-  // unbounded format string would be restorable from an arbitrary file.
+  /**
+   * Title format for new resumes; see {@link renderTitle}.
+   *
+   * Bounded because settings round-trip through the export file, so an
+   * unbounded format string would be restorable from an arbitrary file.
+   */
   defaultResumeTitleFormat: z.string().min(1).max(120),
 })
+
+export type SettingsData = z.infer<typeof appSettingsSchema>
 
 export const tagIdSchema = z.number().int().positive()
 

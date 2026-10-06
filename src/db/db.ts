@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie"
 import type { Link, ResumeSection } from "@/db/types"
+import type { SettingsData } from "@/db/schemas"
 
 // --- SCHEMA ---
 export interface Profile {
@@ -66,12 +67,8 @@ export interface CoverLetter {
   contact?: CoverLetterContact | null
 }
 
-export interface AppSettings {
+export interface AppSettings extends SettingsData {
   id: string
-  /** Whether new resumes and cover letters start synced to the profile. */
-  defaultSyncProfile: boolean
-  /** Title format for new resumes; see {@link renderTitle}. */
-  defaultResumeTitleFormat: string
 }
 
 export class DossierDatabase extends Dexie {
