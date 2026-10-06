@@ -6,6 +6,7 @@ import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
 import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
 import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
 import { SectionList } from "@/pages/resumes/create/components/SectionList"
@@ -34,6 +35,8 @@ export default function CreateResumePage() {
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   usePageTitle("Create Resume")
+
+  useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
     onUndo: undo,

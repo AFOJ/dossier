@@ -14,6 +14,7 @@ import {
 } from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
 import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
 import { TagCombobox } from "@/components/tags"
@@ -52,6 +53,8 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
     canRedo,
   } = useEditResumeForm(resume, profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
+
+  useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
     onUndo: undo,

@@ -9,6 +9,7 @@ import { PersonalInfoFields } from "@/pages/profile/components/PersonalInfoField
 import { SocialLinksFields } from "@/pages/profile/components/SocialLinksFields"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { DeleteProfileDialog } from "@/pages/profile/view/components/DeleteProfileDialog"
 import { useEditProfileForm } from "@/pages/profile/view/hooks/useEditProfileForm"
 
@@ -21,6 +22,8 @@ export default function ProfilePage() {
   })
   const toast = useToast()
   const [isExporting, setIsExporting] = useState(false)
+
+  useUnsavedChangesWarning(() => form.formState.isDirty)
 
   usePageTitle("Manage your profile")
 

@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import { createMemoryRouter, Link, RouterProvider } from "react-router-dom"
 import EditResumePage from "@/pages/resumes/edit/EditResumePage"
 import { updateResume } from "@/db/resume"
 import type { Profile, Resume } from "@/db/db"
@@ -67,6 +67,7 @@ function renderPage() {
             element: (
               <ModalProvider>
                 <EditResumePage />
+                <Link to="/resumes">Leave</Link>
               </ModalProvider>
             ),
           },
@@ -186,5 +187,45 @@ describe("EditResumePage submit bar", () => {
     expect(screen.getByLabelText(/Email/i)).toHaveValue("jane@example.com")
     expect(screen.getByPlaceholderText("Label (e.g. GitHub)")).toHaveValue("GitHub")
     expect(screen.getByPlaceholderText("URL")).toHaveValue("https://github.com/jane")
+  })
+
+  it("warns before navigating away with unsaved changes", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const title = await screen.findByLabelText(/^Title/, undefined, READY)
+    await user.clear(title)
+    await user.type(title, "Renamed")
+
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent(/discard unsaved changes/i)
+    expect(screen.queryByText("Resumes list")).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/^Title/)).toHaveValue("Renamed")
+  })
+
+  it("discards changes and navigates when confirmed", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const title = await screen.findByLabelText(/^Title/, undefined, READY)
+    await user.clear(title)
+    await user.type(title, "Renamed")
+
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+    await user.click(await screen.findByRole("button", { name: /discard and leave/i }))
+
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
+  })
+
+  it("navigates without warning when nothing has changed", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByLabelText(/^Title/, undefined, READY)
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })
