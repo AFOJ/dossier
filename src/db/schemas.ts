@@ -136,6 +136,13 @@ export const coverLetterExportContactSchema = z.object({
   location: z.string().nullable(),
 })
 
+export const appSettingsSchema = z.object({
+  defaultSyncProfile: z.boolean(),
+  // Bounded because settings round-trip through the export file, so an
+  // unbounded format string would be restorable from an arbitrary file.
+  defaultResumeTitleFormat: z.string().min(1).max(120),
+})
+
 export const tagIdSchema = z.number().int().positive()
 
 export const tagIdsSchema = z

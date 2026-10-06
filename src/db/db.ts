@@ -66,12 +66,21 @@ export interface CoverLetter {
   contact?: CoverLetterContact | null
 }
 
+export interface AppSettings {
+  id: string
+  /** Whether new resumes and cover letters start synced to the profile. */
+  defaultSyncProfile: boolean
+  /** Title format for new resumes; see {@link renderTitle}. */
+  defaultResumeTitleFormat: string
+}
+
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   tags!: Table<Tag, number>
   resumes!: Table<Resume, string>
   coverLetters!: Table<CoverLetter, string>
   entityCache!: Table<EntityCacheEntry, string>
+  settings!: Table<AppSettings, string>
 
   constructor() {
     super("DossierDatabase")
@@ -105,6 +114,15 @@ export class DossierDatabase extends Dexie {
       resumes: "id, updatedAt, *tagIds",
       coverLetters: "id, updatedAt, *tagIds",
       entityCache: "id, entityType, entityId",
+    })
+
+    this.version(7).stores({
+      profiles: "++id",
+      tags: "++id, &normalizedName",
+      resumes: "id, updatedAt, *tagIds",
+      coverLetters: "id, updatedAt, *tagIds",
+      entityCache: "id, entityType, entityId",
+      settings: "id",
     })
   }
 }
