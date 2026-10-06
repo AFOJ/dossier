@@ -8,6 +8,7 @@ import {
   MailAdd01Icon,
   MailUpload01Icon,
   Tag01Icon,
+  Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react"
 import { Divider } from "@/components/ui"
@@ -43,6 +44,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/profile", label: "Profile", icon: UserIcon },
       { to: "/tags", label: "Tags", icon: Tag01Icon },
+      { to: "/settings", label: "Settings", icon: Settings01Icon },
     ],
   },
 ]

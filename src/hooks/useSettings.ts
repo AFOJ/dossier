@@ -1,6 +1,6 @@
-import { useCallback } from "react"
+import { useMemo } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
-import { DEFAULT_SETTINGS, getSettings, upsertSettings, type Settings } from "@/db/settings"
+import { DEFAULT_SETTINGS, getSettings, type Settings } from "@/db/settings"
 
 /**
  * Reads the app settings reactively. Starts from the defaults so consumers
@@ -9,15 +9,15 @@ import { DEFAULT_SETTINGS, getSettings, upsertSettings, type Settings } from "@/
 export function useSettings() {
   const stored = useLiveQuery(() => getSettings(), [])
 
-  const update = useCallback(async (data: Partial<Settings>) => {
-    await upsertSettings(data)
-  }, [])
-
-  return {
-    /** The stored settings, or the defaults until they have been read. */
-    settings: stored ?? DEFAULT_SETTINGS,
-    /** False until the stored settings have arrived. */
-    isLoaded: stored !== undefined,
-    update,
-  }
+  return useMemo(
+    () => ({
+      /** The stored settings, or the defaults until they have been read. */
+      settings: stored ?? DEFAULT_SETTINGS,
+      /** False until the stored settings have arrived. */
+      isLoaded: stored !== undefined,
+    }),
+    [stored],
+  )
 }
+
+export type { Settings }
