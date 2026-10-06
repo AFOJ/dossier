@@ -6,6 +6,8 @@ import { useToast } from "@/components/toast"
 import type { CoverLetter, Profile } from "@/db/db"
 import { updateCoverLetter } from "@/db/coverLetter"
 import { sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
+
 import {
   coverLetterFormSchema,
   profileToContactValues,
@@ -55,6 +57,7 @@ export function useEditCoverLetterForm(letter: CoverLetter, profile: Profile) {
 
       form.reset(form.getValues())
       toast.success("Cover letter saved", `"${data.title}" has been saved.`)
+      releaseUnsavedChangesGuard()
       navigate("/cover-letters")
     } catch (error) {
       form.setError("root", {

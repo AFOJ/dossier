@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import { createMemoryRouter, Link, RouterProvider } from "react-router-dom"
 import CreateResumePage from "@/pages/resumes/create/CreateResumePage"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { createResume } from "@/db/resume"
@@ -45,6 +45,7 @@ function renderPage() {
         element: (
           <ModalProvider>
             <CreateResumePage />
+            <Link to="/resumes">Leave</Link>
           </ModalProvider>
         ),
       },
@@ -554,5 +555,39 @@ describe("undoing structural changes", () => {
     // entry for the skill this undo would remove the whole section instead.
     expect(screen.queryByText("React")).not.toBeInTheDocument()
     expect(screen.getByLabelText(/^Group title/)).toBeInTheDocument()
+  })
+
+  it("warns before navigating away mid-creation", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent(/discard unsaved changes/i)
+    expect(screen.queryByText("Resumes list")).not.toBeInTheDocument()
+  })
+
+  it("abandons a half-built resume once confirmed", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await addSectionViaMenu(user, "Paragraph")
+
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+    await user.click(await screen.findByRole("button", { name: /discard and leave/i }))
+
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
+  })
+
+  it("leaves an untouched create page without warning", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole("link", { name: "Leave" }))
+
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })

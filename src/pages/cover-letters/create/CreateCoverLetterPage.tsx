@@ -4,6 +4,7 @@ import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } fr
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useCreateCoverLetterForm } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
 
@@ -19,6 +20,8 @@ export default function CreateCoverLetterPage() {
   const { profile } = useProtectedRouteData()
   const { form, onSubmit, isSubmitting, formError, setSyncProfile } =
     useCreateCoverLetterForm(profile)
+
+  useUnsavedChangesWarning(() => form.formState.isDirty)
 
   usePageTitle("Create Cover Letter")
 
