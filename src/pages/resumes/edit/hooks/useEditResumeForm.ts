@@ -6,7 +6,8 @@ import { useToast } from "@/components/toast"
 import type { Profile, Resume } from "@/db/db"
 import type { ResumeSection } from "@/db/types"
 import { updateResume } from "@/db/resume"
-import { navigateAllowingUnsavedChanges } from "@/lib/unsavedChangesBypass"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
+
 import { useUndoHistory } from "@/hooks/useUndoHistory"
 import {
   createSectionMutations,
@@ -76,7 +77,8 @@ export function useEditResumeForm(resume: Resume, profile: Profile) {
       form.reset(form.getValues())
       clearHistory()
       toast.success("Resume saved", `"${data.title}" has been saved.`)
-      navigateAllowingUnsavedChanges(() => navigate("/resumes"))
+      releaseUnsavedChangesGuard()
+      navigate("/resumes")
     } catch (error) {
       form.setError("root", {
         type: "manual",

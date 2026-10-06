@@ -8,7 +8,7 @@ import type { Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
 import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
 import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
-import { navigateAllowingUnsavedChanges } from "@/lib/unsavedChangesBypass"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 export const coverLetterFormSchema = z
   .object({
@@ -153,9 +153,12 @@ export function useCreateCoverLetterForm(profile?: Profile) {
 
       // Reset to the current values so the form reads as pristine; the
       // unsaved-changes guard would otherwise block the redirect below.
-      form.reset(form.getValues())
+      // Reset first so the form reads as pristine. The unsaved-changes guard reads
+      // isDirty when the router evaluates the redirect, so it has to be false
+      // by then rather than released by a bypass flag that unwinds too early.
+      releaseUnsavedChangesGuard()
       toast.success("Cover letter created", `"${data.title}" has been created.`)
-      navigateAllowingUnsavedChanges(() => navigate("/cover-letters"))
+      navigate("/cover-letters")
     } catch (error) {
       form.setError("root", {
         type: "manual",

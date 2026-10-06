@@ -7,7 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
-import { navigateAllowingUnsavedChanges } from "@/lib/unsavedChangesBypass"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
+
 import { useUndoHistory } from "@/hooks/useUndoHistory"
 import { resumeSectionSchema, type ResumeSectionData } from "@/db/schemas"
 import {
@@ -648,11 +649,10 @@ export function useCreateResumeForm(profile?: Profile) {
         contact,
       })
 
-      // Reset to the current values so the form reads as pristine; the
-      // unsaved-changes guard would otherwise block the redirect below.
-      clearHistory()
       toast.success("Resume created", `"${data.title}" has been created.`)
-      navigateAllowingUnsavedChanges(() => navigate("/resumes"))
+      clearHistory()
+      releaseUnsavedChangesGuard()
+      navigate("/resumes")
     } catch (error) {
       form.setError("root", {
         type: "manual",

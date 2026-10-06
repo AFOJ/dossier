@@ -4,6 +4,7 @@ import { Button, Heading3 } from "@/components/ui"
 import { useToast } from "@/components/toast"
 import type { ModalContentProps } from "@/components/modal"
 import { deleteProfile } from "@/db/profile"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 export function DeleteProfileDialog({ close }: Readonly<ModalContentProps<undefined>>) {
   const [isDeleting, setIsDeleting] = useState(false)
@@ -18,6 +19,10 @@ export function DeleteProfileDialog({ close }: Readonly<ModalContentProps<undefi
     try {
       await deleteProfile()
       close()
+      // The profile is already gone, so the unsaved-changes guard must not turn
+      // this redirect into a discard prompt: staying would leave the user on a
+      // form for data that no longer exists.
+      releaseUnsavedChangesGuard()
       navigate("/setup")
     } catch (error) {
       setError("Unable to delete your profile. Please try again.")

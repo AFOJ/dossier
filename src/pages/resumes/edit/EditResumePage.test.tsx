@@ -218,6 +218,23 @@ describe("EditResumePage submit bar", () => {
     expect(await screen.findByText("Resumes list")).toBeInTheDocument()
   })
 
+  it("redirects after a save without prompting", async () => {
+    const user = userEvent.setup()
+    vi.mocked(updateResume).mockResolvedValueOnce(undefined)
+    renderPage()
+
+    const title = await screen.findByLabelText(/^Title/, undefined, READY)
+    await user.clear(title)
+    await user.type(title, "Renamed")
+
+    await user.click(screen.getByRole("button", { name: /Save changes/ }))
+
+    // A saved form has nothing left to discard, so the redirect must go through
+    // silently rather than opening the prompt again.
+    expect(await screen.findByText("Resumes list")).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
   it("navigates without warning when nothing has changed", async () => {
     const user = userEvent.setup()
     renderPage()

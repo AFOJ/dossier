@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { createMemoryRouter, Link, RouterProvider } from "react-router-dom"
 import { ModalProvider } from "@/components/modal"
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
+import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 type DirtyController = {
   isDirty: () => boolean
@@ -30,7 +31,7 @@ function Probe(props: Readonly<{ onReady: (controller: DirtyController) => void 
   return (
     <>
       <p>Form</p>
-      <Link to="/elsewhere">Elsewhere</Link>
+      <Link to="/elsewhere">Leave</Link>
     </>
   )
 }
@@ -51,7 +52,7 @@ function renderProbe() {
           </ModalProvider>
         ),
       },
-      { path: "/elsewhere", element: <p>Elsewhere</p> },
+      { path: "/elsewhere", element: <p>Destination page</p> },
     ],
     { initialEntries: ["/"] },
   )
@@ -72,8 +73,18 @@ function fireBeforeUnload() {
   return event
 }
 
-async function goToElsewhere(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("link", { name: "Elsewhere" }))
+async function attemptNavigation(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("link", { name: "Leave" }))
+}
+
+/**
+ * Asserts the destination actually rendered. Checking for the link's absence
+ * matters as much as the destination's presence: the link is still on screen
+ * when navigation is blocked, so its presence alone would pass either way.
+ */
+function expectNavigated() {
+  expect(screen.getByText("Destination page")).toBeInTheDocument()
+  expect(screen.queryByRole("link", { name: "Leave" })).not.toBeInTheDocument()
 }
 
 describe("useUnsavedChangesWarning", () => {
@@ -83,9 +94,10 @@ describe("useUnsavedChangesWarning", () => {
 
     expect(fireBeforeUnload().defaultPrevented).toBe(false)
 
-    await goToElsewhere(user)
+    await attemptNavigation(user)
 
-    expect(await screen.findByText("Elsewhere")).toBeInTheDocument()
+    expect(await screen.findByText("Destination page")).toBeInTheDocument()
+    expectNavigated()
   })
 
   it("triggers the browser unload prompt once the form is dirty", async () => {
@@ -102,10 +114,39 @@ describe("useUnsavedChangesWarning", () => {
     const form = renderProbe()
     await form.setDirty(true)
 
-    await goToElsewhere(user)
+    await attemptNavigation(user)
 
     expect(await screen.findByRole("dialog")).toHaveTextContent(/discard unsaved changes/i)
     expect(screen.getByText("Form")).toBeInTheDocument()
+  })
+
+  it("lets an app-initiated redirect past the guard", async () => {
+    const user = userEvent.setup()
+    const form = renderProbe()
+    await form.setDirty(true)
+
+    // Mirrors a form hook redirecting after a successful save: the redirect
+    // must not raise a prompt for changes that are already on disk.
+    releaseUnsavedChangesGuard()
+    await attemptNavigation(user)
+
+    expect(await screen.findByText("Destination page")).toBeInTheDocument()
+    expectNavigated()
+  })
+
+  it("keeps the dialog open when Escape is pressed, leaving the choice to the buttons", async () => {
+    const user = userEvent.setup()
+    const form = renderProbe()
+    await form.setDirty(true)
+
+    await attemptNavigation(user)
+    await user.keyboard("{Escape}")
+
+    // Escape must not strand a blocked navigation with nothing on screen.
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /stay on this page/i }))
+    expect(await screen.findByText("Form")).toBeInTheDocument()
   })
 
   it("returns to the form and unblocks once the user stays", async () => {
@@ -113,16 +154,20 @@ describe("useUnsavedChangesWarning", () => {
     const form = renderProbe()
     await form.setDirty(true)
 
-    await goToElsewhere(user)
+    await attemptNavigation(user)
     await user.click(await screen.findByRole("button", { name: /stay on this page/i }))
 
     expect(await screen.findByText("Form")).toBeInTheDocument()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 
-    // Dismissing the dialog must not leave navigation permanently trapped.
-    await goToElsewhere(user)
+    // The form is still dirty, so leaving again must prompt rather than slip
+    // through: staying has to release the blocker without disarming the guard.
+    await attemptNavigation(user)
+    expect(await screen.findByRole("dialog")).toBeInTheDocument()
 
-    expect(await screen.findByText("Elsewhere")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: /discard and leave/i }))
+    expect(await screen.findByText("Destination page")).toBeInTheDocument()
+    expectNavigated()
   })
 
   it("navigates when the user discards their changes", async () => {
@@ -130,10 +175,11 @@ describe("useUnsavedChangesWarning", () => {
     const form = renderProbe()
     await form.setDirty(true)
 
-    await goToElsewhere(user)
+    await attemptNavigation(user)
     await user.click(await screen.findByRole("button", { name: /discard and leave/i }))
 
-    expect(await screen.findByText("Elsewhere")).toBeInTheDocument()
+    expect(await screen.findByText("Destination page")).toBeInTheDocument()
+    expectNavigated()
   })
 
   it("stops guarding once the form goes clean again", async () => {
@@ -145,8 +191,9 @@ describe("useUnsavedChangesWarning", () => {
     await form.setDirty(false)
 
     expect(fireBeforeUnload().defaultPrevented).toBe(false)
-    await goToElsewhere(user)
+    await attemptNavigation(user)
 
-    expect(await screen.findByText("Elsewhere")).toBeInTheDocument()
+    expect(await screen.findByText("Destination page")).toBeInTheDocument()
+    expectNavigated()
   })
 })
