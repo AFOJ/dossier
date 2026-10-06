@@ -6,10 +6,22 @@ import {
   useCreateResumeForm,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { createResume } from "@/db/resume"
+import { DEFAULT_SETTINGS } from "@/db/settings"
+import type { Profile } from "@/db/db"
 
 vi.mock("@/db/resume", () => ({
   createResume: vi.fn(),
 }))
+
+const profile: Profile = {
+  id: 1,
+  full_name: "Jane Roe",
+  role: "Farmer",
+  email: "jane@example.com",
+  phone: null,
+  location: null,
+  links: [],
+}
 
 const mockNavigate = vi.fn()
 vi.mock("react-router-dom", () => ({
@@ -35,11 +47,15 @@ describe("useCreateResumeForm", () => {
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it("starts with an empty title and no sections", () => {
+  it("starts with no sections and a title rendered from the format setting", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
+    // Pre-filled without marking the form dirty, so Save stays disabled.
+    expect(result.current.isDirty).toBe(false)
+
     expect(result.current.form.getValues()).toEqual({
-      title: "",
+      // No profile here, so {profile.role} has no value and is kept verbatim.
+      title: "{profile.role} Resume",
       tagIds: [],
       syncProfile: true,
       fullName: "",
@@ -152,6 +168,10 @@ describe("useCreateResumeForm", () => {
   it("does not submit without a title", async () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
+    act(() => {
+      result.current.form.setValue("title", "")
+    })
+
     await act(async () => {
       await result.current.onSubmit()
     })
@@ -159,6 +179,30 @@ describe("useCreateResumeForm", () => {
     expect(createResume).not.toHaveBeenCalled()
     expect(mockNavigate).not.toHaveBeenCalled()
     expect(result.current.form.formState.errors.title?.message).toBe("Title is required")
+  })
+
+  it("pre-fills the title from the format setting, leaving the form pristine", () => {
+    const { result } = renderHook(() =>
+      useCreateResumeForm(profile, {
+        ...DEFAULT_SETTINGS,
+        defaultResumeTitleFormat: "{profile.role} CV {year}",
+      }),
+    )
+
+    const year = new Date().getFullYear()
+    expect(result.current.form.getValues("title")).toBe(`Farmer CV ${year}`)
+    // Crucially not an unsaved edit: opening the page must not enable Save.
+    expect(result.current.isDirty).toBe(false)
+  })
+
+  it("honours the default sync setting", () => {
+    const synced = renderHook(() => useCreateResumeForm(profile, DEFAULT_SETTINGS))
+    const unsynced = renderHook(() =>
+      useCreateResumeForm(profile, { ...DEFAULT_SETTINGS, defaultSyncProfile: false }),
+    )
+
+    expect(synced.result.current.form.getValues("syncProfile")).toBe(true)
+    expect(unsynced.result.current.form.getValues("syncProfile")).toBe(false)
   })
 
   it("creates the resume with the entered data on submit", async () => {

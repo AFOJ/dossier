@@ -8,6 +8,7 @@ import type { Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
 import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
 import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
+import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 export const coverLetterFormSchema = z
@@ -85,7 +86,7 @@ export function profileToContactValues(profile: Profile) {
   }
 }
 
-export function useCreateCoverLetterForm(profile?: Profile) {
+export function useCreateCoverLetterForm(profile?: Profile, settings: Settings = DEFAULT_SETTINGS) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,7 +99,7 @@ export function useCreateCoverLetterForm(profile?: Profile) {
       subject: "",
       date: "",
       body: "",
-      syncProfile: true,
+      syncProfile: settings.defaultSyncProfile,
       ...(profile ? profileToContactValues(profile) : emptyContactValues()),
     },
   })

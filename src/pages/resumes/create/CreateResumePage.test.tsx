@@ -105,6 +105,8 @@ describe("CreateResumePage", () => {
     const paragraph = screen.getByRole("textbox", { name: "Summary text" })
     await user.type(paragraph, "Seasoned engineer.")
 
+    // Cleared first: new resumes are pre-filled from the title format setting.
+    await user.clear(screen.getByLabelText(/^Title/))
     await user.type(screen.getByLabelText(/^Title/), "My Resume")
     await user.click(screen.getByRole("button", { name: "Create resume" }))
 
@@ -176,6 +178,9 @@ describe("CreateResumePage", () => {
     const paragraph = screen.getByRole("textbox", { name: "Untitled Section (Paragraph) text" })
     await user.type(paragraph, "Some text")
 
+    // Cleared because the title is pre-filled from the format setting.
+    await user.clear(screen.getByLabelText(/^Title/))
+
     await user.click(screen.getByRole("button", { name: "Create resume" }))
 
     // Find the error message for the resume title (inputId="resume-title"), not the section title
@@ -206,6 +211,7 @@ describe("CreateResumePage", () => {
     )
     expect(screen.getByLabelText(/^Section title/)).not.toBeVisible()
 
+    await user.clear(screen.getByLabelText(/^Title/))
     await user.type(screen.getByLabelText(/^Title/), "My Resume")
     await user.click(screen.getByRole("button", { name: "Create resume" }))
 

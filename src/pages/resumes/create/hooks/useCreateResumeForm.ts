@@ -1,5 +1,5 @@
 import { arrayMove } from "@dnd-kit/sortable"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useForm, useFormContext, type UseFormClearErrors } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
+import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
+import { renderTitle } from "@/lib/titleFormat"
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 import { useUndoHistory } from "@/hooks/useUndoHistory"
@@ -562,7 +564,7 @@ function toContactValues(profile: Profile) {
   }
 }
 
-export function useCreateResumeForm(profile?: Profile) {
+export function useCreateResumeForm(profile?: Profile, settings: Settings = DEFAULT_SETTINGS) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -570,9 +572,12 @@ export function useCreateResumeForm(profile?: Profile) {
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
+      // Left empty here and filled by the effect below: settings are read
+      // asynchronously, so a default value computed at useForm() time would
+      // capture the placeholder rather than the stored format.
       title: "",
       tagIds: [],
-      syncProfile: true,
+      syncProfile: settings.defaultSyncProfile,
       ...(profile
         ? toContactValues(profile)
         : {
@@ -587,7 +592,27 @@ export function useCreateResumeForm(profile?: Profile) {
     },
   })
 
-  const { setValue, getValues, clearErrors } = form
+  const { setValue, getValues, clearErrors, reset } = form
+
+  // Pre-fill the title once the settings have arrived, but only while the field
+  // is untouched, so a resolved title never overwrites the user's typing.
+  //
+  // reset() rather than shouldDirty: isDirty compares against defaultValues,
+  // and the title default is "" because settings load after useForm(). Without
+  // re-baselining, simply opening the page would read as an unsaved edit and
+  // enable Save. This runs before any user interaction, so resetting cannot
+  // discard real input.
+  const appliedTitle = useRef(false)
+  useEffect(() => {
+    if (appliedTitle.current) return
+    if (getValues("title").trim() !== "") return
+
+    appliedTitle.current = true
+    setValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
+    // getValues() with no argument reads every field, so this re-baselines the
+    // form without reaching for the form object itself.
+    reset(getValues())
+  }, [getValues, profile, reset, setValue, settings.defaultResumeTitleFormat])
 
   const history = useUndoHistory<FormSection[]>({
     // The form's declared type predates `_key`; at runtime sections are keyed.

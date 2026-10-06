@@ -4,6 +4,7 @@ import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } fr
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useSettings } from "@/hooks/useSettings"
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useCreateCoverLetterForm } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
@@ -18,8 +19,11 @@ const RichTextEditor = lazy(() => {
 
 export default function CreateCoverLetterPage() {
   const { profile } = useProtectedRouteData()
-  const { form, onSubmit, isSubmitting, formError, setSyncProfile } =
-    useCreateCoverLetterForm(profile)
+  const { settings } = useSettings()
+  const { form, onSubmit, isSubmitting, formError, setSyncProfile } = useCreateCoverLetterForm(
+    profile,
+    settings,
+  )
 
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
