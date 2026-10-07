@@ -244,6 +244,7 @@ describe("importProfile", () => {
     settings: {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
+      defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
     },
     resumes: [
       {
@@ -516,6 +517,7 @@ describe("importProfile", () => {
     expect(await getSettings()).toEqual({
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
+      defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
     })
   })
 

@@ -11,6 +11,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // what a new document starts as.
   defaultSyncProfile: true,
   defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
+  // Default export filename format - {kind} = resume/cover-letter/profile, {title} = document title, {date} = ISO date
+  defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
 }
 
 /**

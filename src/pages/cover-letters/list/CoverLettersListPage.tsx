@@ -2,20 +2,21 @@ import { createCoverLetter } from "@/db/coverLetter"
 import { DeleteCoverLetterDialog } from "@/pages/cover-letters/list/components/DeleteCoverLetterDialog"
 import { BulkDeleteDialog } from "@/pages/cover-letters/list/components/BulkDeleteDialog"
 import { CoverLetterPreviewDialog } from "@/pages/cover-letters/list/components/CoverLetterPreviewDialog"
-import { downloadJson, getExportFilename } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { toCoverLetterExportPayload } from "@/lib/coverLetterExport"
 import { Heading1, Subheading } from "@/components/ui"
 import { CoverLetterListContent } from "@/pages/cover-letters/list/components/CoverLetterListContent"
 import type { CoverLetterQueryItem } from "@/db/coverLetter"
-import { slugify } from "@/utils"
 import { Toolbar } from "@/pages/cover-letters/list/components/Toolbar"
 import { useModal } from "@/components/modal"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useCoverLetterTable } from "@/hooks/useCoverLetterTable"
 import { useBulkCoverLetterActions } from "@/hooks/useBulkCoverLetterActions"
 import { useToast } from "@/components/toast"
+import { useSettings } from "@/hooks/useSettings"
 
 export default function CoverLettersListPage() {
+  const { settings } = useSettings()
   const table = useCoverLetterTable()
   const { exportSelected, isExporting } = useBulkCoverLetterActions()
   const deleteModal = useModal(DeleteCoverLetterDialog, {
@@ -37,7 +38,7 @@ export default function CoverLettersListPage() {
 
   const handleExport = async (letter: CoverLetterQueryItem) => {
     try {
-      const filename = getExportFilename("cover-letter", new Date(), slugify(letter.title))
+      const filename = getExportFilenameWithSettings("cover-letter", letter.title, settings)
       downloadJson(filename, toCoverLetterExportPayload(letter))
       toast.success("Cover letter exported", `Saved ${filename}.`)
     } catch {

@@ -146,6 +146,13 @@ export const appSettingsSchema = z.object({
    * unbounded format string would be restorable from an arbitrary file.
    */
   defaultResumeTitleFormat: z.string().min(1).max(120),
+  /**
+   * Export filename format for downloaded documents.
+   *
+   * Available tokens: {kind}, {title}, {date}, {dateShort}, {year}, {month}, {monthShort}, {day}.
+   * Invalid filename characters (<>:"/\|?*) will be sanitized automatically.
+   */
+  defaultExportFilenameFormat: z.string().min(1).max(120),
 })
 
 export type SettingsData = z.infer<typeof appSettingsSchema>

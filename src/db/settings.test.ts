@@ -68,6 +68,7 @@ describe("upsertSettings", () => {
     expect(await getSettings()).toEqual({
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
+      defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
     })
   })
 
