@@ -12,6 +12,7 @@ import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilename } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
+import { renderTitle } from "@/lib/titleFormat"
 
 export default function SettingsPage() {
   usePageTitle("Settings")
@@ -35,7 +36,7 @@ export default function SettingsPage() {
 
 function DocumentsSection() {
   const { profile } = useProtectedRouteData() as { profile: Profile }
-  const { form, onSubmit, previewTitle } = useSettingsForm(profile)
+  const { form, onSubmit, titleFormat, previewTitle } = useSettingsForm(profile)
 
   return (
     <div className="flex flex-col gap-4">
@@ -87,6 +88,36 @@ function DocumentsSection() {
               left as written.
             </p>
           </Card>
+
+          <Card className="gap-4">
+            <Field
+              label="Export filename format"
+              inputId="defaultExportFilenameFormat"
+              description={`Currently produces: ${renderTitle(
+                titleFormat ?? "{profile.role} Resume",
+                { profile, now: new Date() }
+              )}`}
+              error={form.formState.errors.defaultExportFilenameFormat?.message}
+            >
+              <Input
+                id="defaultExportFilenameFormat"
+                placeholder="{kind}-{title}-export-{dateShort}"
+                {...form.register("defaultExportFilenameFormat")}
+              />
+            </Field>
+            <p className="text-sm text-gray-700">
+              Used for exported file names. Use{" "}
+              <code className="rounded bg-gray-100 px-1">{"{kind}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{title}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{dateShort}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{date}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{year}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{month}"}</code>,{" "}
+              <code className="rounded bg-gray-100 px-1">{"{monthShort}"}</code>, or{" "}
+              <code className="rounded bg-gray-100 px-1">{"{day}"}</code>.{" "}
+              Invalid filename characters will be removed automatically.
+</p>
+            </Card>
 
           <div className="flex justify-end">
             <Button type="submit" disabled={!form.formState.isDirty}>
