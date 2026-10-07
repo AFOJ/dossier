@@ -1,5 +1,5 @@
 import { arrayMove } from "@dnd-kit/sortable"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useForm, useFormContext, type UseFormClearErrors } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
@@ -8,7 +8,7 @@ import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
 import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
-import { renderTitle } from "@/lib/titleFormat"
+
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 import { useUndoHistory } from "@/hooks/useUndoHistory"
@@ -592,26 +592,7 @@ export function useCreateResumeForm(profile?: Profile, settings: Settings = DEFA
     },
   })
 
-  const { setValue, getValues, clearErrors, reset } = form
-
-  // Pre-fill the title from the format setting, but only while the field is
-// untouched. The effect re-runs whenever the format setting changes so that
-// changes made in the Settings page are reflected immediately.
-const appliedTitle = useRef(false)
-// Reset the guard when the format changes so we re-apply the new format.
-useEffect(() => {
-  appliedTitle.current = false
-}, [settings.defaultResumeTitleFormat])
-
-useEffect(() => {
-  if (appliedTitle.current) return
-
-  appliedTitle.current = true
-  setValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
-  // getValues() with no argument reads every field, so this re-baselines the
-  // form without reaching for the form object itself.
-  reset(getValues())
-}, [getValues, profile, reset, setValue, form, settings.defaultResumeTitleFormat])
+  const { setValue, getValues, clearErrors } = form
 
   const history = useUndoHistory<FormSection[]>({
     // The form's declared type predates `_key`; at runtime sections are keyed.

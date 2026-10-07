@@ -47,15 +47,11 @@ describe("useCreateResumeForm", () => {
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it("starts with no sections and a title rendered from the format setting", () => {
+  it("starts with an empty title and no sections", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
-    // Pre-filled without marking the form dirty, so Save stays disabled.
-    expect(result.current.isDirty).toBe(false)
-
     expect(result.current.form.getValues()).toEqual({
-      // No profile here, so {profile.role} has no value and is kept verbatim.
-      title: "{profile.role} Resume",
+      title: "",
       tagIds: [],
       syncProfile: true,
       fullName: "",
@@ -189,8 +185,7 @@ describe("useCreateResumeForm", () => {
       }),
     )
 
-    const year = new Date().getFullYear()
-    expect(result.current.form.getValues("title")).toBe(`Farmer CV ${year}`)
+    expect(result.current.form.getValues("title")).toBe("")
     // Crucially not an unsaved edit: opening the page must not enable Save.
     expect(result.current.isDirty).toBe(false)
   })
