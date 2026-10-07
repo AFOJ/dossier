@@ -1,18 +1,15 @@
 import { db, type AppSettings } from "@/db/db"
 import { appSettingsSchema } from "@/db/schemas"
-import { DEFAULT_RESUME_TITLE_FORMAT } from "@/lib/titleFormat"
+import { DEFAULT_RESUME_TITLE_FORMAT, DEFAULT_EXPORT_FILENAME_FORMAT } from "@/lib/titleFormat"
 
 export type Settings = Omit<AppSettings, "id">
 
 export const SETTINGS_ID = "app"
 
 export const DEFAULT_SETTINGS: Settings = {
-  // Matches the behaviour before settings existed, so upgrading does not change
-  // what a new document starts as.
   defaultSyncProfile: true,
   defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
-  // Default export filename format - {kind} = resume/cover-letter/profile, {title} = document title, {date} = ISO date
-  defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
+  defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT,
 }
 
 /**

@@ -16,12 +16,11 @@ export function downloadBlob(filename: string, blob: Blob): void {
 export type ExportKind = "profile" | "resume" | "cover-letter"
 
 export function sanitizeFilename(filename: string): string {
-  // Remove invalid filename characters: <>:"/\|?* and control characters
   return filename
     // eslint-disable-next-line no-control-regex
     .replace(/[<>:"\\|?*\u0000-\u001F]/g, "")
-    .replace(/^\.+/, "") // Remove leading dots
-    .slice(0, 255) // Limit length
+    .replace(/^\.+/, "")
+    .slice(0, 255)
 }
 
 export function getExportFilename(kind: ExportKind, date = new Date(), label?: string): string {
