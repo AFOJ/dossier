@@ -605,7 +605,6 @@ useEffect(() => {
 
 useEffect(() => {
   if (appliedTitle.current) return
-  if (getValues("title").trim() !== "") return
 
   appliedTitle.current = true
   setValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
