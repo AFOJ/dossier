@@ -5,14 +5,12 @@ import { Button, Card, Field, Heading1, Heading2, Input, Subheading } from "@/co
 import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { usePageTitle } from "@/hooks/usePageTitle"
-import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
-import { db, type Profile } from "@/db/db"
+import { db } from "@/db/db"
 import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilename } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
-import { renderTitle } from "@/lib/titleFormat"
 
 export default function SettingsPage() {
   usePageTitle("Settings")
@@ -35,8 +33,7 @@ export default function SettingsPage() {
 }
 
 function DocumentsSection() {
-  const { profile } = useProtectedRouteData() as { profile: Profile }
-  const { form, onSubmit, titleFormat, previewTitle } = useSettingsForm(profile)
+  const { form, onSubmit } = useSettingsForm()
 
   return (
     <div className="flex flex-col gap-4">
@@ -69,34 +66,8 @@ function DocumentsSection() {
 
           <Card className="gap-4">
             <Field
-              label="New resume title"
-              inputId="defaultResumeTitleFormat"
-              description={`Currently produces: ${previewTitle}`}
-              error={form.formState.errors.defaultResumeTitleFormat?.message}
-            >
-              <Input
-                id="defaultResumeTitleFormat"
-                placeholder="{profile.role} Resume"
-                {...form.register("defaultResumeTitleFormat")}
-              />
-            </Field>
-            <p className="text-sm text-gray-700">
-              Pre-filled when you create a resume. Use{" "}
-              <code className="rounded bg-gray-100 px-1">{"{profile.role}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{profile.name}"}</code>, or{" "}
-              <code className="rounded bg-gray-100 px-1">{"{date}"}</code>. A token with no value is
-              left as written.
-            </p>
-          </Card>
-
-          <Card className="gap-4">
-            <Field
               label="Export filename format"
               inputId="defaultExportFilenameFormat"
-              description={`Currently produces: ${renderTitle(
-                titleFormat ?? "{profile.role} Resume",
-                { profile, now: new Date() }
-              )}`}
               error={form.formState.errors.defaultExportFilenameFormat?.message}
             >
               <Input
@@ -115,9 +86,9 @@ function DocumentsSection() {
               <code className="rounded bg-gray-100 px-1">{"{month}"}</code>,{" "}
               <code className="rounded bg-gray-100 px-1">{"{monthShort}"}</code>, or{" "}
               <code className="rounded bg-gray-100 px-1">{"{day}"}</code>.{" "}
-              Invalid filename characters will be removed automatically.
-</p>
-            </Card>
+              Invalid filename characters are removed automatically.
+            </p>
+          </Card>
 
           <div className="flex justify-end">
             <Button type="submit" disabled={!form.formState.isDirty}>
