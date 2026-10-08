@@ -245,8 +245,9 @@ describe("importProfile", () => {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
-      defaultResumePdfFilenameFormat: "{title}-{kind}.pdf",
-      defaultCoverLetterPdfFilenameFormat: "{title}-{kind}.pdf",
+      defaultResumePdfFilenameFormat: "{title}-resume.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
+      pdfFilenamePattern: "per-kind",
     },
     resumes: [
       {
@@ -520,8 +521,9 @@ describe("importProfile", () => {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
-      defaultResumePdfFilenameFormat: "{title}-{kind}.pdf",
-      defaultCoverLetterPdfFilenameFormat: "{title}-{kind}.pdf",
+      defaultResumePdfFilenameFormat: "{title}-resume.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
+      pdfFilenamePattern: "per-kind",
     })
   })
 

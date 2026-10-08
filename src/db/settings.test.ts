@@ -71,6 +71,7 @@ describe("upsertSettings", () => {
       defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
       defaultResumePdfFilenameFormat: DEFAULT_SETTINGS.defaultResumePdfFilenameFormat,
       defaultCoverLetterPdfFilenameFormat: DEFAULT_SETTINGS.defaultCoverLetterPdfFilenameFormat,
+      pdfFilenamePattern: DEFAULT_SETTINGS.pdfFilenamePattern,
     })
   })
 

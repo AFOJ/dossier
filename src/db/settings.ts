@@ -3,7 +3,8 @@ import { appSettingsSchema } from "@/db/schemas"
 import {
   DEFAULT_RESUME_TITLE_FORMAT,
   DEFAULT_EXPORT_FILENAME_FORMAT,
-  DEFAULT_PDF_FILENAME_FORMAT,
+  DEFAULT_PDF_FILENAME_FORMAT_RESUME,
+  DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
 } from "@/lib/titleFormat"
 
 export type Settings = Omit<AppSettings, "id">
@@ -14,8 +15,9 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultSyncProfile: true,
   defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
   defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT,
-  defaultResumePdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT,
-  defaultCoverLetterPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT,
+  defaultResumePdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_RESUME,
+  defaultCoverLetterPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
+  pdfFilenamePattern: "per-kind",
 }
 
 /**

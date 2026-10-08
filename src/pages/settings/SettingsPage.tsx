@@ -32,6 +32,108 @@ export default function SettingsPage() {
 function DocumentsSection() {
   const { form, onSubmit } = useSettingsForm()
 
+  const pdfFilenamePattern = form.watch("pdfFilenamePattern")
+  const isUnified = pdfFilenamePattern === "unified"
+
+  const pdfFields = isUnified ? (
+    <div className="mt-4">
+      <Field
+        label="PDF filename (shared)"
+        inputId="defaultPdfFilenameFormat"
+        error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
+      >
+        <Input
+          id="defaultPdfFilenameFormat"
+          placeholder="{title}-{kind}.pdf"
+          {...form.register("defaultResumePdfFilenameFormat")}
+          className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+        />
+      </Field>
+      <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+        Used for both resume and cover letter PDFs. The title is lowercased with spaces as dashes.
+        Use{" "}
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+          {"{title}"}
+        </code>{" "}
+        for the filename-safe title,{" "}
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+          {"{kind}"}
+        </code>{" "}
+        to insert "resume" or "cover-letter". Date tokens like{" "}
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+          {"{dateShort}"}
+        </code>{" "}
+        and{" "}
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+          {"{year}"}
+        </code>
+        are also available. A `.pdf` suffix is added unless the name already ends with one.
+      </p>
+    </div>
+  ) : (
+    <>
+      <div className="mt-4">
+        <Field
+          label="Resume PDF filename"
+          inputId="defaultResumePdfFilenameFormat"
+          error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
+        >
+          <Input
+            id="defaultResumePdfFilenameFormat"
+            placeholder="{title}-resume.pdf"
+            {...form.register("defaultResumePdfFilenameFormat")}
+            className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+          />
+        </Field>
+        <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+          Used for downloaded resume PDFs. The title is lowercased with spaces as dashes. Use{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+            {"{title}"}
+          </code>{" "}
+          for the filename-safe title. Date tokens like{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+            {"{dateShort}"}
+          </code>{" "}
+          and{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+            {"{year}"}
+          </code>
+          are also available. A `.pdf` suffix is added unless the name already ends with one.
+        </p>
+      </div>
+
+      <div className="mt-4">
+        <Field
+          label="Cover letter PDF filename"
+          inputId="defaultCoverLetterPdfFilenameFormat"
+          error={form.formState.errors.defaultCoverLetterPdfFilenameFormat?.message}
+        >
+          <Input
+            id="defaultCoverLetterPdfFilenameFormat"
+            placeholder="{title}-cover-letter.pdf"
+            {...form.register("defaultCoverLetterPdfFilenameFormat")}
+            className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+          />
+        </Field>
+        <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+          Used for downloaded cover letter PDFs. The title is lowercased with spaces as dashes. Use{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+            {"{title}"}
+          </code>{" "}
+          for the filename-safe title. Date tokens like{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+            {"{dateShort}"}
+          </code>
+          and{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+            {"{year}"}
+          </code>
+          are also available. A `.pdf` suffix is added unless the name already ends with one.
+        </p>
+      </div>
+    </>
+  )
+
   return (
     <div className="flex flex-col gap-4">
       <Heading2>Documents</Heading2>
@@ -106,73 +208,52 @@ function DocumentsSection() {
           </div>
 
           <div className="mt-4">
-            <Field
-              label="Resume PDF filename"
-              inputId="defaultResumePdfFilenameFormat"
-              error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
-            >
-              <Input
-                id="defaultResumePdfFilenameFormat"
-                placeholder="{title}-{kind}.pdf"
-                {...form.register("defaultResumePdfFilenameFormat")}
-                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-              />
+            <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="per-kind"
+                    {...form.register("pdfFilenamePattern")}
+                    className="h-4 w-4 border-gray-300 text-[#0969da] focus:ring-2 focus:ring-[#0969da]"
+                  />
+                  <span className="text-sm font-medium text-gray-900">Per-kind (explicit)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="unified"
+                    {...form.register("pdfFilenamePattern")}
+                    className="h-4 w-4 border-gray-300 text-[#0969da] focus:ring-2 focus:ring-[#0969da]"
+                  />
+                  <span className="text-sm font-medium text-gray-900">
+                    Unified (use {"{kind}"})
+                  </span>
+                </label>
+              </div>
+              <p className="mt-1.5 text-xs text-[#59636e]">
+                Per-kind: each document type has its own format (e.g.{" "}
+                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                  {"{title}-resume.pdf"}
+                </code>
+                /{" "}
+                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                  {"{title}-cover-letter.pdf"}
+                </code>{" "}
+                ). Unified: one shared format using{" "}
+                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                  {"{kind}"}
+                </code>{" "}
+                token (e.g.{" "}
+                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                  {"{title}-{kind}.pdf"}
+                </code>
+                ).
+              </p>
             </Field>
-            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-              Used for downloaded resume PDFs. The title is lowercased with spaces as dashes. Use{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{title}"}
-              </code>
-              ,{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{kind}"}
-              </code>
-              ,{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{dateShort}"}
-              </code>
-              , or{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{year}"}
-              </code>
-              . A `.pdf` suffix is added unless the name already ends with one.
-            </p>
           </div>
 
-          <div className="mt-4">
-            <Field
-              label="Cover letter PDF filename"
-              inputId="defaultCoverLetterPdfFilenameFormat"
-              error={form.formState.errors.defaultCoverLetterPdfFilenameFormat?.message}
-            >
-              <Input
-                id="defaultCoverLetterPdfFilenameFormat"
-                placeholder="{title}-{kind}.pdf"
-                {...form.register("defaultCoverLetterPdfFilenameFormat")}
-                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-              />
-            </Field>
-            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-              Used for downloaded cover letter PDFs. The title is lowercased with spaces as dashes.
-              Use{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{title}"}
-              </code>
-              ,{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{kind}"}
-              </code>
-              ,{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{dateShort}"}
-              </code>
-              , or{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{year}"}
-              </code>
-              . A `.pdf` suffix is added unless the name already ends with one.
-            </p>
-          </div>
+          {pdfFields}
 
           <div>
             <Button type="submit" disabled={!form.formState.isDirty}>

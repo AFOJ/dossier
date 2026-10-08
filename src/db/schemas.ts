@@ -160,6 +160,11 @@ export const appSettingsSchema = z.object({
    */
   defaultResumePdfFilenameFormat: z.string().min(1).max(120),
   defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename pattern mode: "per-kind" uses explicit per-kind formats,
+   * "unified" uses a single format with the {kind} token.
+   */
+  pdfFilenamePattern: z.enum(["per-kind", "unified"]).default("per-kind"),
 })
 
 export type SettingsData = z.infer<typeof appSettingsSchema>

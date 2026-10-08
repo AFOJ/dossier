@@ -33,7 +33,9 @@ export const DEFAULT_RESUME_TITLE_FORMAT = "{profile.role} Resume"
 
 export const DEFAULT_EXPORT_FILENAME_FORMAT = "{kind}-{title}-export-{dateShort}"
 
-export const DEFAULT_PDF_FILENAME_FORMAT = "{title}-{kind}.pdf"
+export const DEFAULT_PDF_FILENAME_FORMAT_RESUME = "{title}-resume.pdf"
+
+export const DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER = "{title}-cover-letter.pdf"
 
 const TOKEN_PATTERN = /\{([a-zA-Z]+(?:\.[a-zA-Z]+)?)\}/g
 

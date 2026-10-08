@@ -76,13 +76,12 @@ function renderFilenameFormat(format: string, tokens: Record<string, string>): s
 }
 
 /**
- * Builds a PDF download filename from a user-configurable format, shared by
- * both document kinds so resume and cover-letter PDFs follow one pattern.
+ * Builds a PDF download filename from a user-configurable format.
  *
- * `{title}` always resolves to the slugified title, falling back to the kind
- * (which reproduces the historical `my-resume-resume.pdf` naming under the
- * default `"{title}-{kind}.pdf"` format). A `.pdf` suffix is appended unless
- * the rendered name already ends with one.
+ * `{title}` always resolves to the slugified title, falling back to the
+ * document kind ("resume" or "cover-letter"). `{kind}` resolves to the
+ * document kind, enabling a shared pattern like `{title}-{kind}.pdf`. A
+ * `.pdf` suffix is appended unless the rendered name already ends with one.
  */
 export function getProcessedPdfFilename(
   kind: PdfKind,

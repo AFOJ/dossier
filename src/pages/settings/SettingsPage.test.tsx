@@ -74,8 +74,10 @@ describe("SettingsPage", () => {
   it("renders a filename format field per document kind", async () => {
     renderPage()
 
-    expect(await screen.findByLabelText("Resume PDF filename")).toHaveValue("{title}-{kind}.pdf")
-    expect(screen.getByLabelText("Cover letter PDF filename")).toHaveValue("{title}-{kind}.pdf")
+    expect(await screen.findByLabelText("Resume PDF filename")).toHaveValue("{title}-resume.pdf")
+    expect(screen.getByLabelText("Cover letter PDF filename")).toHaveValue(
+      "{title}-cover-letter.pdf",
+    )
   })
 
   it("toggles the sync profile setting", async () => {
