@@ -69,6 +69,8 @@ describe("upsertSettings", () => {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
       defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
+      defaultResumePdfFilenameFormat: DEFAULT_SETTINGS.defaultResumePdfFilenameFormat,
+      defaultCoverLetterPdfFilenameFormat: DEFAULT_SETTINGS.defaultCoverLetterPdfFilenameFormat,
     })
   })
 

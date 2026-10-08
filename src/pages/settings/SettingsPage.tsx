@@ -16,17 +16,14 @@ export default function SettingsPage() {
   usePageTitle("Settings")
 
   return (
-    <section className="flex flex-col gap-6 pb-20">
+    <section className="flex max-w-[880px] flex-col gap-8 pb-20">
       <header>
-        <div className="flex flex-col gap-1">
-          <Heading1>Settings</Heading1>
-          <Subheading>Defaults for new documents, your data, and backups.</Subheading>
-        </div>
+        <Heading1>Settings</Heading1>
+        <Subheading>Defaults for new documents, your data, and backups.</Subheading>
       </header>
 
       <DocumentsSection />
       <DataSection />
-      <BackupSection />
       <DangerZone />
     </section>
   )
@@ -41,30 +38,30 @@ function DocumentsSection() {
 
       <FormProvider {...form}>
         <form onSubmit={onSubmit} className="contents">
-          <Card className="gap-4">
-            <div className="flex items-center gap-3">
-              <Controller
-                control={form.control}
-                name="defaultSyncProfile"
-                render={({ field }) => (
-                  <SyncSwitch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    label="Sync new documents to my profile"
-                  />
-                )}
-              />
-              <span className="text-sm font-medium text-gray-900">
+          <div className="flex items-start gap-3">
+            <Controller
+              control={form.control}
+              name="defaultSyncProfile"
+              render={({ field }) => (
+                <SyncSwitch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  label="Sync new documents to my profile"
+                />
+              )}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900">
                 Sync new documents to my profile
-              </span>
+              </p>
+              <p className="mt-1 text-xs text-[#59636e]">
+                New resumes and cover letters start with your profile contact details. Turn this off
+                to give every new document its own contact details.
+              </p>
             </div>
-            <p className="text-sm text-gray-700">
-              New resumes and cover letters start with your profile contact details. Turn this off
-              to give every new document its own contact details.
-            </p>
-          </Card>
+          </div>
 
-          <Card className="gap-4">
+          <div className="mt-4">
             <Field
               label="Export filename format"
               inputId="defaultExportFilenameFormat"
@@ -74,23 +71,110 @@ function DocumentsSection() {
                 id="defaultExportFilenameFormat"
                 placeholder="{kind}-{title}-export-{dateShort}"
                 {...form.register("defaultExportFilenameFormat")}
+                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
               />
             </Field>
-            <p className="text-sm text-gray-700">
+            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
               Used for exported file names. Use{" "}
-              <code className="rounded bg-gray-100 px-1">{"{kind}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{title}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{dateShort}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{date}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{year}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{month}"}</code>,{" "}
-              <code className="rounded bg-gray-100 px-1">{"{monthShort}"}</code>, or{" "}
-              <code className="rounded bg-gray-100 px-1">{"{day}"}</code>.{" "}
-              Invalid filename characters are removed automatically.
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{kind}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{title}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{dateShort}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{date}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{year}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{month}"}
+              </code>{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{monthShort}"}
+              </code>{" "}
+              or{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{day}"}
+              </code>
+              . Invalid filename characters are removed automatically.
             </p>
-          </Card>
+          </div>
 
-          <div className="flex justify-end">
+          <div className="mt-4">
+            <Field
+              label="Resume PDF filename"
+              inputId="defaultResumePdfFilenameFormat"
+              error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
+            >
+              <Input
+                id="defaultResumePdfFilenameFormat"
+                placeholder="{title}-{kind}.pdf"
+                {...form.register("defaultResumePdfFilenameFormat")}
+                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+              />
+            </Field>
+            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+              Used for downloaded resume PDFs. The title is lowercased with spaces as dashes. Use{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{title}"}
+              </code>
+              ,{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{kind}"}
+              </code>
+              ,{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{dateShort}"}
+              </code>
+              , or{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{year}"}
+              </code>
+              . A `.pdf` suffix is added unless the name already ends with one.
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <Field
+              label="Cover letter PDF filename"
+              inputId="defaultCoverLetterPdfFilenameFormat"
+              error={form.formState.errors.defaultCoverLetterPdfFilenameFormat?.message}
+            >
+              <Input
+                id="defaultCoverLetterPdfFilenameFormat"
+                placeholder="{title}-{kind}.pdf"
+                {...form.register("defaultCoverLetterPdfFilenameFormat")}
+                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+              />
+            </Field>
+            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+              Used for downloaded cover letter PDFs. The title is lowercased with spaces as dashes.
+              Use{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{title}"}
+              </code>
+              ,{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{kind}"}
+              </code>
+              ,{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{dateShort}"}
+              </code>
+              , or{" "}
+              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+                {"{year}"}
+              </code>
+              . A `.pdf` suffix is added unless the name already ends with one.
+            </p>
+          </div>
+
+          <div>
             <Button type="submit" disabled={!form.formState.isDirty}>
               {form.formState.isSubmitting ? "Saving..." : "Save changes"}
             </Button>
@@ -102,9 +186,24 @@ function DocumentsSection() {
 }
 
 function DataSection() {
+  const [isExporting, setIsExporting] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
   const cacheCount = useLiveQuery(() => db.entityCache.count(), [])
   const toast = useToast()
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const data = await exportProfile()
+      downloadJson(getExportFilename("profile"), data)
+      toast.success("Data exported", "Your profile and documents were downloaded as JSON.")
+    } catch (error) {
+      toast.error("Failed to export data", "Please try again.")
+      console.error("Failed to export data:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const handleClear = async () => {
     setIsClearing(true)
@@ -123,67 +222,46 @@ function DataSection() {
     <div className="flex flex-col gap-4">
       <Heading2>Data</Heading2>
 
-      <Card className="gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-gray-900">Cached uploads</p>
-          <p className="text-sm text-gray-700">
-            Dossier keeps parsed copies of uploaded files so it can show you a preview without
-            re-reading the original. Those copies stay in this browser.
-          </p>
+      <Card tone="plain" className="gap-0 rounded-[10px] border-[#d1d9e0] p-0">
+        <div id="export-your-data" className="flex items-center justify-between gap-6 p-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Export your data</p>
+            <p className="mt-1 text-xs text-[#59636e]">
+              Downloads your profile, documents, tags, and settings as a JSON file.
+            </p>
+          </div>
+          <Button
+            type="button"
+            intent="secondary"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="shrink-0"
+          >
+            {isExporting ? "Exporting..." : "Export data"}
+          </Button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-gray-500">
-            {cacheCount === undefined
-              ? "Reading cache..."
-              : `${cacheCount} ${cacheCount === 1 ? "file" : "files"} cached`}
-          </p>
+        <div className="flex items-center justify-between gap-6 border-t border-[#d1d9e0] p-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Cached uploads</p>
+            <p className="mt-1 text-xs text-[#59636e]">
+              Dossier keeps parsed copies of uploaded files so it can show you a preview without
+              re-reading the original. Those copies stay in this browser.{" "}
+              {cacheCount === undefined
+                ? "Reading cache..."
+                : `${cacheCount} ${cacheCount === 1 ? "file" : "files"} cached.`}
+            </p>
+          </div>
           <Button
             type="button"
             intent="secondary"
             onClick={handleClear}
             disabled={isClearing || !cacheCount}
+            className="shrink-0"
           >
             {isClearing ? "Clearing..." : "Clear cached uploads"}
           </Button>
         </div>
-      </Card>
-    </div>
-  )
-}
-
-function BackupSection() {
-  const [isExporting, setIsExporting] = useState(false)
-  const toast = useToast()
-
-  const handleExport = async () => {
-    setIsExporting(true)
-    try {
-      const data = await exportProfile()
-      downloadJson(getExportFilename("profile"), data)
-      toast.success("Data exported", "Your profile and documents were downloaded as JSON.")
-    } catch (error) {
-      toast.error("Failed to export data", "Please try again.")
-      console.error("Failed to export data:", error)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Heading2>Backup</Heading2>
-
-      <Card className="gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-gray-900">Export your data</p>
-          <p className="text-sm text-gray-700">
-            Downloads your profile, documents, tags, and settings as a JSON file.
-          </p>
-        </div>
-        <Button type="button" intent="secondary" onClick={handleExport} disabled={isExporting}>
-          {isExporting ? "Exporting..." : "Export data"}
-        </Button>
       </Card>
     </div>
   )
@@ -197,23 +275,29 @@ function DangerZone() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Heading2>Danger zone</Heading2>
+      <Heading2 className="text-[#d1242f]">Danger zone</Heading2>
 
-      <Card className="gap-4 border-red-200">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-gray-900">Delete all data</p>
-          <p className="text-sm text-gray-700">
-            Permanently removes your profile, documents, tags, and settings from this browser.
-            Export a backup first: this cannot be undone.
-          </p>
+      <Card tone="plain" className="gap-0 rounded-[10px] border-[#cf222e] p-0">
+        <div className="flex items-center justify-between gap-6 p-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Delete all data</p>
+            <p className="mt-1 text-xs text-[#59636e]">
+              Permanently removes your profile, documents, tags, and settings from this browser.{" "}
+              <a href="#export-your-data" className="text-[#0969da] no-underline hover:underline">
+                Export a backup
+              </a>{" "}
+              first: this cannot be undone.
+            </p>
+          </div>
+          <Button
+            type="button"
+            intent="secondary"
+            onClick={() => deleteModal.open(undefined)}
+            className="shrink-0 text-[#d1242f]"
+          >
+            Delete all data
+          </Button>
         </div>
-        <Button
-          type="button"
-          onClick={() => deleteModal.open(undefined)}
-          className="bg-red-700 enabled:hover:bg-red-800 focus:ring-red-500"
-        >
-          Delete all data
-        </Button>
       </Card>
     </div>
   )

@@ -151,6 +151,15 @@ export const appSettingsSchema = z.object({
    * Invalid filename characters (<>:"/\|?*) will be sanitized automatically.
    */
   defaultExportFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename formats, one per document kind so resume and cover-letter
+   * PDFs can be named differently. Supports `{title}` (filename-safe title,
+   * falling back to the kind), `{kind}`, and the `{date}`, `{dateShort}`,
+   * `{year}`, `{month}`, `{monthShort}`, `{day}` tokens. A `.pdf` suffix is
+   * added on download unless the rendered name already ends with one.
+   */
+  defaultResumePdfFilenameFormat: z.string().min(1).max(120),
+  defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
 })
 
 export type SettingsData = z.infer<typeof appSettingsSchema>

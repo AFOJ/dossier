@@ -67,8 +67,15 @@ describe("SettingsPage", () => {
     expect(await screen.findByText("Settings")).toBeInTheDocument()
     expect(screen.getByText("Documents")).toBeInTheDocument()
     expect(screen.getByText("Data")).toBeInTheDocument()
-    expect(screen.getByText("Backup")).toBeInTheDocument()
+    expect(screen.getByText("Export your data")).toBeInTheDocument()
     expect(screen.getByText("Danger zone")).toBeInTheDocument()
+  })
+
+  it("renders a filename format field per document kind", async () => {
+    renderPage()
+
+    expect(await screen.findByLabelText("Resume PDF filename")).toHaveValue("{title}-{kind}.pdf")
+    expect(screen.getByLabelText("Cover letter PDF filename")).toHaveValue("{title}-{kind}.pdf")
   })
 
   it("toggles the sync profile setting", async () => {

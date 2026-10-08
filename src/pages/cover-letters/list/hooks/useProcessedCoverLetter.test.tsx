@@ -4,6 +4,8 @@ import { createCoverLetter, updateCoverLetter } from "@/db/coverLetter"
 import { db } from "@/db/db"
 import type { CoverLetter } from "@/db/db"
 import { processCoverLetter } from "@/lib/api"
+import { downloadBlob } from "@/lib/download"
+import { upsertSettings } from "@/db/settings"
 import { useProcessedCoverLetter } from "@/pages/cover-letters/list/hooks/useProcessedCoverLetter"
 
 vi.mock("@/lib/api", () => ({
@@ -16,6 +18,11 @@ vi.mock("@/lib/api", () => ({
   },
   processCoverLetter: vi.fn(),
 }))
+
+vi.mock("@/lib/download", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/download")>()
+  return { ...actual, downloadBlob: vi.fn() }
+})
 
 const mockProcessCoverLetter = vi.mocked(processCoverLetter)
 
@@ -167,5 +174,39 @@ describe("useProcessedCoverLetter", () => {
 
     await waitFor(() => expect(result.current.status).toBe("ready"))
     expect(mockProcessCoverLetter).toHaveBeenCalledTimes(2)
+  }, 20_000)
+
+  it("names the PDF download from the cover letter filename format", async () => {
+    const letter = await makeLetter()
+    const { result } = renderHook(() => useProcessedCoverLetter(letter))
+    await waitFor(() => expect(result.current.status).toBe("ready"))
+
+    await result.current.download()
+
+    expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+      "acme-application-cover-letter.pdf",
+      expect.any(Blob),
+    )
+  }, 20_000)
+
+  it("ignores the resume format when naming cover letter PDFs", async () => {
+    await upsertSettings({
+      defaultResumePdfFilenameFormat: "{title}-CV.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-CL.pdf",
+    })
+    try {
+      const letter = await makeLetter()
+      const { result } = renderHook(() => useProcessedCoverLetter(letter))
+      await waitFor(() => expect(result.current.status).toBe("ready"))
+
+      await result.current.download()
+
+      expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+        "acme-application-CL.pdf",
+        expect.any(Blob),
+      )
+    } finally {
+      await db.settings.clear()
+    }
   }, 20_000)
 })

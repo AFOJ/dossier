@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Resume } from "@/db/db"
 import { ApiError } from "@/lib/api"
-import { downloadBlob } from "@/lib/download"
-import { ensureProcessedResume, getProcessedResumeFilename } from "@/lib/processedResume"
+import { downloadBlob, getProcessedPdfFilename } from "@/lib/download"
+import { ensureProcessedResume } from "@/lib/processedResume"
+import { useSettings } from "@/hooks/useSettings"
 
 export type ProcessedResumeStatus = "loading" | "ready" | "error"
 
@@ -32,6 +33,8 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
   const [processedAt, setProcessedAt] = useState<Date | undefined>(undefined)
   const [error, setError] = useState<ApiError | undefined>(undefined)
   const [isDownloading, setIsDownloading] = useState(false)
+
+  const { settings } = useSettings()
 
   const blobRef = useRef<Blob | undefined>(undefined)
   const urlRef = useRef<string | undefined>(undefined)
@@ -120,11 +123,14 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
         throw new ApiError("INTERNAL_ERROR", "The processed resume is not available yet.", [])
       }
 
-      downloadBlob(getProcessedResumeFilename(resumeTitle), blobRef.current)
+      downloadBlob(
+        getProcessedPdfFilename("resume", resumeTitle, settings.defaultResumePdfFilenameFormat),
+        blobRef.current,
+      )
     } finally {
       setIsDownloading(false)
     }
-  }, [load, resumeTitle])
+  }, [load, resumeTitle, settings])
 
   return {
     status,

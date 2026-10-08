@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { appSettingsSchema } from "@/db/schemas"
@@ -18,11 +18,16 @@ export function useSettingsForm() {
 
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
+  const initialized = useRef(false)
+
   useEffect(() => {
-    if (isLoaded) {
-      form.reset(settings)
+    // Only initialize once: the form already has defaultValues from the first
+    // settings read. Subsequent stored-settings arrivals must not clobber user
+    // edits, so we skip resetting after the first load.
+    if (isLoaded && !initialized.current) {
+      initialized.current = true
     }
-  }, [settings, isLoaded, form])
+  }, [isLoaded, settings])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {

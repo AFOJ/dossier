@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { CoverLetter } from "@/db/db"
 import { ApiError } from "@/lib/api"
-import { downloadBlob } from "@/lib/download"
-import {
-  ensureProcessedCoverLetter,
-  getProcessedCoverLetterFilename,
-} from "@/lib/processedCoverLetter"
+import { downloadBlob, getProcessedPdfFilename } from "@/lib/download"
+import { ensureProcessedCoverLetter } from "@/lib/processedCoverLetter"
+import { useSettings } from "@/hooks/useSettings"
 
 export type ProcessedCoverLetterStatus = "loading" | "ready" | "error"
 
@@ -26,6 +24,8 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
   const [processedAt, setProcessedAt] = useState<Date | undefined>(undefined)
   const [error, setError] = useState<ApiError | undefined>(undefined)
   const [isDownloading, setIsDownloading] = useState(false)
+
+  const { settings } = useSettings()
 
   const blobRef = useRef<Blob | undefined>(undefined)
   const urlRef = useRef<string | undefined>(undefined)
@@ -110,11 +110,18 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
         throw new ApiError("INTERNAL_ERROR", "The processed cover letter is not available yet.", [])
       }
 
-      downloadBlob(getProcessedCoverLetterFilename(letterTitle), blobRef.current)
+      downloadBlob(
+        getProcessedPdfFilename(
+          "cover-letter",
+          letterTitle,
+          settings.defaultCoverLetterPdfFilenameFormat,
+        ),
+        blobRef.current,
+      )
     } finally {
       setIsDownloading(false)
     }
-  }, [load, letterTitle])
+  }, [load, letterTitle, settings])
 
   return {
     status,

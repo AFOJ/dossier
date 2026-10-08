@@ -245,6 +245,8 @@ describe("importProfile", () => {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
+      defaultResumePdfFilenameFormat: "{title}-{kind}.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-{kind}.pdf",
     },
     resumes: [
       {
@@ -518,6 +520,8 @@ describe("importProfile", () => {
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name}",
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
+      defaultResumePdfFilenameFormat: "{title}-{kind}.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-{kind}.pdf",
     })
   })
 
