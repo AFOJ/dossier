@@ -5,6 +5,7 @@ import {
   DEFAULT_EXPORT_FILENAME_FORMAT,
   DEFAULT_PDF_FILENAME_FORMAT_RESUME,
   DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
+  DEFAULT_PDF_FILENAME_FORMAT_SHARED,
 } from "@/lib/titleFormat"
 
 export type Settings = Omit<AppSettings, "id">
@@ -17,7 +18,8 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT,
   defaultResumePdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_RESUME,
   defaultCoverLetterPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
-  pdfFilenamePattern: "per-kind",
+  defaultPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_SHARED,
+  pdfFilenamePattern: "ad-hoc",
 }
 
 /**

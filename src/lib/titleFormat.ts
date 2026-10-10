@@ -37,6 +37,8 @@ export const DEFAULT_PDF_FILENAME_FORMAT_RESUME = "{title}-resume.pdf"
 
 export const DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER = "{title}-cover-letter.pdf"
 
+export const DEFAULT_PDF_FILENAME_FORMAT_SHARED = "{title}-{kind}.pdf"
+
 const TOKEN_PATTERN = /\{([a-zA-Z]+(?:\.[a-zA-Z]+)?)\}/g
 
 type TokenValues = Partial<Record<TitleFormatToken, string>>

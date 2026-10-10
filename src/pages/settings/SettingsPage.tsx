@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { Controller, FormProvider } from "react-hook-form"
 import { Button, Card, Field, Heading1, Heading2, Input, Subheading } from "@/components/ui"
+import { RadioGroup } from "@base-ui/react/radio-group"
+import { Radio } from "@base-ui/react/radio"
 import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { usePageTitle } from "@/hooks/usePageTitle"
@@ -33,46 +35,45 @@ function DocumentsSection() {
   const { form, onSubmit } = useSettingsForm()
 
   const pdfFilenamePattern = form.watch("pdfFilenamePattern")
-  const isUnified = pdfFilenamePattern === "unified"
+  const isShared = pdfFilenamePattern === "shared"
 
-  const pdfFields = isUnified ? (
-    <div className="mt-4">
+  const pdfFields = isShared ? (
+    <div className="mt-3">
       <Field
-        label="PDF filename (shared)"
+        label="PDF filename"
         inputId="defaultPdfFilenameFormat"
-        error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
+        error={form.formState.errors.defaultPdfFilenameFormat?.message}
       >
         <Input
           id="defaultPdfFilenameFormat"
           placeholder="{title}-{kind}.pdf"
-          {...form.register("defaultResumePdfFilenameFormat")}
+          {...form.register("defaultPdfFilenameFormat")}
           className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
         />
       </Field>
       <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-        Used for both resume and cover letter PDFs. The title is lowercased with spaces as dashes.
-        Use{" "}
+        One format for both resumes and cover letters. Use{" "}
         <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
           {"{title}"}
         </code>{" "}
         for the filename-safe title,{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
           {"{kind}"}
         </code>{" "}
-        to insert "resume" or "cover-letter". Date tokens like{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+        to insert "resume" or "cover-letter". Date tokens such as{" "}
+        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
           {"{dateShort}"}
         </code>{" "}
         and{" "}
         <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
           {"{year}"}
         </code>
-        are also available. A `.pdf` suffix is added unless the name already ends with one.
+        are available. A `.pdf` suffix is added automatically.
       </p>
     </div>
   ) : (
     <>
-      <div className="mt-4">
+      <div className="mt-3">
         <Field
           label="Resume PDF filename"
           inputId="defaultResumePdfFilenameFormat"
@@ -86,23 +87,23 @@ function DocumentsSection() {
           />
         </Field>
         <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-          Used for downloaded resume PDFs. The title is lowercased with spaces as dashes. Use{" "}
+          Format for resume PDFs. Use{" "}
           <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{title}"}
           </code>{" "}
-          for the filename-safe title. Date tokens like{" "}
+          for the filename-safe title. Date tokens such as{" "}
           <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{dateShort}"}
           </code>{" "}
           and{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{year}"}
           </code>
-          are also available. A `.pdf` suffix is added unless the name already ends with one.
+          are available. A `.pdf` suffix is added automatically.
         </p>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-1.5">
         <Field
           label="Cover letter PDF filename"
           inputId="defaultCoverLetterPdfFilenameFormat"
@@ -116,19 +117,19 @@ function DocumentsSection() {
           />
         </Field>
         <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-          Used for downloaded cover letter PDFs. The title is lowercased with spaces as dashes. Use{" "}
+          Format for cover letter PDFs. Use{" "}
           <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{title}"}
           </code>{" "}
-          for the filename-safe title. Date tokens like{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text=[11.5px]">
+          for the filename-safe title. Date tokens such as{" "}
+          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{dateShort}"}
           </code>
           and{" "}
           <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
             {"{year}"}
           </code>
-          are also available. A `.pdf` suffix is added unless the name already ends with one.
+          are available. A `.pdf` suffix is added automatically.
         </p>
       </div>
     </>
@@ -163,7 +164,7 @@ function DocumentsSection() {
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <Field
               label="Export filename format"
               inputId="defaultExportFilenameFormat"
@@ -207,48 +208,49 @@ function DocumentsSection() {
             </p>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="per-kind"
-                    {...form.register("pdfFilenamePattern")}
-                    className="h-4 w-4 border-gray-300 text-[#0969da] focus:ring-2 focus:ring-[#0969da]"
-                  />
-                  <span className="text-sm font-medium text-gray-900">Per-kind (explicit)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="unified"
-                    {...form.register("pdfFilenamePattern")}
-                    className="h-4 w-4 border-gray-300 text-[#0969da] focus:ring-2 focus:ring-[#0969da]"
-                  />
-                  <span className="text-sm font-medium text-gray-900">
-                    Unified (use {"{kind}"})
-                  </span>
-                </label>
-              </div>
+              <Controller
+                control={form.control}
+                name="pdfFilenamePattern"
+                render={({ field }) => (
+                  <RadioGroup
+                    name="pdfFilenamePattern"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="flex items-center gap-4"
+                  >
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <Radio.Root
+                        value="shared"
+                        className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
+                      >
+                        <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
+                      </Radio.Root>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        Shared
+                      </span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <Radio.Root
+                        value="ad-hoc"
+                        className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
+                      >
+                        <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
+                      </Radio.Root>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        Ad Hoc
+                      </span>
+                    </label>
+                  </RadioGroup>
+                )}
+              />
               <p className="mt-1.5 text-xs text-[#59636e]">
-                Per-kind: each document type has its own format (e.g.{" "}
-                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                  {"{title}-resume.pdf"}
-                </code>
-                /{" "}
-                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                  {"{title}-cover-letter.pdf"}
-                </code>{" "}
-                ). Unified: one shared format using{" "}
+                Shared: one format for both resumes and cover letters using{" "}
                 <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
                   {"{kind}"}
                 </code>{" "}
-                token (e.g.{" "}
-                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                  {"{title}-{kind}.pdf"}
-                </code>
-                ).
+                to distinguish them. Ad Hoc: separate format per document type.
               </p>
             </Field>
           </div>

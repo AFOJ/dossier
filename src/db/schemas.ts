@@ -161,10 +161,16 @@ export const appSettingsSchema = z.object({
   defaultResumePdfFilenameFormat: z.string().min(1).max(120),
   defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
   /**
-   * PDF filename pattern mode: "per-kind" uses explicit per-kind formats,
-   * "unified" uses a single format with the {kind} token.
+   * PDF filename format used when pdfFilenamePattern is "shared".
+   * Supports `{title}` (filename-safe title), `{kind}` ("resume" or "cover-letter"),
+   * and date tokens. A `.pdf` suffix is added if missing.
    */
-  pdfFilenamePattern: z.enum(["per-kind", "unified"]).default("per-kind"),
+  defaultPdfFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename pattern mode: "shared" uses one format with {kind} token,
+   * "ad-hoc" uses separate formats per document type.
+   */
+  pdfFilenamePattern: z.enum(["shared", "ad-hoc"]).default("ad-hoc"),
 })
 
 export type SettingsData = z.infer<typeof appSettingsSchema>

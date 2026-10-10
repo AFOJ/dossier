@@ -247,7 +247,8 @@ describe("importProfile", () => {
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
       defaultResumePdfFilenameFormat: "{title}-resume.pdf",
       defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
-      pdfFilenamePattern: "per-kind",
+      defaultPdfFilenameFormat: "{title}-{kind}.pdf",
+      pdfFilenamePattern: "ad-hoc",
     },
     resumes: [
       {
@@ -523,7 +524,8 @@ describe("importProfile", () => {
       defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
       defaultResumePdfFilenameFormat: "{title}-resume.pdf",
       defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
-      pdfFilenamePattern: "per-kind",
+      defaultPdfFilenameFormat: "{title}-{kind}.pdf",
+      pdfFilenamePattern: "ad-hoc",
     })
   })
 

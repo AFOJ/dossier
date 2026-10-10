@@ -80,6 +80,23 @@ describe("SettingsPage", () => {
     )
   })
 
+  it("defaults to the ad hoc PDF filename pattern and switches to shared", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const radios = await screen.findAllByRole("radio")
+    expect(radios).toHaveLength(2)
+    expect(screen.getByRole("radio", { checked: true })).toBeInTheDocument()
+    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-resume.pdf")
+    expect(screen.queryByLabelText("PDF filename")).not.toBeInTheDocument()
+
+    await user.click(radios[0])
+
+    expect(await screen.findByLabelText("PDF filename")).toHaveValue("{title}-{kind}.pdf")
+    expect(screen.queryByLabelText("Resume PDF filename")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled()
+  })
+
   it("toggles the sync profile setting", async () => {
     const user = userEvent.setup()
     renderPage()
