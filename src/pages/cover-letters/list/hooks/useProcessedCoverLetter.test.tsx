@@ -209,4 +209,25 @@ describe("useProcessedCoverLetter", () => {
       await db.settings.clear()
     }
   }, 20_000)
+
+  it("uses the shared format when the pattern is shared", async () => {
+    await upsertSettings({
+      pdfFilenamePattern: "shared",
+      defaultPdfFilenameFormat: "{kind}-{title}.pdf",
+    })
+    try {
+      const letter = await makeLetter()
+      const { result } = renderHook(() => useProcessedCoverLetter(letter))
+      await waitFor(() => expect(result.current.status).toBe("ready"))
+
+      await result.current.download()
+
+      expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+        "cover-letter-acme-application.pdf",
+        expect.any(Blob),
+      )
+    } finally {
+      await db.settings.clear()
+    }
+  }, 20_000)
 })

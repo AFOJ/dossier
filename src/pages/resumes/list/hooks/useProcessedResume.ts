@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Resume } from "@/db/db"
 import { ApiError } from "@/lib/api"
-import { downloadBlob, getProcessedPdfFilename } from "@/lib/download"
+import { downloadBlob, getPdfFilenameWithSettings } from "@/lib/download"
 import { ensureProcessedResume } from "@/lib/processedResume"
 import { useSettings } from "@/hooks/useSettings"
 
@@ -123,10 +123,7 @@ export function useProcessedResume(resume: Resume): UseProcessedResumeResult {
         throw new ApiError("INTERNAL_ERROR", "The processed resume is not available yet.", [])
       }
 
-      downloadBlob(
-        getProcessedPdfFilename("resume", resumeTitle, settings.defaultResumePdfFilenameFormat),
-        blobRef.current,
-      )
+      downloadBlob(getPdfFilenameWithSettings("resume", resumeTitle, settings), blobRef.current)
     } finally {
       setIsDownloading(false)
     }

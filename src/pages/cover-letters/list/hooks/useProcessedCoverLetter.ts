@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { CoverLetter } from "@/db/db"
 import { ApiError } from "@/lib/api"
-import { downloadBlob, getProcessedPdfFilename } from "@/lib/download"
+import { downloadBlob, getPdfFilenameWithSettings } from "@/lib/download"
 import { ensureProcessedCoverLetter } from "@/lib/processedCoverLetter"
 import { useSettings } from "@/hooks/useSettings"
 
@@ -111,11 +111,7 @@ export function useProcessedCoverLetter(letter: CoverLetter): UseProcessedCoverL
       }
 
       downloadBlob(
-        getProcessedPdfFilename(
-          "cover-letter",
-          letterTitle,
-          settings.defaultCoverLetterPdfFilenameFormat,
-        ),
+        getPdfFilenameWithSettings("cover-letter", letterTitle, settings),
         blobRef.current,
       )
     } finally {

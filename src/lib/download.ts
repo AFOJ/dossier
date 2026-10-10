@@ -114,3 +114,32 @@ export function getProcessedPdfFilename(
 
   return rendered.toLowerCase().endsWith(".pdf") ? rendered : `${rendered}.pdf`
 }
+
+/**
+ * Builds a PDF download filename from the saved settings.
+ *
+ * When the pattern is "shared" the single `defaultPdfFilenameFormat` is used for
+ * every document kind (it typically contains `{kind}` to tell them apart);
+ * otherwise each kind has its own format. Naming follows the same rules as
+ * `getProcessedPdfFilename`.
+ */
+export function getPdfFilenameWithSettings(
+  kind: PdfKind,
+  title: string,
+  settings: {
+    pdfFilenamePattern: "shared" | "ad-hoc"
+    defaultPdfFilenameFormat: string
+    defaultResumePdfFilenameFormat: string
+    defaultCoverLetterPdfFilenameFormat: string
+  },
+  date = new Date(),
+): string {
+  const format =
+    settings.pdfFilenamePattern === "shared"
+      ? settings.defaultPdfFilenameFormat
+      : kind === "resume"
+        ? settings.defaultResumePdfFilenameFormat
+        : settings.defaultCoverLetterPdfFilenameFormat
+
+  return getProcessedPdfFilename(kind, title, format, date)
+}

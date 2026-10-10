@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { getProcessedPdfFilename } from "@/lib/download"
+import { getProcessedPdfFilename, getPdfFilenameWithSettings } from "@/lib/download"
 import {
+  DEFAULT_PDF_FILENAME_FORMAT_SHARED,
   DEFAULT_PDF_FILENAME_FORMAT_RESUME,
   DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
 } from "@/lib/titleFormat"
@@ -72,6 +73,47 @@ describe("getProcessedPdfFilename", () => {
   it("does not double the .pdf suffix", () => {
     expect(getProcessedPdfFilename("resume", "My Resume", "{title}-resume.PDF", DATE)).toBe(
       "my-resume-resume.PDF",
+    )
+  })
+})
+
+describe("getPdfFilenameWithSettings", () => {
+  const baseSettings = {
+    pdfFilenamePattern: "ad-hoc" as const,
+    defaultPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_SHARED,
+    defaultResumePdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_RESUME,
+    defaultCoverLetterPdfFilenameFormat: DEFAULT_PDF_FILENAME_FORMAT_COVER_LETTER,
+  }
+
+  it("uses the per-kind format in ad hoc mode", () => {
+    expect(getPdfFilenameWithSettings("resume", "My Resume", baseSettings, DATE)).toBe(
+      "my-resume-resume.pdf",
+    )
+    expect(getPdfFilenameWithSettings("cover-letter", "My Letter", baseSettings, DATE)).toBe(
+      "my-letter-cover-letter.pdf",
+    )
+  })
+
+  it("uses the shared format in shared mode, with {kind} telling them apart", () => {
+    const settings = { ...baseSettings, pdfFilenamePattern: "shared" as const }
+
+    expect(getPdfFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+      "my-resume-resume.pdf",
+    )
+    expect(getPdfFilenameWithSettings("cover-letter", "My Letter", settings, DATE)).toBe(
+      "my-letter-cover-letter.pdf",
+    )
+  })
+
+  it("uses a custom shared format over a custom per-kind format", () => {
+    const settings = {
+      ...baseSettings,
+      pdfFilenamePattern: "shared" as const,
+      defaultPdfFilenameFormat: "{kind}-{title}-{year}.pdf",
+    }
+
+    expect(getPdfFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+      "resume-my-resume-2026.pdf",
     )
   })
 })

@@ -189,4 +189,25 @@ describe("useProcessedResume", () => {
       await db.settings.clear()
     }
   }, 20_000)
+
+  it("uses the shared format when the pattern is shared", async () => {
+    await upsertSettings({
+      pdfFilenamePattern: "shared",
+      defaultPdfFilenameFormat: "{kind}-{title}.pdf",
+    })
+    try {
+      const resume = await makeResume()
+      const { result } = renderHook(() => useProcessedResume(resume))
+      await waitFor(() => expect(result.current.status).toBe("ready"))
+
+      await result.current.download()
+
+      expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+        "resume-frontend-engineer.pdf",
+        expect.any(Blob),
+      )
+    } finally {
+      await db.settings.clear()
+    }
+  }, 20_000)
 })
