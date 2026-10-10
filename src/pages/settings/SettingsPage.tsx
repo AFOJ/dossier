@@ -306,7 +306,10 @@ function DataSection() {
       <Heading2>Data</Heading2>
 
       <Card tone="plain" className="gap-0 rounded-[10px] border-[#d1d9e0] p-0">
-        <div id="export-your-data" className="flex items-center justify-between gap-6 p-4">
+        <div
+          id="export-your-data"
+          className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+        >
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Export your data</p>
             <p className="mt-1 text-xs text-[#59636e]">
@@ -318,13 +321,13 @@ function DataSection() {
             intent="secondary"
             onClick={handleExport}
             disabled={isExporting}
-            className="shrink-0"
+            className="w-full shrink-0 sm:w-auto"
           >
             {isExporting ? "Exporting..." : "Export data"}
           </Button>
         </div>
 
-        <div className="flex items-center justify-between gap-6 border-t border-[#d1d9e0] p-4">
+        <div className="flex flex-col gap-3 border-t border-[#d1d9e0] p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Cached uploads</p>
             <p className="mt-1 text-xs text-[#59636e]">
@@ -340,7 +343,7 @@ function DataSection() {
             intent="secondary"
             onClick={handleClear}
             disabled={isClearing || !cacheCount}
-            className="shrink-0"
+            className="w-full shrink-0 sm:w-auto"
           >
             {isClearing ? "Clearing..." : "Clear cached uploads"}
           </Button>
@@ -361,7 +364,7 @@ function DangerZone() {
       <Heading2 className="text-[#d1242f]">Danger zone</Heading2>
 
       <Card tone="plain" className="gap-0 rounded-[10px] border-[#cf222e] p-0">
-        <div className="flex items-center justify-between gap-6 p-4">
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Delete all data</p>
             <p className="mt-1 text-xs text-[#59636e]">
@@ -376,7 +379,7 @@ function DangerZone() {
             type="button"
             intent="secondary"
             onClick={() => deleteModal.open(undefined)}
-            className="shrink-0 text-[#d1242f]"
+            className="w-full shrink-0 text-[#d1242f] sm:w-auto"
           >
             Delete all data
           </Button>
