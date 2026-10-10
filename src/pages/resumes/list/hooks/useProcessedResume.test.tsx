@@ -4,6 +4,8 @@ import { createResume, updateResume } from "@/db/resume"
 import { db } from "@/db/db"
 import type { Resume } from "@/db/db"
 import { processResume } from "@/lib/api"
+import { downloadBlob } from "@/lib/download"
+import { upsertSettings } from "@/db/settings"
 import { useProcessedResume } from "@/pages/resumes/list/hooks/useProcessedResume"
 
 vi.mock("@/lib/api", () => ({
@@ -16,6 +18,11 @@ vi.mock("@/lib/api", () => ({
   },
   processResume: vi.fn(),
 }))
+
+vi.mock("@/lib/download", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/download")>()
+  return { ...actual, downloadBlob: vi.fn() }
+})
 
 const mockProcessResume = vi.mocked(processResume)
 
@@ -150,5 +157,57 @@ describe("useProcessedResume", () => {
 
     await waitFor(() => expect(result.current.status).toBe("ready"))
     expect(mockProcessResume).toHaveBeenCalledTimes(2)
+  }, 20_000)
+
+  it("names the PDF download from the resume filename format", async () => {
+    const resume = await makeResume()
+    const { result } = renderHook(() => useProcessedResume(resume))
+    await waitFor(() => expect(result.current.status).toBe("ready"))
+
+    await result.current.download()
+
+    expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+      "frontend-engineer-resume.pdf",
+      expect.any(Blob),
+    )
+  }, 20_000)
+
+  it("honors a custom resume filename format", async () => {
+    await upsertSettings({ defaultResumePdfFilenameFormat: "{title}-CV.pdf" })
+    try {
+      const resume = await makeResume()
+      const { result } = renderHook(() => useProcessedResume(resume))
+      await waitFor(() => expect(result.current.status).toBe("ready"))
+
+      await result.current.download()
+
+      expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+        "frontend-engineer-CV.pdf",
+        expect.any(Blob),
+      )
+    } finally {
+      await db.settings.clear()
+    }
+  }, 20_000)
+
+  it("uses the shared format when the pattern is shared", async () => {
+    await upsertSettings({
+      pdfFilenamePattern: "shared",
+      defaultPdfFilenameFormat: "{kind}-{title}.pdf",
+    })
+    try {
+      const resume = await makeResume()
+      const { result } = renderHook(() => useProcessedResume(resume))
+      await waitFor(() => expect(result.current.status).toBe("ready"))
+
+      await result.current.download()
+
+      expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(
+        "resume-frontend-engineer.pdf",
+        expect.any(Blob),
+      )
+    } finally {
+      await db.settings.clear()
+    }
   }, 20_000)
 })

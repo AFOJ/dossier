@@ -3,7 +3,6 @@ import { db } from "@/db/db"
 import { entryToBlob, getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
 import { processCoverLetter } from "@/lib/api"
 import { toCoverLetterPayload } from "@/lib/coverLetterPayload"
-import { slugify } from "@/utils"
 
 export interface ProcessedCoverLetter {
   blob: Blob
@@ -40,8 +39,4 @@ export async function ensureProcessedCoverLetter(
   })
 
   return { blob, processedAt }
-}
-
-export function getProcessedCoverLetterFilename(title: string): string {
-  return `${slugify(title) || "cover-letter"}-cover-letter.pdf`
 }

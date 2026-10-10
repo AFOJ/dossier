@@ -33,8 +33,13 @@ vi.mock("@/pages/resumes/list/hooks/useProcessedResume", () => ({
 vi.mock("@/lib/download", () => ({
   downloadJson: vi.fn(),
   getExportFilename: vi.fn(
-    (_kind: string, _date: Date, label?: string) =>
-      `dossier-resume${label ? `-${label}` : ""}-export.json`,
+    (_kind: string, _date: Date, _label?: string) =>
+      `dossier-resume${_label ? `-${_label}` : ""}-export.json`,
+  ),
+  getExportFilenameWithSettings: vi.fn(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_kind: string, _title: string, _settings: unknown, _date?: Date) =>
+      "resume-Export Me-export-2026-01-01.json",
   ),
 }))
 
@@ -206,7 +211,7 @@ describe("ResumesListPage", () => {
 
     await waitFor(() => {
       expect(downloadJson).toHaveBeenCalledWith(
-        "dossier-resume-export-me-export.json",
+        "resume-Export Me-export-2026-01-01.json",
         expect.objectContaining({
           id: "exp-1",
           title: "Export Me",

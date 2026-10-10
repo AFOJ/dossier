@@ -126,8 +126,6 @@ export const exportContactSchema = z.object({
   links: z.array(linkSchema),
 })
 
-// Cover letters persist a contact without links (the profile owns links), so
-// the export shape is the CoverLetterContact type, not exportContactSchema.
 export const coverLetterExportContactSchema = z.object({
   full_name: z.string(),
   role: z.string().nullable(),
@@ -135,6 +133,47 @@ export const coverLetterExportContactSchema = z.object({
   phone: z.string().nullable(),
   location: z.string().nullable(),
 })
+
+export const appSettingsSchema = z.object({
+  /** Whether new resumes and cover letters start synced to the profile. */
+  defaultSyncProfile: z.boolean(),
+  /**
+   * Title format for new resumes; see {@link renderTitle}.
+   *
+   * Bounded because settings round-trip through the export file, so an
+   * unbounded format string would be restorable from an arbitrary file.
+   */
+  defaultResumeTitleFormat: z.string().min(1).max(120),
+  /**
+   * Export filename format for downloaded documents.
+   *
+   * Available tokens: {kind}, {title}, {date}, {dateShort}, {year}, {month}, {monthShort}, {day}.
+   * Invalid filename characters (<>:"/\|?*) will be sanitized automatically.
+   */
+  defaultExportFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename formats, one per document kind so resume and cover-letter
+   * PDFs can be named differently. Supports `{title}` (filename-safe title,
+   * falling back to the kind), `{kind}`, and the `{date}`, `{dateShort}`,
+   * `{year}`, `{month}`, `{monthShort}`, `{day}` tokens. A `.pdf` suffix is
+   * added on download unless the rendered name already ends with one.
+   */
+  defaultResumePdfFilenameFormat: z.string().min(1).max(120),
+  defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename format used when pdfFilenamePattern is "shared".
+   * Supports `{title}` (filename-safe title), `{kind}` ("resume" or "cover-letter"),
+   * and date tokens. A `.pdf` suffix is added if missing.
+   */
+  defaultPdfFilenameFormat: z.string().min(1).max(120),
+  /**
+   * PDF filename pattern mode: "shared" uses one format with {kind} token,
+   * "ad-hoc" uses separate formats per document type.
+   */
+  pdfFilenamePattern: z.enum(["shared", "ad-hoc"]).default("ad-hoc"),
+})
+
+export type SettingsData = z.infer<typeof appSettingsSchema>
 
 export const tagIdSchema = z.number().int().positive()
 
@@ -155,8 +194,6 @@ export const tagSchema = z.object({
 export const resumeSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),
-  // The builder allows section-less resumes, and exports must round-trip,
-  // so imports accept an empty sections array.
   sections: z.array(resumeSectionSchema),
   createdAt: z.iso.datetime().optional(),
   updatedAt: z.iso.datetime().optional(),
@@ -169,9 +206,7 @@ export type ResumeData = z.infer<typeof resumeSchema>
 export const resumePayloadSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().min(1, "Title is required"),
-  // Match resumeSchema: an explicit null contact (synced resume) must round-trip.
   contact: contactSchema.nullable().optional(),
-  // Keep in sync with resumeSchema: section-less payloads must round-trip.
   sections: z.array(resumeSectionSchema),
 })
 

@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
+import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
+
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 import { useUndoHistory } from "@/hooks/useUndoHistory"
@@ -562,7 +564,7 @@ function toContactValues(profile: Profile) {
   }
 }
 
-export function useCreateResumeForm(profile?: Profile) {
+export function useCreateResumeForm(profile?: Profile, settings: Settings = DEFAULT_SETTINGS) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -570,9 +572,12 @@ export function useCreateResumeForm(profile?: Profile) {
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
+      // Left empty here and filled by the effect below: settings are read
+      // asynchronously, so a default value computed at useForm() time would
+      // capture the placeholder rather than the stored format.
       title: "",
       tagIds: [],
-      syncProfile: true,
+      syncProfile: settings.defaultSyncProfile,
       ...(profile
         ? toContactValues(profile)
         : {
