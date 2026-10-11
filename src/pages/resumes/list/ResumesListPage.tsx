@@ -1,22 +1,23 @@
 import { createResume } from "@/db/resume"
 import { DeleteResumeDialog } from "@/pages/resumes/list/components/DeleteResumeDialog"
 import { BulkDeleteDialog } from "@/pages/resumes/list/components/BulkDeleteDialog"
-import { downloadJson, getExportFilename } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { toResumeExportPayload } from "@/lib/resumeExport"
 import { Heading1, Subheading } from "@/components/ui"
 import { ResumeListContent } from "@/pages/resumes/list/components/ResumeListContent"
 import type { ResumeQueryItem } from "@/db/resume"
 import { ResumePreviewDialog } from "@/pages/resumes/list/components/ResumePreviewDialog"
-import { slugify } from "@/utils"
 import { Toolbar } from "@/pages/resumes/list/components/Toolbar"
 import { useModal } from "@/components/modal"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useResumeTable } from "@/hooks/useResumeTable"
 import { useBulkResumeActions } from "@/hooks/useBulkResumeActions"
 import { useToast } from "@/components/toast"
+import { useSettings } from "@/hooks/useSettings"
 
 export default function ResumesListPage() {
   const table = useResumeTable()
+  const { settings } = useSettings()
   const { exportSelected, isExporting } = useBulkResumeActions()
   const deleteModal = useModal(DeleteResumeDialog, {
     closeOnBackdropClick: false,
@@ -37,7 +38,7 @@ export default function ResumesListPage() {
 
   const handleExport = async (resume: ResumeQueryItem) => {
     try {
-      const filename = getExportFilename("resume", new Date(), slugify(resume.title))
+      const filename = getExportFilenameWithSettings("resume", resume.title, settings)
       downloadJson(filename, toResumeExportPayload(resume))
       toast.success("Resume exported", `Saved ${filename}.`)
     } catch {

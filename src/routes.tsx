@@ -26,6 +26,7 @@ import EditResumePage from "@/pages/resumes/edit"
 import ResumesListPage from "@/pages/resumes/list"
 import UploadResumePage from "@/pages/resumes/upload"
 import TagsPage from "@/pages/tags"
+import SettingsPage from "@/pages/settings"
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -142,6 +143,7 @@ const router = createBrowserRouter(
         </Route>
         <Route path="profile" element={<ProfilePage />} />
         <Route path="tags" element={<TagsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       <Route

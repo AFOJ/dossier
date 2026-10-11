@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie"
 import type { Link, ResumeSection } from "@/db/types"
+import type { SettingsData } from "@/db/schemas"
 
 // --- SCHEMA ---
 export interface Profile {
@@ -66,12 +67,17 @@ export interface CoverLetter {
   contact?: CoverLetterContact | null
 }
 
+export interface AppSettings extends SettingsData {
+  id: string
+}
+
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   tags!: Table<Tag, number>
   resumes!: Table<Resume, string>
   coverLetters!: Table<CoverLetter, string>
   entityCache!: Table<EntityCacheEntry, string>
+  settings!: Table<AppSettings, string>
 
   constructor() {
     super("DossierDatabase")
@@ -105,6 +111,15 @@ export class DossierDatabase extends Dexie {
       resumes: "id, updatedAt, *tagIds",
       coverLetters: "id, updatedAt, *tagIds",
       entityCache: "id, entityType, entityId",
+    })
+
+    this.version(7).stores({
+      profiles: "++id",
+      tags: "++id, &normalizedName",
+      resumes: "id, updatedAt, *tagIds",
+      coverLetters: "id, updatedAt, *tagIds",
+      entityCache: "id, entityType, entityId",
+      settings: "id",
     })
   }
 }

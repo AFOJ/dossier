@@ -1,7 +1,8 @@
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { deleteProfile, upsertProfile, exportProfile } from "@/db/profile"
+import { DEFAULT_SETTINGS } from "@/db/settings"
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { downloadJson, getExportFilename } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { ModalProvider } from "@/components/modal"
 import { render, screen, waitFor } from "@testing-library/react"
 import ProfilePage from "@/pages/profile/view/ProfilePage"
@@ -21,7 +22,10 @@ vi.mock("@/db/profile", () => ({
 
 vi.mock("@/lib/download", () => ({
   downloadJson: vi.fn(),
-  getExportFilename: vi.fn((kind: string) => `dossier-${kind}-export-2026-08-23.json`),
+  getExportFilenameWithSettings: vi.fn(
+    (kind: string, label: string, settings: { defaultExportFilenameFormat: string }) =>
+      `${settings.defaultExportFilenameFormat}-${kind}-${label}`,
+  ),
 }))
 
 const mockToast = {
@@ -136,12 +140,13 @@ describe("ProfilePage", () => {
   it("exports the profile and resumes as a downloaded JSON file", async () => {
     const user = userEvent.setup()
     const exportData = {
-      version: 2 as const,
+      version: 3 as const,
       exportedAt: "2026-08-23T00:00:00.000Z",
       profile,
       tags: [],
       resumes: [],
       coverLetters: [],
+      settings: DEFAULT_SETTINGS,
     }
     vi.mocked(exportProfile).mockResolvedValueOnce(exportData)
     renderPage()
@@ -150,9 +155,15 @@ describe("ProfilePage", () => {
 
     await waitFor(() => {
       expect(exportProfile).toHaveBeenCalled()
-      expect(getExportFilename).toHaveBeenCalledWith("profile")
+      expect(getExportFilenameWithSettings).toHaveBeenCalledWith(
+        "profile",
+        "backup",
+        expect.objectContaining({
+          defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
+        }),
+      )
       expect(downloadJson).toHaveBeenCalledWith(
-        "dossier-profile-export-2026-08-23.json",
+        `${DEFAULT_SETTINGS.defaultExportFilenameFormat}-profile-backup`,
         exportData,
       )
     })

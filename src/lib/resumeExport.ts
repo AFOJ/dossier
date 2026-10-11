@@ -1,4 +1,5 @@
 import type { Resume } from "@/db/db"
+import { saveJsonAsZip, type ZipEntry } from "@/lib/zipExport"
 
 export interface ResumeExportPayload {
   id: Resume["id"]
@@ -25,4 +26,17 @@ export function toResumeExportPayload(resume: Resume): ResumeExportPayload {
     syncProfile: resume.syncProfile,
     contact: resume.contact,
   }
+}
+
+export async function exportResumesAsZip(
+  archiveName: string,
+  resumes: Resume[],
+  nameEntry: (resume: Resume) => string,
+): Promise<void> {
+  const entries: ZipEntry[] = resumes.map((resume) => ({
+    filename: nameEntry(resume),
+    payload: toResumeExportPayload(resume),
+  }))
+
+  await saveJsonAsZip(archiveName, entries)
 }

@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
+import { useSettingsHydration } from "@/hooks/useSettingsHydration"
 import type { Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
 import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
 import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
+import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 export const coverLetterFormSchema = z
@@ -85,7 +87,11 @@ export function profileToContactValues(profile: Profile) {
   }
 }
 
-export function useCreateCoverLetterForm(profile?: Profile) {
+export function useCreateCoverLetterForm(
+  profile?: Profile,
+  settings: Settings = DEFAULT_SETTINGS,
+  settingsLoaded = true,
+) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,12 +104,21 @@ export function useCreateCoverLetterForm(profile?: Profile) {
       subject: "",
       date: "",
       body: "",
-      syncProfile: true,
+      syncProfile: settings.defaultSyncProfile,
       ...(profile ? profileToContactValues(profile) : emptyContactValues()),
     },
   })
 
   const { setValue } = form
+
+  const hydrate = useCallback(
+    (setUnlessTouched: (name: "syncProfile", value: unknown) => void) => {
+      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
+    },
+    [settings.defaultSyncProfile],
+  )
+
+  useSettingsHydration({ form, settingsLoaded, hydrate })
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {

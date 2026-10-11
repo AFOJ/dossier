@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
+import { getSettings, parseStoredSettings, SETTINGS_ID, type Settings } from "@/db/settings"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import {
@@ -10,6 +11,7 @@ import {
   tagSchema,
 } from "@/db/schemas"
 import { listTags, normaliseTagColour, normaliseTagDescription, normaliseTagName } from "@/db/tag"
+import { DEFAULT_SETTINGS } from "@/db/settings"
 import { getAllResumes } from "@/db/resume"
 
 export async function upsertProfile(data: Omit<Profile, "id">): Promise<number> {
@@ -56,28 +58,26 @@ export async function getProfile(): Promise<Profile | null> {
 export async function deleteProfile(): Promise<void> {
   await db.transaction(
     "rw",
-    db.profiles,
-    db.tags,
-    db.resumes,
-    db.coverLetters,
-    db.entityCache,
+    [db.profiles, db.tags, db.resumes, db.coverLetters, db.entityCache, db.settings],
     async () => {
       await db.resumes.clear()
       await db.coverLetters.clear()
       await db.tags.clear()
       await db.profiles.clear()
       await db.entityCache.clear()
+      await db.settings.clear()
     },
   )
 }
 
 export interface ExportFile {
-  version: 2
+  version: 3
   exportedAt: string
   profile: Omit<Profile, "id">
   tags: Tag[]
   resumes: Resume[]
   coverLetters: CoverLetter[]
+  settings: Settings
 }
 
 export async function exportProfile(): Promise<ExportFile> {
@@ -96,19 +96,21 @@ export async function exportProfile(): Promise<ExportFile> {
     links: profile.links,
   }
 
-  const [tags, resumes, coverLetters] = await Promise.all([
+  const [tags, resumes, coverLetters, settings] = await Promise.all([
     listTags(),
     getAllResumes(),
     getAllCoverLetters(),
+    getSettings(),
   ])
 
   return {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     profile: profileData,
     tags,
     resumes,
     coverLetters,
+    settings,
   }
 }
 
@@ -191,6 +193,11 @@ export const exportFileSchema = z
           .strict(),
       )
       .default([]),
+    // Backups written before settings existed omit the key entirely, so the
+    // default keeps them restorable. Parsing tolerantly here matters as much as
+    // it does on the read path: a backup carrying a retired setting value must
+    // restore the rest of itself rather than being rejected outright.
+    settings: z.unknown().transform(parseStoredSettings).default(DEFAULT_SETTINGS),
   })
   .strict()
 
@@ -216,7 +223,7 @@ export async function importProfile(fileContent: string): Promise<void> {
     throw new InvalidExportFileError()
   }
 
-  const { profile, tags, resumes, coverLetters } = result.data
+  const { profile, tags, resumes, coverLetters, settings } = result.data
   const knownTagIds = new Set(tags.map((tag) => tag.id))
 
   const restoredTags: Tag[] = tags.map((tag) => ({
@@ -258,19 +265,17 @@ export async function importProfile(fileContent: string): Promise<void> {
 
   await db.transaction(
     "rw",
-    db.profiles,
-    db.tags,
-    db.resumes,
-    db.coverLetters,
-    db.entityCache,
+    [db.profiles, db.tags, db.resumes, db.coverLetters, db.entityCache, db.settings],
     async () => {
       await db.profiles.clear()
       await db.tags.clear()
       await db.resumes.clear()
       await db.coverLetters.clear()
       await db.entityCache.clear()
+      await db.settings.clear()
 
       await db.profiles.add(profile)
+      await db.settings.put({ ...settings, id: SETTINGS_ID })
 
       if (restoredTags.length > 0) {
         await db.tags.bulkPut(restoredTags)

@@ -4,7 +4,8 @@ import { Button, Divider, FormSubmitBar, Heading1, Subheading } from "@/componen
 import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { exportProfile } from "@/db/profile"
-import { downloadJson, getExportFilename } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
+import { useSettings } from "@/hooks/useSettings"
 import { PersonalInfoFields } from "@/pages/profile/components/PersonalInfoFields"
 import { SocialLinksFields } from "@/pages/profile/components/SocialLinksFields"
 import { usePageTitle } from "@/hooks/usePageTitle"
@@ -16,6 +17,7 @@ import { useEditProfileForm } from "@/pages/profile/view/hooks/useEditProfileFor
 export default function ProfilePage() {
   const { profile } = useProtectedRouteData()
   const { form, isDirty, isSubmitting, revert, save, formError } = useEditProfileForm(profile)
+  const { settings } = useSettings()
   const deleteModal = useModal(DeleteProfileDialog, {
     closeOnBackdropClick: false,
     closeOnEscape: true,
@@ -32,7 +34,7 @@ export default function ProfilePage() {
       setIsExporting(true)
 
       const data = await exportProfile()
-      downloadJson(getExportFilename("profile"), data)
+      downloadJson(getExportFilenameWithSettings("profile", "backup", settings), data)
 
       toast.success("Profile data exported", "Your profile and documents were downloaded as JSON.")
     } catch (error) {

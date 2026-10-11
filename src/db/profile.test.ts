@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
+import { DEFAULT_SETTINGS, getSettings, upsertSettings } from "@/db/settings"
 import "fake-indexeddb/auto"
 import { db, type Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
@@ -140,7 +141,7 @@ describe("exportProfile", () => {
 
     const data = await exportProfile()
 
-    expect(data.version).toBe(2)
+    expect(data.version).toBe(3)
     expect(data.exportedAt).toEqual(expect.any(String))
     expect(data.profile).toEqual({
       full_name: "John Doe",
@@ -229,7 +230,7 @@ describe("importProfile", () => {
   })
 
   const validExport = {
-    version: 2,
+    version: 3,
     exportedAt: "2026-08-23T00:00:00.000Z",
     profile: {
       full_name: "John Doe",
@@ -240,6 +241,15 @@ describe("importProfile", () => {
       links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
     },
     tags: [],
+    settings: {
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.name}",
+      defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
+      defaultResumePdfFilenameFormat: "{title}-resume.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
+      defaultPdfFilenameFormat: "{title}-{kind}.pdf",
+      pdfFilenamePattern: "ad-hoc",
+    },
     resumes: [
       {
         id: "resume-1",
@@ -501,6 +511,64 @@ describe("importProfile", () => {
     expect(restored).toHaveLength(1)
     expect(restored[0]?.title).toBe("My Resume")
     expect(restored[0]?.tagIds).toEqual([])
+  })
+
+  it("restores settings from a valid export", async () => {
+    // Seeded with values that differ from validExport.settings so the assertions
+    // can only pass if the import actually wrote them.
+    await upsertSettings({ defaultSyncProfile: true, defaultResumeTitleFormat: "Keep me?" })
+
+    await importProfile(JSON.stringify(validExport))
+
+    expect(await getSettings()).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.name}",
+      defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
+      defaultResumePdfFilenameFormat: "{title}-resume.pdf",
+      defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
+      defaultPdfFilenameFormat: "{title}-{kind}.pdf",
+      pdfFilenamePattern: "ad-hoc",
+    })
+  })
+
+  it("restores backups written before settings support", async () => {
+    // Pre-settings backups have no `settings` key at all, so the schema default
+    // must land as the defaults rather than leaving the row missing.
+    await importProfile(
+      JSON.stringify({
+        version: 2,
+        exportedAt: validExport.exportedAt,
+        profile: validExport.profile,
+        tags: [],
+        resumes: [],
+        coverLetters: [],
+      }),
+    )
+
+    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
+  })
+
+  it("restores settings from a backup that uses retired values", async () => {
+    // A backup exported while pdfFilenamePattern was still "per-kind", before
+    // defaultPdfFilenameFormat existed. The stale value falls back, and the
+    // fields the backup does carry must survive.
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        settings: {
+          ...validExport.settings,
+          pdfFilenamePattern: "per-kind",
+          defaultPdfFilenameFormat: undefined,
+        },
+      }),
+    )
+
+    const settings = await getSettings()
+
+    expect(settings.defaultSyncProfile).toBe(validExport.settings.defaultSyncProfile)
+    expect(settings.defaultResumeTitleFormat).toBe(validExport.settings.defaultResumeTitleFormat)
+    expect(settings.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.pdfFilenamePattern)
+    expect(settings.defaultPdfFilenameFormat).toBe(DEFAULT_SETTINGS.defaultPdfFilenameFormat)
   })
 
   it("rejects invalid JSON", async () => {

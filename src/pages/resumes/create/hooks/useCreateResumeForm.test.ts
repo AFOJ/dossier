@@ -6,10 +6,23 @@ import {
   useCreateResumeForm,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { createResume } from "@/db/resume"
+import { DEFAULT_SETTINGS } from "@/db/settings"
+import { DEFAULT_RESUME_TITLE_FORMAT, renderTitle } from "@/lib/titleFormat"
+import type { Profile } from "@/db/db"
 
 vi.mock("@/db/resume", () => ({
   createResume: vi.fn(),
 }))
+
+const profile: Profile = {
+  id: 1,
+  full_name: "Jane Roe",
+  role: "Farmer",
+  email: "jane@example.com",
+  phone: null,
+  location: null,
+  links: [],
+}
 
 const mockNavigate = vi.fn()
 vi.mock("react-router-dom", () => ({
@@ -35,11 +48,11 @@ describe("useCreateResumeForm", () => {
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it("starts with an empty title and no sections", () => {
+  it("starts from the default title format and no sections", () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
     expect(result.current.form.getValues()).toEqual({
-      title: "",
+      title: renderTitle(DEFAULT_RESUME_TITLE_FORMAT),
       tagIds: [],
       syncProfile: true,
       fullName: "",
@@ -152,6 +165,10 @@ describe("useCreateResumeForm", () => {
   it("does not submit without a title", async () => {
     const { result } = renderHook(() => useCreateResumeForm())
 
+    act(() => {
+      result.current.form.setValue("title", "")
+    })
+
     await act(async () => {
       await result.current.onSubmit()
     })
@@ -159,6 +176,71 @@ describe("useCreateResumeForm", () => {
     expect(createResume).not.toHaveBeenCalled()
     expect(mockNavigate).not.toHaveBeenCalled()
     expect(result.current.form.formState.errors.title?.message).toBe("Title is required")
+  })
+
+  it("pre-fills the title from the format setting, leaving the form pristine", () => {
+    const { result } = renderHook(() =>
+      useCreateResumeForm(profile, {
+        ...DEFAULT_SETTINGS,
+        defaultResumeTitleFormat: "{profile.role} CV {year}",
+      }),
+    )
+
+    expect(result.current.form.getValues("title")).toBe(
+      renderTitle("{profile.role} CV {year}", { profile }),
+    )
+    // Crucially not an unsaved edit: opening the page must not enable Save.
+    expect(result.current.isDirty).toBe(false)
+  })
+
+  it("honours the default sync setting", () => {
+    const synced = renderHook(() => useCreateResumeForm(profile, DEFAULT_SETTINGS))
+    const unsynced = renderHook(() =>
+      useCreateResumeForm(profile, { ...DEFAULT_SETTINGS, defaultSyncProfile: false }),
+    )
+
+    expect(synced.result.current.form.getValues("syncProfile")).toBe(true)
+    expect(unsynced.result.current.form.getValues("syncProfile")).toBe(false)
+  })
+
+  it("applies stored settings that arrive after mount", () => {
+    const stored = { ...DEFAULT_SETTINGS, defaultSyncProfile: false }
+    // useSettings hands the form DEFAULT_SETTINGS until the stored row resolves.
+    const { result, rerender } = renderHook(
+      ({ loaded }: { loaded: boolean }) =>
+        useCreateResumeForm(profile, loaded ? stored : DEFAULT_SETTINGS, loaded),
+      { initialProps: { loaded: false } },
+    )
+
+    expect(result.current.form.getValues("syncProfile")).toBe(true)
+
+    rerender({ loaded: true })
+
+    expect(result.current.form.getValues("syncProfile")).toBe(false)
+    expect(result.current.isDirty).toBe(false)
+  })
+
+  it("keeps an edited field but still applies settings to the untouched ones", () => {
+    const stored = {
+      ...DEFAULT_SETTINGS,
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.role} CV {year}",
+    }
+    const { result, rerender } = renderHook(
+      ({ loaded }: { loaded: boolean }) =>
+        useCreateResumeForm(profile, loaded ? stored : DEFAULT_SETTINGS, loaded),
+      { initialProps: { loaded: false } },
+    )
+
+    act(() => {
+      result.current.form.setValue("title", "My own title", { shouldDirty: true })
+    })
+
+    rerender({ loaded: true })
+
+    expect(result.current.form.getValues("title")).toBe("My own title")
+    expect(result.current.form.getValues("syncProfile")).toBe(false)
+    expect(result.current.isDirty).toBe(true)
   })
 
   it("creates the resume with the entered data on submit", async () => {

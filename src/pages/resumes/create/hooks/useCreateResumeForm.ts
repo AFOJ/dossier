@@ -5,8 +5,12 @@ import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
+import { useSettingsHydration } from "@/hooks/useSettingsHydration"
 import type { Profile } from "@/db/db"
 import { createResume } from "@/db/resume"
+import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
+import { renderTitle } from "@/lib/titleFormat"
+
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 import { useUndoHistory } from "@/hooks/useUndoHistory"
@@ -562,7 +566,11 @@ function toContactValues(profile: Profile) {
   }
 }
 
-export function useCreateResumeForm(profile?: Profile) {
+export function useCreateResumeForm(
+  profile?: Profile,
+  settings: Settings = DEFAULT_SETTINGS,
+  settingsLoaded = true,
+) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -570,9 +578,12 @@ export function useCreateResumeForm(profile?: Profile) {
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
+      // Left empty here and filled by the effect below: settings are read
+      // asynchronously, so a default value computed at useForm() time would
+      // capture the placeholder rather than the stored format.
       title: "",
       tagIds: [],
-      syncProfile: true,
+      syncProfile: settings.defaultSyncProfile,
       ...(profile
         ? toContactValues(profile)
         : {
@@ -588,6 +599,16 @@ export function useCreateResumeForm(profile?: Profile) {
   })
 
   const { setValue, getValues, clearErrors } = form
+
+  const hydrate = useCallback(
+    (setUnlessTouched: (name: "syncProfile" | "title", value: unknown) => void) => {
+      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
+      setUnlessTouched("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
+    },
+    [profile, settings.defaultResumeTitleFormat, settings.defaultSyncProfile],
+  )
+
+  useSettingsHydration({ form, settingsLoaded, hydrate })
 
   const history = useUndoHistory<FormSection[]>({
     // The form's declared type predates `_key`; at runtime sections are keyed.

@@ -10,7 +10,8 @@ import { useResumeTable } from "@/hooks/useResumeTable"
 import { useBulkResumeActions } from "@/hooks/useBulkResumeActions"
 import { ModalProvider } from "@/components/modal"
 import { useProcessedResume } from "@/pages/resumes/list/hooks/useProcessedResume"
-import { downloadJson } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
+import { DEFAULT_SETTINGS } from "@/db/settings"
 
 vi.mock("@/hooks/useResumeTable", () => ({
   useResumeTable: vi.fn(),
@@ -32,9 +33,9 @@ vi.mock("@/pages/resumes/list/hooks/useProcessedResume", () => ({
 
 vi.mock("@/lib/download", () => ({
   downloadJson: vi.fn(),
-  getExportFilename: vi.fn(
-    (_kind: string, _date: Date, label?: string) =>
-      `dossier-resume${label ? `-${label}` : ""}-export.json`,
+  getExportFilenameWithSettings: vi.fn(
+    (kind: string, title: string, settings: { defaultExportFilenameFormat: string }) =>
+      `${settings.defaultExportFilenameFormat}/${kind}/${title}`,
   ),
 }))
 
@@ -205,8 +206,15 @@ describe("ResumesListPage", () => {
     await user.click(await screen.findByRole("button", { name: "Export JSON" }))
 
     await waitFor(() => {
+      expect(getExportFilenameWithSettings).toHaveBeenCalledWith(
+        "resume",
+        "Export Me",
+        expect.objectContaining({
+          defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
+        }),
+      )
       expect(downloadJson).toHaveBeenCalledWith(
-        "dossier-resume-export-me-export.json",
+        `${DEFAULT_SETTINGS.defaultExportFilenameFormat}/resume/Export Me`,
         expect.objectContaining({
           id: "exp-1",
           title: "Export Me",

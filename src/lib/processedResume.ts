@@ -3,7 +3,6 @@ import { db } from "@/db/db"
 import { entryToBlob, getValidProcessedEntity, saveProcessedEntity } from "@/db/entityCache"
 import { processResume } from "@/lib/api"
 import { toResumePayload } from "@/lib/resumePayload"
-import { slugify } from "@/utils"
 
 export interface ProcessedResume {
   blob: Blob
@@ -38,8 +37,4 @@ export async function ensureProcessedResume(resume: Resume): Promise<ProcessedRe
   })
 
   return { blob, processedAt }
-}
-
-export function getProcessedResumeFilename(title: string): string {
-  return `${slugify(title) || "resume"}-resume.pdf`
 }
