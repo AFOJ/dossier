@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { getProcessedPdfFilename, getPdfFilenameWithSettings } from "@/lib/download"
+import {
+  getExportFilenameWithSettings,
+  getProcessedPdfFilename,
+  getPdfFilenameWithSettings,
+} from "@/lib/download"
+import { DEFAULT_EXPORT_FILENAME_FORMAT } from "@/lib/titleFormat"
 import {
   DEFAULT_PDF_FILENAME_FORMAT_SHARED,
   DEFAULT_PDF_FILENAME_FORMAT_RESUME,
@@ -114,6 +119,33 @@ describe("getPdfFilenameWithSettings", () => {
 
     expect(getPdfFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
       "resume-my-resume-2026.pdf",
+    )
+  })
+})
+
+describe("getExportFilenameWithSettings", () => {
+  const settings = { defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT }
+
+  it("renders the default format and keeps the .json suffix", () => {
+    expect(getExportFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+      "resume-my-resume-export-Sep 17, 2026.json",
+    )
+  })
+
+  it("does not double the .json suffix when the format carries one", () => {
+    expect(
+      getExportFilenameWithSettings(
+        "resume",
+        "My Resume",
+        { defaultExportFilenameFormat: "{title}.json" },
+        DATE,
+      ),
+    ).toBe("my-resume.json")
+  })
+
+  it("falls back to the kind when the title is empty", () => {
+    expect(getExportFilenameWithSettings("resume", "", settings, DATE)).toBe(
+      "resume-resume-export-Sep 17, 2026.json",
     )
   })
 })

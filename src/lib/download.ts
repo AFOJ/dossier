@@ -14,20 +14,11 @@ export function downloadBlob(filename: string, blob: Blob): void {
 }
 
 import { slugify } from "@/utils"
+import { sanitizeFilename, withExtension } from "@/lib/filenames"
 
 export type ExportKind = "profile" | "resume" | "cover-letter"
 
 export type PdfKind = "resume" | "cover-letter"
-
-export function sanitizeFilename(filename: string): string {
-  return (
-    filename
-      // eslint-disable-next-line no-control-regex
-      .replace(/[<>:"\\|?*\u0000-\u001F]/g, "")
-      .replace(/^\.+/, "")
-      .slice(0, 255)
-  )
-}
 
 export function getExportFilename(kind: ExportKind, date = new Date(), label?: string): string {
   const suffix = label ? `-${label}` : ""
@@ -66,7 +57,8 @@ export function getExportFilenameWithSettings(
     day,
   }
 
-  return sanitizeFilename(renderFilenameFormat(format, tokens))
+  const rendered = sanitizeFilename(renderFilenameFormat(format, tokens))
+  return withExtension(rendered, ".json")
 }
 
 function renderFilenameFormat(format: string, tokens: Record<string, string>): string {
@@ -111,8 +103,7 @@ export function getProcessedPdfFilename(
   }
 
   const rendered = sanitizeFilename(renderFilenameFormat(format, tokens))
-
-  return rendered.toLowerCase().endsWith(".pdf") ? rendered : `${rendered}.pdf`
+  return withExtension(rendered, ".pdf")
 }
 
 /**
