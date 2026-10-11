@@ -9,10 +9,11 @@ import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { useSettings } from "@/hooks/useSettings"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import { db } from "@/db/db"
 import { exportProfile } from "@/db/profile"
-import { downloadJson, getExportFilename } from "@/lib/download"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
 import { renderTitle, TOKEN_HELPERS, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
@@ -321,13 +322,15 @@ function DataSection() {
   const [isExporting, setIsExporting] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
   const cacheCount = useLiveQuery(() => db.entityCache.count(), [])
+  const { settings } = useSettings()
   const toast = useToast()
 
   const handleExport = async () => {
     setIsExporting(true)
     try {
       const data = await exportProfile()
-      downloadJson(getExportFilename("profile"), data)
+      const filename = getExportFilenameWithSettings("profile", "backup", settings)
+      downloadJson(filename, data)
       toast.success("Data exported", "Your profile and documents were downloaded as JSON.")
     } catch (error) {
       toast.error("Failed to export data", "Please try again.")

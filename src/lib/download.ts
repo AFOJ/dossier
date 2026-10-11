@@ -20,11 +20,6 @@ export type ExportKind = "profile" | "resume" | "cover-letter"
 
 export type PdfKind = "resume" | "cover-letter"
 
-export function getExportFilename(kind: ExportKind, date = new Date(), label?: string): string {
-  const suffix = label ? `-${label}` : ""
-  return `dossier-${kind}${suffix}-export-${date.toISOString().slice(0, 10)}.json`
-}
-
 export function getExportFilenameWithSettings(
   kind: ExportKind,
   title: string,

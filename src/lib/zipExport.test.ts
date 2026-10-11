@@ -1,28 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { unzip } from "fflate"
-import { exportResumesAsZip } from "@/lib/zipExport"
+import { saveJsonAsZip } from "@/lib/zipExport"
 import { downloadBlob } from "@/lib/download"
-import type { Resume } from "@/db/db"
 
 vi.mock("@/lib/download", () => ({
   downloadBlob: vi.fn(),
 }))
 
 const mockDownloadBlob = vi.mocked(downloadBlob)
-
-function makeResume(overrides: Partial<Resume> = {}): Resume {
-  return {
-    id: crypto.randomUUID(),
-    title: "Untitled",
-    sections: [],
-    tagIds: [],
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2026-02-01T00:00:00.000Z"),
-    syncProfile: true,
-    contact: null,
-    ...overrides,
-  }
-}
 
 async function readZipEntries(blob: Blob): Promise<Record<string, Uint8Array>> {
   const data = new Uint8Array(await blob.arrayBuffer())
@@ -37,49 +22,50 @@ async function readZipEntries(blob: Blob): Promise<Record<string, Uint8Array>> {
   })
 }
 
-describe("exportResumesAsZip", () => {
+describe("saveJsonAsZip", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it("downloads a single ZIP containing one JSON file per resume", async () => {
-    await exportResumesAsZip([
-      makeResume({ id: "a", title: "Frontend Engineer" }),
-      makeResume({ id: "b", title: "Backend Engineer" }),
+  it("downloads a single ZIP holding one JSON file per entry", async () => {
+    await saveJsonAsZip("resumes.zip", [
+      { filename: "a.json", payload: { id: "a" } },
+      { filename: "b.json", payload: { id: "b" } },
     ])
 
     expect(mockDownloadBlob).toHaveBeenCalledTimes(1)
     const [filename, blob] = mockDownloadBlob.mock.calls[0] as [string, Blob]
-    expect(filename).toMatch(/^dossier-resumes-export-\d{4}-\d{2}-\d{2}\.zip$/)
+    expect(filename).toBe("resumes.zip")
 
     const entries = await readZipEntries(blob)
-    expect(Object.keys(entries).sort()).toEqual([
-      "backend-engineer-resume.json",
-      "frontend-engineer-resume.json",
-    ])
-
-    const parsed = JSON.parse(new TextDecoder().decode(entries["frontend-engineer-resume.json"]))
-    expect(parsed).toMatchObject({ id: "a", title: "Frontend Engineer" })
+    expect(Object.keys(entries).sort()).toEqual(["a.json", "b.json"])
+    expect(JSON.parse(new TextDecoder().decode(entries["a.json"]))).toEqual({ id: "a" })
   })
 
-  it("dedupes filenames when resume titles slug to the same value", async () => {
-    await exportResumesAsZip([
-      makeResume({ id: "a", title: "Same Title" }),
-      makeResume({ id: "b", title: "Same Title" }),
-      makeResume({ id: "c", title: "Same Title" }),
+  it("dedupes filenames so each entry stays separately retrievable", async () => {
+    await saveJsonAsZip("resumes.zip", [
+      { filename: "same.json", payload: { id: "a" } },
+      { filename: "same.json", payload: { id: "b" } },
+      { filename: "same.json", payload: { id: "c" } },
     ])
 
     const [, blob] = mockDownloadBlob.mock.calls[0] as [string, Blob]
     const entries = await readZipEntries(blob)
-    expect(Object.keys(entries).sort()).toEqual([
-      "same-title-resume-2.json",
-      "same-title-resume-3.json",
-      "same-title-resume.json",
-    ])
+    expect(Object.keys(entries).sort()).toEqual(["same-2.json", "same-3.json", "same.json"])
 
     const ids = Object.values(entries).map(
       (bytes) => (JSON.parse(new TextDecoder().decode(bytes)) as { id: string }).id,
     )
     expect(ids.sort()).toEqual(["a", "b", "c"])
+  })
+
+  it("formats the JSON so the archive is readable when unpacked", async () => {
+    await saveJsonAsZip("resumes.zip", [{ filename: "a.json", payload: { id: "a", nested: [1] } }])
+
+    const [, blob] = mockDownloadBlob.mock.calls[0] as [string, Blob]
+    const entries = await readZipEntries(blob)
+    expect(new TextDecoder().decode(entries["a.json"])).toBe(
+      JSON.stringify({ id: "a", nested: [1] }, null, 2),
+    )
   })
 })

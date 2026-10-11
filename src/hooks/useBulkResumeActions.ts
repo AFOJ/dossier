@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react"
-import { exportResumesAsZip } from "@/lib/zipExport"
-import { downloadJson, getExportFilename } from "@/lib/download"
-import { toResumeExportPayload } from "@/lib/resumeExport"
+import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
+import { exportResumesAsZip, toResumeExportPayload } from "@/lib/resumeExport"
+import { withExtension } from "@/lib/filenames"
 import { useToast } from "@/components/toast"
+import { useSettings } from "@/hooks/useSettings"
 import type { Resume } from "@/db/db"
 
 interface UseBulkResumeActionsResult {
@@ -13,6 +14,12 @@ interface UseBulkResumeActionsResult {
 export function useBulkResumeActions(): UseBulkResumeActionsResult {
   const [isExporting, setIsExporting] = useState(false)
   const toast = useToast()
+  const { settings } = useSettings()
+
+  const nameResume = useCallback(
+    (resume: Resume) => getExportFilenameWithSettings("resume", resume.title, settings),
+    [settings],
+  )
 
   const exportSelected = useCallback(
     async (resumes: Resume[]) => {
@@ -24,11 +31,15 @@ export function useBulkResumeActions(): UseBulkResumeActionsResult {
       try {
         if (resumes.length === 1) {
           const resume = resumes[0]
-          const filename = getExportFilename("resume", new Date(), resume.title)
+          const filename = nameResume(resume)
           downloadJson(filename, toResumeExportPayload(resume))
           toast.success("Resume exported", `Saved ${filename}.`)
         } else {
-          await exportResumesAsZip(resumes)
+          await exportResumesAsZip(
+            withExtension(getExportFilenameWithSettings("resume", "bulk", settings), ".zip"),
+            resumes,
+            nameResume,
+          )
           toast.success("Resumes exported", `${resumes.length} resumes saved as ZIP.`)
         }
       } catch {
@@ -37,7 +48,7 @@ export function useBulkResumeActions(): UseBulkResumeActionsResult {
         setIsExporting(false)
       }
     },
-    [toast],
+    [nameResume, settings, toast],
   )
 
   return {
