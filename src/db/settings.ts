@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { db, type AppSettings } from "@/db/db"
 import { appSettingsSchema } from "@/db/schemas"
 import {
@@ -23,19 +24,50 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 /**
- * A stored row may predate a newly added setting, so reads accept a subset and
- * let the defaults fill the gaps. Anything unrecognised is stripped.
+ * Read-path counterpart of `appSettingsSchema`.
+ *
+ * A stored row or an imported backup may predate a setting, or carry a value
+ * that has since been retired — a row written while `pdfFilenamePattern` was
+ * still `"per-kind"` must not make the whole row unusable. Each field therefore
+ * falls back on its own, so one unrecognised value costs that setting only.
  */
-const STORED_SETTINGS_SCHEMA = appSettingsSchema.partial()
+const storedSettingsSchema = z.object({
+  defaultSyncProfile: appSettingsSchema.shape.defaultSyncProfile.catch(
+    DEFAULT_SETTINGS.defaultSyncProfile,
+  ),
+  defaultResumeTitleFormat: appSettingsSchema.shape.defaultResumeTitleFormat.catch(
+    DEFAULT_SETTINGS.defaultResumeTitleFormat,
+  ),
+  defaultExportFilenameFormat: appSettingsSchema.shape.defaultExportFilenameFormat.catch(
+    DEFAULT_SETTINGS.defaultExportFilenameFormat,
+  ),
+  defaultResumePdfFilenameFormat: appSettingsSchema.shape.defaultResumePdfFilenameFormat.catch(
+    DEFAULT_SETTINGS.defaultResumePdfFilenameFormat,
+  ),
+  defaultCoverLetterPdfFilenameFormat:
+    appSettingsSchema.shape.defaultCoverLetterPdfFilenameFormat.catch(
+      DEFAULT_SETTINGS.defaultCoverLetterPdfFilenameFormat,
+    ),
+  defaultPdfFilenameFormat: appSettingsSchema.shape.defaultPdfFilenameFormat.catch(
+    DEFAULT_SETTINGS.defaultPdfFilenameFormat,
+  ),
+  pdfFilenamePattern: appSettingsSchema.shape.pdfFilenamePattern.catch(
+    DEFAULT_SETTINGS.pdfFilenamePattern,
+  ),
+})
+
+export function parseStoredSettings(row: unknown): Settings {
+  const parsed = storedSettingsSchema.safeParse(row)
+
+  return parsed.success ? parsed.data : { ...DEFAULT_SETTINGS }
+}
 
 /**
  * Reads the app settings, falling back to the defaults when the row is missing,
  * incomplete, or corrupt. Callers never have to handle absence.
  */
 export async function getSettings(): Promise<Settings> {
-  const parsed = STORED_SETTINGS_SCHEMA.safeParse(await db.settings.get(SETTINGS_ID))
-
-  return parsed.success ? { ...DEFAULT_SETTINGS, ...parsed.data } : { ...DEFAULT_SETTINGS }
+  return parseStoredSettings(await db.settings.get(SETTINGS_ID))
 }
 
 /**

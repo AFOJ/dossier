@@ -58,6 +58,22 @@ describe("getSettings", () => {
 
     expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
   })
+
+  it("keeps the valid fields when one field holds a retired value", async () => {
+    await writeRawRow({
+      ...DEFAULT_SETTINGS,
+      id: SETTINGS_ID,
+      defaultSyncProfile: false,
+      defaultExportFilenameFormat: "{title}-export",
+      pdfFilenamePattern: "per-kind",
+    })
+
+    const settings = await getSettings()
+
+    expect(settings.defaultSyncProfile).toBe(false)
+    expect(settings.defaultExportFilenameFormat).toBe("{title}-export")
+    expect(settings.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.pdfFilenamePattern)
+  })
 })
 
 describe("upsertSettings", () => {
