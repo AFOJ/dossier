@@ -220,8 +220,12 @@ describe("useCreateResumeForm", () => {
     expect(result.current.isDirty).toBe(false)
   })
 
-  it("leaves a form the visitor has already edited alone", () => {
-    const stored = { ...DEFAULT_SETTINGS, defaultSyncProfile: false }
+  it("keeps an edited field but still applies settings to the untouched ones", () => {
+    const stored = {
+      ...DEFAULT_SETTINGS,
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.role} CV {year}",
+    }
     const { result, rerender } = renderHook(
       ({ loaded }: { loaded: boolean }) =>
         useCreateResumeForm(profile, loaded ? stored : DEFAULT_SETTINGS, loaded),
@@ -235,6 +239,8 @@ describe("useCreateResumeForm", () => {
     rerender({ loaded: true })
 
     expect(result.current.form.getValues("title")).toBe("My own title")
+    expect(result.current.form.getValues("syncProfile")).toBe(false)
+    expect(result.current.isDirty).toBe(true)
   })
 
   it("creates the resume with the entered data on submit", async () => {

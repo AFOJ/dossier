@@ -112,8 +112,8 @@ export function useCreateCoverLetterForm(
   const { setValue } = form
 
   const hydrate = useCallback(
-    (applyValue: typeof setValue) => {
-      applyValue("syncProfile", settings.defaultSyncProfile, { shouldDirty: false })
+    (setUnlessTouched: (name: "syncProfile", value: unknown) => void) => {
+      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
     },
     [settings.defaultSyncProfile],
   )

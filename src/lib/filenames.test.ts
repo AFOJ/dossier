@@ -1,9 +1,39 @@
 import { describe, expect, it } from "vitest"
-import { sanitizeFilename, uniqueFilename, withExtension } from "@/lib/filenames"
+import { replaceExtension, sanitizeFilename, uniqueFilename, withExtension } from "@/lib/filenames"
 
 describe("sanitizeFilename", () => {
   it("strips characters the filesystem rejects", () => {
     expect(sanitizeFilename('a<b>c:d"e\\f|g?h*i')).toBe("abcdefghi")
+  })
+
+  it("strips forward slashes so the name stays a single filename", () => {
+    expect(sanitizeFilename("resume/my title.json")).toBe("resumemy title.json")
+  })
+})
+
+describe("replaceExtension", () => {
+  it("swaps an existing extension for the new one", () => {
+    expect(replaceExtension("resume-bulk-export-10 Oct 2026.json", ".zip")).toBe(
+      "resume-bulk-export-10 Oct 2026.zip",
+    )
+  })
+
+  it("appends when there is no extension to replace", () => {
+    expect(replaceExtension("resume-bulk-export-10 Oct 2026", ".zip")).toBe(
+      "resume-bulk-export-10 Oct 2026.zip",
+    )
+  })
+
+  it("only replaces the final extension", () => {
+    expect(replaceExtension("resume.v2-export.json", ".zip")).toBe("resume.v2-export.zip")
+  })
+
+  it("keeps a leading dot, which belongs to the name", () => {
+    expect(replaceExtension(".hidden.json", ".zip")).toBe(".hidden.zip")
+  })
+
+  it("keeps an extension that is already the wanted one", () => {
+    expect(replaceExtension("resume.zip", ".zip")).toBe("resume.zip")
   })
 })
 

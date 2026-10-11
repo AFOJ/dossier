@@ -97,19 +97,19 @@ describe("SettingsPage", () => {
 
   it("replaces the skeleton once the settings have loaded", async () => {
     settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: false })
-    const { container, unmount } = renderPage()
+    const { unmount } = renderPage()
 
     expect(await screen.findByRole("status")).toHaveTextContent("Loading settings")
     unmount()
 
     settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: true })
-    renderPage()
+    const loaded = renderPage()
 
     expect(await screen.findByRole("status")).toHaveTextContent("Settings loaded")
     expect(
       screen.getByRole("switch", { name: "Sync new documents to my profile" }),
     ).toBeInTheDocument()
-    expect(container.querySelector('[aria-busy="true"]')).toBeNull()
+    expect(loaded.container.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it("renders the sections", async () => {

@@ -2,7 +2,7 @@ export function sanitizeFilename(filename: string): string {
   return (
     filename
       // eslint-disable-next-line no-control-regex
-      .replace(/[<>:"\\|?*\u0000-\u001F]/g, "")
+      .replace(/[<>:"\\|?*/\u0000-\u001F]/g, "")
       .replace(/^\.+/, "")
       .slice(0, 255)
   )
@@ -17,6 +17,23 @@ export function withExtension(filename: string, extension: string): string {
   const lowered = filename.toLowerCase()
 
   return lowered.endsWith(extension.toLowerCase()) ? filename : `${filename}${extension}`
+}
+
+/**
+ * Returns `filename` with its final extension swapped for `extension`.
+ *
+ * Used where a rendered filename already carries one and a different one is
+ * needed — a JSON export name being reused as a ZIP archive name, say — so the
+ * result is a single extension rather than `.json.zip`.
+ */
+export function replaceExtension(filename: string, extension: string): string {
+  const lastDot = filename.lastIndexOf(".")
+
+  // A leading dot belongs to the name, not to an extension, so only a dot that
+  // has something before it marks one.
+  const stem = lastDot > 0 ? filename.slice(0, lastDot) : filename
+
+  return withExtension(stem, extension)
 }
 
 /**

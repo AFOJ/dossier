@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react"
 import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { exportCoverLettersAsZip, toCoverLetterExportPayload } from "@/lib/coverLetterExport"
-import { withExtension } from "@/lib/filenames"
+import { replaceExtension } from "@/lib/filenames"
 import { useToast } from "@/components/toast"
 import { useSettings } from "@/hooks/useSettings"
 import type { CoverLetter } from "@/db/db"
@@ -36,7 +36,10 @@ export function useBulkCoverLetterActions(): UseBulkCoverLetterActionsResult {
           toast.success("Cover letter exported", `Saved ${filename}.`)
         } else {
           await exportCoverLettersAsZip(
-            withExtension(getExportFilenameWithSettings("cover-letter", "bulk", settings), ".zip"),
+            replaceExtension(
+              getExportFilenameWithSettings("cover-letter", "bulk", settings),
+              ".zip",
+            ),
             letters,
             nameLetter,
           )

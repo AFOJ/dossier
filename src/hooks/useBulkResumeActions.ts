@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react"
 import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { exportResumesAsZip, toResumeExportPayload } from "@/lib/resumeExport"
-import { withExtension } from "@/lib/filenames"
+import { replaceExtension } from "@/lib/filenames"
 import { useToast } from "@/components/toast"
 import { useSettings } from "@/hooks/useSettings"
 import type { Resume } from "@/db/db"
@@ -36,7 +36,7 @@ export function useBulkResumeActions(): UseBulkResumeActionsResult {
           toast.success("Resume exported", `Saved ${filename}.`)
         } else {
           await exportResumesAsZip(
-            withExtension(getExportFilenameWithSettings("resume", "bulk", settings), ".zip"),
+            replaceExtension(getExportFilenameWithSettings("resume", "bulk", settings), ".zip"),
             resumes,
             nameResume,
           )

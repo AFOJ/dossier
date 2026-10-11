@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
-import type { FieldValues, UseFormReturn } from "react-hook-form"
+import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form"
 
-interface UseSettingsHydrationOptions<T extends FieldValues> {
+export interface UseSettingsHydrationOptions<T extends FieldValues> {
   form: UseFormReturn<T>
   /**
    * False until the stored settings have been read. Hydration waits for it, so
@@ -9,10 +9,11 @@ interface UseSettingsHydrationOptions<T extends FieldValues> {
    */
   settingsLoaded: boolean
   /**
-   * Applies the stored settings to the form's fields. Called at most once, and
-   * only while the form is still pristine, so anything already typed is kept.
+   * Applies the stored settings to the form's fields. Called at most once.
+   * Fields the visitor has already changed are skipped, so hydration cannot roll
+   * back anything entered before the settings arrived.
    */
-  hydrate: (setValue: UseFormReturn<T>["setValue"]) => void
+  hydrate: (setUnlessDirty: (name: FieldPath<T>, value: unknown) => void) => void
 }
 
 /**
@@ -36,10 +37,18 @@ export function useSettingsHydration<T extends FieldValues>({
     }
     hydrated.current = true
 
-    if (form.formState.isDirty) {
-      return
-    }
+    // dirtyFields is deeply partial to allow nested paths, so narrowing it to
+    // the flat lookup these form fields need costs a cast.
+    const dirtyFields = form.formState.dirtyFields as Record<string, boolean>
 
-    hydrate(form.setValue)
+    hydrate((name, value) => {
+      if (dirtyFields[name]) {
+        return
+      }
+
+      // setValue pairs a field name with the type of that one field's value,
+      // which cannot be expressed across a whole FieldPath union.
+      form.setValue(name, value as never, { shouldDirty: false })
+    })
   }, [form, hydrate, settingsLoaded])
 }

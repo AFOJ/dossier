@@ -601,11 +601,9 @@ export function useCreateResumeForm(
   const { setValue, getValues, clearErrors } = form
 
   const hydrate = useCallback(
-    (applyValue: typeof setValue) => {
-      applyValue("syncProfile", settings.defaultSyncProfile, { shouldDirty: false })
-      applyValue("title", renderTitle(settings.defaultResumeTitleFormat, { profile }), {
-        shouldDirty: false,
-      })
+    (setUnlessTouched: (name: "syncProfile" | "title", value: unknown) => void) => {
+      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
+      setUnlessTouched("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
     },
     [profile, settings.defaultResumeTitleFormat, settings.defaultSyncProfile],
   )
