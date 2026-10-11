@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
+import { useSettingsHydration } from "@/hooks/useSettingsHydration"
 import type { Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
 import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLetterBody"
@@ -86,7 +87,11 @@ export function profileToContactValues(profile: Profile) {
   }
 }
 
-export function useCreateCoverLetterForm(profile?: Profile, settings: Settings = DEFAULT_SETTINGS) {
+export function useCreateCoverLetterForm(
+  profile?: Profile,
+  settings: Settings = DEFAULT_SETTINGS,
+  settingsLoaded = true,
+) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -105,6 +110,15 @@ export function useCreateCoverLetterForm(profile?: Profile, settings: Settings =
   })
 
   const { setValue } = form
+
+  const hydrate = useCallback(
+    (applyValue: typeof setValue) => {
+      applyValue("syncProfile", settings.defaultSyncProfile, { shouldDirty: false })
+    },
+    [settings.defaultSyncProfile],
+  )
+
+  useSettingsHydration({ form, settingsLoaded, hydrate })
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {

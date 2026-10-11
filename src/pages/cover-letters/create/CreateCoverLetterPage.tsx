@@ -19,10 +19,11 @@ const RichTextEditor = lazy(() => {
 
 export default function CreateCoverLetterPage() {
   const { profile } = useProtectedRouteData()
-  const { settings } = useSettings()
+  const { settings, isLoaded } = useSettings()
   const { form, onSubmit, isSubmitting, formError, setSyncProfile } = useCreateCoverLetterForm(
     profile,
     settings,
+    isLoaded,
   )
 
   useUnsavedChangesWarning(() => form.formState.isDirty)

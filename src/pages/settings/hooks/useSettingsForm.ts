@@ -21,13 +21,16 @@ export function useSettingsForm() {
   const initialized = useRef(false)
 
   useEffect(() => {
-    // Only initialize once: the form already has defaultValues from the first
-    // settings read. Subsequent stored-settings arrivals must not clobber user
-    // edits, so we skip resetting after the first load.
+    // The form's defaultValues came from the first read, which may still have
+    // been the placeholder defaults, so swap in the real row once it lands.
+    // Later arrivals must not clobber the visitor's edits: values they have
+    // already changed are kept, so a click made before the read resolved is not
+    // rolled back by it.
     if (isLoaded && !initialized.current) {
       initialized.current = true
+      form.reset(settings, { keepDirtyValues: true })
     }
-  }, [isLoaded, settings])
+  }, [form, isLoaded, settings])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {

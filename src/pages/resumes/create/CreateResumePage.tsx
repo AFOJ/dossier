@@ -18,7 +18,7 @@ import {
 
 export default function CreateResumePage() {
   const { profile } = useProtectedRouteData()
-  const { settings } = useSettings()
+  const { settings, isLoaded } = useSettings()
   const {
     form,
     onSubmit,
@@ -33,7 +33,7 @@ export default function CreateResumePage() {
     redo,
     canUndo,
     canRedo,
-  } = useCreateResumeForm(profile, settings)
+  } = useCreateResumeForm(profile, settings, isLoaded)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
   usePageTitle("Create Resume")

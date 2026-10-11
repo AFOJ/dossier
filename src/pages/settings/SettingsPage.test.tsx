@@ -1,9 +1,11 @@
 import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import SettingsPage from "@/pages/settings/SettingsPage"
 import type { Profile } from "@/db/db"
+import { db } from "@/db/db"
+import { upsertSettings } from "@/db/settings"
 import { ModalProvider } from "@/components/modal"
 
 vi.mock("@/db/profile", () => ({
@@ -57,8 +59,13 @@ function renderPage() {
 }
 
 describe("SettingsPage", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+    await db.settings.clear()
+  })
+
+  afterEach(async () => {
+    await db.settings.clear()
   })
 
   it("renders the sections", async () => {
@@ -78,6 +85,22 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Cover letter PDF filename")).toHaveValue(
       "{title}-cover-letter.pdf",
     )
+  })
+
+  it("shows stored settings rather than the defaults once they have loaded", async () => {
+    await upsertSettings({
+      defaultSyncProfile: false,
+      defaultResumePdfFilenameFormat: "{title}-cv.pdf",
+    })
+
+    renderPage()
+
+    const syncSwitch = await screen.findByRole("switch", {
+      name: "Sync new documents to my profile",
+    })
+    await waitFor(() => expect(syncSwitch).not.toBeChecked())
+    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-cv.pdf")
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
   })
 
   it("defaults to the ad hoc PDF filename pattern and switches to shared", async () => {
