@@ -133,13 +133,14 @@ describe("SettingsPage", () => {
     expect(syncSwitch).not.toBeChecked()
   })
 
-  it.skip("updates the title format and shows a live preview", async () => {
+  it("updates the title format and shows a live preview", async () => {
     const user = userEvent.setup()
     renderPage()
 
     await screen.findByText("New resume title")
     const input = screen.getByLabelText("New resume title")
     expect(input).toHaveValue("{profile.role} Resume")
+    expect(await screen.findByText("Currently produces:")).toHaveTextContent("Engineer Resume")
 
     await user.clear(input)
     // Use native value setter to bypass userEvent keyboard parsing of braces
@@ -154,7 +155,7 @@ describe("SettingsPage", () => {
     })
 
     const preview = await screen.findByText(/Currently produces:/)
-    expect(preview).toHaveTextContent("John Doe CV 2026")
+    expect(preview).toHaveTextContent(`John Doe CV ${new Date().getFullYear()}`)
   })
 
   it("saves the settings on submit", async () => {

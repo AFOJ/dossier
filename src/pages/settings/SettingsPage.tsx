@@ -1,4 +1,5 @@
 import { useState } from "react"
+import React from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { Controller, FormProvider } from "react-hook-form"
 import { Button, Card, Field, Heading1, Heading2, Input, Subheading } from "@/components/ui"
@@ -7,12 +8,14 @@ import { Radio } from "@base-ui/react/radio"
 import { useModal } from "@/components/modal"
 import { useToast } from "@/components/toast"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import { db } from "@/db/db"
 import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilename } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
+import { renderTitle, TOKEN_HELPERS, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
 
 export default function SettingsPage() {
   usePageTitle("Settings")
@@ -31,11 +34,35 @@ export default function SettingsPage() {
   )
 }
 
+function TitleFormatHelp() {
+  return (
+    <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+      Available tokens:{" "}
+      {TITLE_FORMAT_TOKENS.map((token, index) => (
+        <React.Fragment key={token}>
+          {index > 0 && ", "}
+          <code
+            className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]"
+            title={TOKEN_HELPERS[token]}
+          >
+            {"{" + token + "}"}
+          </code>
+        </React.Fragment>
+      ))}
+      . A token with nothing behind it is left as typed.
+    </p>
+  )
+}
+
 function DocumentsSection() {
   const { form, onSubmit } = useSettingsForm()
+  const { profile } = useProtectedRouteData()
 
   const pdfFilenamePattern = form.watch("pdfFilenamePattern")
   const isShared = pdfFilenamePattern === "shared"
+
+  const titleFormat = form.watch("defaultResumeTitleFormat")
+  const titleFormatPreview = renderTitle(titleFormat, { profile })
 
   const pdfFields = isShared ? (
     <div className="mt-3">
@@ -162,6 +189,28 @@ function DocumentsSection() {
                 to give every new document its own contact details.
               </p>
             </div>
+          </div>
+
+          <div className="mt-3">
+            <Field
+              label="New resume title"
+              inputId="defaultResumeTitleFormat"
+              error={form.formState.errors.defaultResumeTitleFormat?.message}
+              description={
+                <>
+                  Currently produces:{" "}
+                  <strong className="font-semibold">{titleFormatPreview}</strong>
+                </>
+              }
+            >
+              <Input
+                id="defaultResumeTitleFormat"
+                placeholder="{profile.role} Resume"
+                {...form.register("defaultResumeTitleFormat")}
+                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+              />
+            </Field>
+            <TitleFormatHelp />
           </div>
 
           <div className="mt-3">

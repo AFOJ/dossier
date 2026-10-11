@@ -4,7 +4,7 @@ import * as React from "react"
 
 export interface FieldProps extends React.ComponentPropsWithoutRef<typeof BaseField.Root> {
   label?: string
-  description?: string
+  description?: React.ReactNode
   error?: string
   required?: boolean
   children: React.ReactNode
