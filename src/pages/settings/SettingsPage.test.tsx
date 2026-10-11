@@ -5,8 +5,23 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import SettingsPage from "@/pages/settings/SettingsPage"
 import type { Profile } from "@/db/db"
 import { db } from "@/db/db"
-import { getSettings, upsertSettings } from "@/db/settings"
+import { DEFAULT_SETTINGS, getSettings, upsertSettings } from "@/db/settings"
 import { ModalProvider } from "@/components/modal"
+
+// Settings arrive asynchronously, so the loading state is only reachable by
+// controlling the hook that resolves them. `real` keeps the genuine hook as the
+// default so every other test exercises the real read path.
+const settingsMock = vi.hoisted(() => ({
+  useSettings: vi.fn(),
+  real: null as unknown as typeof import("@/hooks/useSettings").useSettings,
+}))
+
+vi.mock("@/hooks/useSettings", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/useSettings")>()
+  settingsMock.real = actual.useSettings
+  settingsMock.useSettings.mockImplementation(actual.useSettings)
+  return { useSettings: settingsMock.useSettings }
+})
 
 vi.mock("@/db/profile", () => ({
   updateProfile: vi.fn(),
@@ -62,10 +77,39 @@ describe("SettingsPage", () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     await db.settings.clear()
+    settingsMock.useSettings.mockImplementation(settingsMock.real)
   })
 
   afterEach(async () => {
     await db.settings.clear()
+  })
+
+  it("shows a skeleton with an accessible status before the settings have loaded", async () => {
+    settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: false })
+    const { container } = renderPage()
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading settings")
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull()
+    expect(
+      screen.queryByRole("switch", { name: "Sync new documents to my profile" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("replaces the skeleton once the settings have loaded", async () => {
+    settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: false })
+    const { container, unmount } = renderPage()
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading settings")
+    unmount()
+
+    settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: true })
+    renderPage()
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Settings loaded")
+    expect(
+      screen.getByRole("switch", { name: "Sync new documents to my profile" }),
+    ).toBeInTheDocument()
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it("renders the sections", async () => {

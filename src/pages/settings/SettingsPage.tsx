@@ -16,6 +16,7 @@ import type { Settings } from "@/db/settings"
 import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
+import { DocumentsFormSkeleton } from "@/pages/settings/components/DocumentsFormSkeleton"
 import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
 import { renderTitle, TOKEN_HELPERS, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
 
@@ -62,9 +63,12 @@ function DocumentsSection() {
   return (
     <div className="flex flex-col gap-4">
       <Heading2>Documents</Heading2>
-      {/* Mounted below the gate so the form's initial values come from the stored
-          row rather than the placeholder defaults read before it arrived. */}
-      {isLoaded && <DocumentsForm settings={settings} />}
+      {/* A stable element whose text changes, rather than one swapped in and out,
+          so the transition is announced rather than silently replaced. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {isLoaded ? "Settings loaded" : "Loading settings"}
+      </span>
+      {isLoaded ? <DocumentsForm settings={settings} /> : <DocumentsFormSkeleton />}
     </div>
   )
 }
