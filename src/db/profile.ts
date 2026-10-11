@@ -1,10 +1,9 @@
 import { z } from "zod"
 import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
-import { getSettings, SETTINGS_ID, type Settings } from "@/db/settings"
+import { getSettings, parseStoredSettings, SETTINGS_ID, type Settings } from "@/db/settings"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import {
-  appSettingsSchema,
   coverLetterExportContactSchema,
   resumeSectionSchema,
   exportContactSchema,
@@ -195,8 +194,10 @@ export const exportFileSchema = z
       )
       .default([]),
     // Backups written before settings existed omit the key entirely, so the
-    // default is what keeps them restorable.
-    settings: appSettingsSchema.default(DEFAULT_SETTINGS),
+    // default keeps them restorable. Parsing tolerantly here matters as much as
+    // it does on the read path: a backup carrying a retired setting value must
+    // restore the rest of itself rather than being rejected outright.
+    settings: z.unknown().transform(parseStoredSettings).default(DEFAULT_SETTINGS),
   })
   .strict()
 

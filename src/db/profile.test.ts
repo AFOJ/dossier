@@ -546,6 +546,29 @@ describe("importProfile", () => {
     expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
   })
 
+  it("restores settings from a backup that uses retired values", async () => {
+    // A backup exported while pdfFilenamePattern was still "per-kind", before
+    // defaultPdfFilenameFormat existed. The stale value falls back, and the
+    // fields the backup does carry must survive.
+    await importProfile(
+      JSON.stringify({
+        ...validExport,
+        settings: {
+          ...validExport.settings,
+          pdfFilenamePattern: "per-kind",
+          defaultPdfFilenameFormat: undefined,
+        },
+      }),
+    )
+
+    const settings = await getSettings()
+
+    expect(settings.defaultSyncProfile).toBe(validExport.settings.defaultSyncProfile)
+    expect(settings.defaultResumeTitleFormat).toBe(validExport.settings.defaultResumeTitleFormat)
+    expect(settings.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.pdfFilenamePattern)
+    expect(settings.defaultPdfFilenameFormat).toBe(DEFAULT_SETTINGS.defaultPdfFilenameFormat)
+  })
+
   it("rejects invalid JSON", async () => {
     await expect(importProfile("not json")).rejects.toThrow(InvalidExportFileError)
   })
