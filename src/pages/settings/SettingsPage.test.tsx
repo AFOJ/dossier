@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import SettingsPage from "@/pages/settings/SettingsPage"
 import type { Profile } from "@/db/db"
 import { db } from "@/db/db"
-import { upsertSettings } from "@/db/settings"
+import { getSettings, upsertSettings } from "@/db/settings"
 import { ModalProvider } from "@/components/modal"
 
 vi.mock("@/db/profile", () => ({
@@ -174,5 +174,7 @@ describe("SettingsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
     })
+
+    expect((await getSettings()).defaultSyncProfile).toBe(false)
   })
 })

@@ -514,7 +514,9 @@ describe("importProfile", () => {
   })
 
   it("restores settings from a valid export", async () => {
-    await upsertSettings({ defaultSyncProfile: false, defaultResumeTitleFormat: "{profile.name}" })
+    // Seeded with values that differ from validExport.settings so the assertions
+    // can only pass if the import actually wrote them.
+    await upsertSettings({ defaultSyncProfile: true, defaultResumeTitleFormat: "Keep me?" })
 
     await importProfile(JSON.stringify(validExport))
 
