@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/AFOJ/dossier/compare/dossier-v1.6.1...dossier-v1.7.0) (2026-10-11)
+
+
+### Features
+
+* add Settings page with document defaults and filename formats ([#43](https://github.com/AFOJ/dossier/issues/43)) ([d0ec2f2](https://github.com/AFOJ/dossier/commit/d0ec2f28f7558917a3be819c1d3e1b3ded11b42c))
+
+
+### Bug Fixes
+
+* warn before leaving a form with unsaved changes ([#41](https://github.com/AFOJ/dossier/issues/41)) ([9f94e40](https://github.com/AFOJ/dossier/commit/9f94e403d8d63d85bafbbb7f3d73e3df81a6a13b))
+
 ## [1.6.1](https://github.com/AFOJ/dossier/compare/dossier-v1.6.0...dossier-v1.6.1) (2026-10-03)
 
 
