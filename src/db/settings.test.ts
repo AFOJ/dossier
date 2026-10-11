@@ -99,6 +99,18 @@ describe("upsertSettings", () => {
     expect(await db.settings.count()).toBe(1)
   })
 
+  it("does not lose one update to another that starts alongside it", async () => {
+    await Promise.all([
+      upsertSettings({ defaultSyncProfile: false }),
+      upsertSettings({ defaultResumeTitleFormat: "{profile.name} CV" }),
+    ])
+
+    const settings = await getSettings()
+
+    expect(settings.defaultSyncProfile).toBe(false)
+    expect(settings.defaultResumeTitleFormat).toBe("{profile.name} CV")
+  })
+
   it("rejects a value the reader could not use", async () => {
     await expect(upsertSettings({ defaultResumeTitleFormat: "" })).rejects.toThrow(
       "Invalid app settings.",

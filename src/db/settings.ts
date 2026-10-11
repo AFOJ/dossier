@@ -73,13 +73,22 @@ export async function getSettings(): Promise<Settings> {
 /**
  * Merges `data` into the saved settings. The merged result is validated as a
  * whole so a partial update can never persist a value the reader would reject.
+ *
+ * Reading, merging, and writing share one transaction so two overlapping
+ * updates that touch different fields cannot both read the same row and save
+ * over each other's change.
  */
 export async function upsertSettings(data: Partial<Settings>): Promise<void> {
-  const merged = appSettingsSchema.safeParse({ ...(await getSettings()), ...data })
+  await db.transaction("rw", db.settings, async () => {
+    const merged = appSettingsSchema.safeParse({
+      ...parseStoredSettings(await db.settings.get(SETTINGS_ID)),
+      ...data,
+    })
 
-  if (!merged.success) {
-    throw new Error("Invalid app settings.")
-  }
+    if (!merged.success) {
+      throw new Error("Invalid app settings.")
+    }
 
-  await db.settings.put({ ...merged.data, id: SETTINGS_ID })
+    await db.settings.put({ ...merged.data, id: SETTINGS_ID })
+  })
 }
