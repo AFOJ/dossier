@@ -12,6 +12,7 @@ import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { useSettings } from "@/hooks/useSettings"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
 import { db } from "@/db/db"
+import type { Settings } from "@/db/settings"
 import { exportProfile } from "@/db/profile"
 import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
 import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
@@ -56,7 +57,20 @@ function TitleFormatHelp() {
 }
 
 function DocumentsSection() {
-  const { form, onSubmit } = useSettingsForm()
+  const { settings, isLoaded } = useSettings()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Heading2>Documents</Heading2>
+      {/* Mounted below the gate so the form's initial values come from the stored
+          row rather than the placeholder defaults read before it arrived. */}
+      {isLoaded && <DocumentsForm settings={settings} />}
+    </div>
+  )
+}
+
+function DocumentsForm({ settings }: { settings: Settings }) {
+  const { form, onSubmit } = useSettingsForm(settings)
   const { profile } = useProtectedRouteData()
 
   const pdfFilenamePattern = form.watch("pdfFilenamePattern")
@@ -164,157 +178,150 @@ function DocumentsSection() {
   )
 
   return (
-    <div className="flex flex-col gap-4">
-      <Heading2>Documents</Heading2>
+    <FormProvider {...form}>
+      <form onSubmit={onSubmit} className="contents">
+        <div className="flex items-start gap-3">
+          <Controller
+            control={form.control}
+            name="defaultSyncProfile"
+            render={({ field }) => (
+              <SyncSwitch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                label="Sync new documents to my profile"
+              />
+            )}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Sync new documents to my profile</p>
+            <p className="mt-1 text-xs text-[#59636e]">
+              New resumes and cover letters start with your profile contact details. Turn this off
+              to give every new document its own contact details.
+            </p>
+          </div>
+        </div>
 
-      <FormProvider {...form}>
-        <form onSubmit={onSubmit} className="contents">
-          <div className="flex items-start gap-3">
+        <div className="mt-3">
+          <Field
+            label="New resume title"
+            inputId="defaultResumeTitleFormat"
+            error={form.formState.errors.defaultResumeTitleFormat?.message}
+            description={
+              <>
+                Currently produces: <strong className="font-semibold">{titleFormatPreview}</strong>
+              </>
+            }
+          >
+            <Input
+              id="defaultResumeTitleFormat"
+              placeholder="{profile.role} Resume"
+              {...form.register("defaultResumeTitleFormat")}
+              className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+            />
+          </Field>
+          <TitleFormatHelp />
+        </div>
+
+        <div className="mt-3">
+          <Field
+            label="Export filename format"
+            inputId="defaultExportFilenameFormat"
+            error={form.formState.errors.defaultExportFilenameFormat?.message}
+          >
+            <Input
+              id="defaultExportFilenameFormat"
+              placeholder="{kind}-{title}-export-{dateShort}"
+              {...form.register("defaultExportFilenameFormat")}
+              className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
+            />
+          </Field>
+          <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
+            Used for exported file names. Use{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{kind}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{title}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{dateShort}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{date}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{year}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{month}"}
+            </code>{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{monthShort}"}
+            </code>{" "}
+            or{" "}
+            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
+              {"{day}"}
+            </code>
+            . Invalid filename characters are removed automatically.
+          </p>
+        </div>
+
+        <div className="mt-3">
+          <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
             <Controller
               control={form.control}
-              name="defaultSyncProfile"
+              name="pdfFilenamePattern"
               render={({ field }) => (
-                <SyncSwitch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  label="Sync new documents to my profile"
-                />
+                <RadioGroup
+                  name="pdfFilenamePattern"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex items-center gap-4"
+                >
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <Radio.Root
+                      value="shared"
+                      className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
+                    >
+                      <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
+                    </Radio.Root>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Shared
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <Radio.Root
+                      value="ad-hoc"
+                      className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
+                    >
+                      <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
+                    </Radio.Root>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Ad Hoc
+                    </span>
+                  </label>
+                </RadioGroup>
               )}
             />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900">
-                Sync new documents to my profile
-              </p>
-              <p className="mt-1 text-xs text-[#59636e]">
-                New resumes and cover letters start with your profile contact details. Turn this off
-                to give every new document its own contact details.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <Field
-              label="New resume title"
-              inputId="defaultResumeTitleFormat"
-              error={form.formState.errors.defaultResumeTitleFormat?.message}
-              description={
-                <>
-                  Currently produces:{" "}
-                  <strong className="font-semibold">{titleFormatPreview}</strong>
-                </>
-              }
-            >
-              <Input
-                id="defaultResumeTitleFormat"
-                placeholder="{profile.role} Resume"
-                {...form.register("defaultResumeTitleFormat")}
-                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-              />
-            </Field>
-            <TitleFormatHelp />
-          </div>
-
-          <div className="mt-3">
-            <Field
-              label="Export filename format"
-              inputId="defaultExportFilenameFormat"
-              error={form.formState.errors.defaultExportFilenameFormat?.message}
-            >
-              <Input
-                id="defaultExportFilenameFormat"
-                placeholder="{kind}-{title}-export-{dateShort}"
-                {...form.register("defaultExportFilenameFormat")}
-                className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-              />
-            </Field>
-            <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-              Used for exported file names. Use{" "}
+            <p className="mt-1.5 text-xs text-[#59636e]">
+              Shared: one format for both resumes and cover letters using{" "}
               <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
                 {"{kind}"}
               </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{title}"}
-              </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{dateShort}"}
-              </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{date}"}
-              </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{year}"}
-              </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{month}"}
-              </code>{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{monthShort}"}
-              </code>{" "}
-              or{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{day}"}
-              </code>
-              . Invalid filename characters are removed automatically.
+              to distinguish them. Ad Hoc: separate format per document type.
             </p>
-          </div>
+          </Field>
+        </div>
 
-          <div className="mt-3">
-            <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
-              <Controller
-                control={form.control}
-                name="pdfFilenamePattern"
-                render={({ field }) => (
-                  <RadioGroup
-                    name="pdfFilenamePattern"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    className="flex items-center gap-4"
-                  >
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <Radio.Root
-                        value="shared"
-                        className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
-                      >
-                        <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
-                      </Radio.Root>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Shared
-                      </span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <Radio.Root
-                        value="ad-hoc"
-                        className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
-                      >
-                        <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
-                      </Radio.Root>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Ad Hoc
-                      </span>
-                    </label>
-                  </RadioGroup>
-                )}
-              />
-              <p className="mt-1.5 text-xs text-[#59636e]">
-                Shared: one format for both resumes and cover letters using{" "}
-                <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                  {"{kind}"}
-                </code>{" "}
-                to distinguish them. Ad Hoc: separate format per document type.
-              </p>
-            </Field>
-          </div>
+        {pdfFields}
 
-          {pdfFields}
-
-          <div>
-            <Button type="submit" disabled={!form.formState.isDirty}>
-              {form.formState.isSubmitting ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
-        </form>
-      </FormProvider>
-    </div>
+        <div>
+          <Button type="submit" disabled={!form.formState.isDirty}>
+            {form.formState.isSubmitting ? "Saving..." : "Save changes"}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   )
 }
 
