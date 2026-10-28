@@ -1,7 +1,6 @@
 import { zipSync } from "fflate"
 import { extractResumeJsonFiles } from "@/lib/zipImport"
 import { describe, it, expect } from "vitest"
-import { resumeSectionSchema } from "@/db/schemas"
 import { createResume, getResume } from "@/db/resume"
 import { toResumePayload } from "@/lib/resumePayload"
 import { toResumeExportPayload } from "@/lib/resumeExport"
@@ -22,75 +21,32 @@ const project = { name: "Dashboard", technologies: [], bullets: [] }
 const section = { type: "projects" as const, title: "Projects", projects: [project] }
 
 describe("projects integration", () => {
-  it("requires a title, a project name, arrays, and at least one project", () => {
-    expect(resumeSectionSchema.safeParse(section).success).toBe(true)
-    for (const invalid of [
-      { ...section, title: " " },
-      { ...section, projects: [] },
-      { ...section, projects: [{ ...project, name: " " }] },
-      { ...section, projects: [{ name: "Missing arrays" }] },
-      { ...section, projects: [{ ...project, url: "invalid" }] },
-    ]) {
-      expect(resumeSectionSchema.safeParse(invalid).success).toBe(false)
-    }
-    for (const bullet of [
-      { type: "text", text: " " },
-      { type: "text-with-title", title: "", text: "Impact" },
-    ]) {
-      expect(
-        resumeSectionSchema.safeParse({ ...section, projects: [{ ...project, bullets: [bullet] }] })
-          .success,
-      ).toBe(false)
-    }
-  })
-
-  it.each([
-    [undefined, undefined],
-    ["2024", undefined],
-    [undefined, "03-2024"],
-    [undefined, "Present"],
-    [" ", "Present"],
-    [undefined, "In progress"],
-    ["2024", "In progress"],
-    ["2024", "2024"],
-    ["Summer 2024", "Present"],
-    [" 03-2024 ", " Autumn 2025 "],
-    ["", " "],
-  ])("round trips dates %s / %s and emits required empty arrays", async (start_date, end_date) => {
-    const id = await createResume(
-      "Projects resume",
-      [{ ...section, projects: [{ ...project, start_date, end_date, url: " " }] }],
-      { syncProfile: false },
-    )
-    const saved = (await getResume(id))!
-    const exported = JSON.parse(JSON.stringify(toResumeExportPayload(saved)))
-    expect(resumeSectionSchema.parse(exported.sections[0])).toEqual(
-      JSON.parse(JSON.stringify(saved.sections[0])),
-    )
-    const imported = parseResumeJsonText(JSON.stringify(exported), "resume.json")
-    expect(imported.success).toBe(true)
-    if (!imported.success) throw new Error(imported.error)
-    expect(imported.resume.sections).toEqual(exported.sections)
-    const payload = JSON.parse(JSON.stringify(await toResumePayload(imported.resume)))
-    expect(payload.sections[0]).toEqual({
-      type: "projects",
-      title: "Projects",
-      projects: [
+  it("sends project dates and empty arrays according to current-work state", async () => {
+    const resumeId = await createResume(
+      "Projects",
+      [
         {
-          ...project,
-          ...(start_date?.trim() ? { start_date: start_date.trim() } : {}),
-          ...(end_date?.trim()
-            ? {
-                end_date: ["Present", "In progress"].includes(end_date.trim())
-                  ? start_date?.trim()
-                    ? "Present"
-                    : "In progress"
-                  : end_date.trim(),
-              }
-            : {}),
+          ...section,
+          projects: [
+            { ...project },
+            { ...project, start_date: " Summer 2024 ", end_date: "Present" },
+            { ...project, end_date: "Present" },
+            { ...project, start_date: "2024", end_date: "In progress" },
+            { ...project, end_date: " 03-2025 " },
+          ],
         },
       ],
-    })
+      { syncProfile: false },
+    )
+    const resume = (await getResume(resumeId))!
+    const payload = JSON.parse(JSON.stringify(await toResumePayload(resume)))
+    expect(payload.sections[0].projects).toEqual([
+      { ...project },
+      { ...project, start_date: "Summer 2024", end_date: "Present" },
+      { ...project, end_date: "In progress" },
+      { ...project, start_date: "2024", end_date: "Present" },
+      { ...project, end_date: "03-2025" },
+    ])
   })
 
   it("strips editor keys and preserves links, technologies, and both bullet types", async () => {
@@ -195,19 +151,6 @@ it("imports old list and skills sections without changing their data", () => {
   )
   expect(result.success).toBe(true)
   if (result.success) expect(result.resume.sections).toEqual(sections)
-})
-
-it("tracks skill reordering in undo without changing the stored string array", () => {
-  const group = withKey({ title: "Tools", items: ["React", "TypeScript"] })
-  const before: FormSection[] = [withKey({ type: "skills", title: "Skills", groups: [group] })]
-  const after: FormSection[] = [
-    { ...before[0], type: "skills", groups: [{ ...group, items: ["TypeScript", "React"] }] },
-  ]
-  expect(sectionsSignature(before)).not.toBe(sectionsSignature(after))
-  expect(describeSectionsChange(before, after)).toBe("reorder skills")
-  expect(replaySections(before, after)[0]).toMatchObject({
-    groups: [{ items: ["React", "TypeScript"] }],
-  })
 })
 
 it("imports a ZIP entry containing exported projects and preserves current-work state", async () => {

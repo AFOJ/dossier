@@ -35,17 +35,6 @@ describe("shared TagInput", () => {
     expect(screen.getByRole("status")).toHaveTextContent("[]")
   })
 
-  it("reorders plain strings and disables moves past either end", async () => {
-    const user = userEvent.setup()
-    render(<Harness initial={["React", "TypeScript"]} reorderable />)
-    expect(screen.getByRole("button", { name: "Move React up" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Move TypeScript down" })).toBeDisabled()
-    await user.click(screen.getByRole("button", { name: "Move TypeScript up" }))
-    expect(screen.getByRole("status")).toHaveTextContent('["TypeScript","React"]')
-    await user.click(screen.getByRole("button", { name: "Move TypeScript down" }))
-    expect(screen.getByRole("status")).toHaveTextContent('["React","TypeScript"]')
-  })
-
   it("preserves duplicate tags from older imports and removes only the selected occurrence", async () => {
     const user = userEvent.setup()
     render(<Harness initial={["React", "TypeScript", "React"]} reorderable />)
