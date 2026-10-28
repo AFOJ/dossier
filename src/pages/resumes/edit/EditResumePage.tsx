@@ -22,6 +22,8 @@ import type { Profile, Resume } from "@/db/db"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
 import { SectionList } from "@/pages/resumes/create/components/SectionList"
+import { SECTION_TYPES } from "@/pages/resumes/create/components/sectionTypes"
+import { ResumeCompatibilityNotice } from "./ResumeCompatibilityNotice"
 import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
 export default function EditResumePage() {
@@ -29,6 +31,25 @@ export default function EditResumePage() {
   const { profile } = useProtectedRouteData()
 
   usePageTitle("Edit Resume")
+
+  const sections: unknown = resume.sections
+  const invalidSections =
+    !Array.isArray(sections) ||
+    sections.some(
+      (section: unknown) =>
+        typeof section !== "object" ||
+        section === null ||
+        !("type" in section) ||
+        typeof section.type !== "string",
+    )
+  const unsupportedSections =
+    !invalidSections &&
+    (sections as { type: string }[]).some(
+      (section) => !SECTION_TYPES.some((supportedType) => supportedType === section.type),
+    )
+  if (invalidSections || unsupportedSections) {
+    return <ResumeCompatibilityNotice resume={resume} unsupported={unsupportedSections} />
+  }
 
   return <EditResumeForm key={resume.id} resume={resume} profile={profile} />
 }

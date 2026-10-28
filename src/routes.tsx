@@ -119,31 +119,33 @@ const router = createBrowserRouter(
         loader={protectedRouteLoader}
         hydrateFallbackElement={<HydrateFallback />}
       >
-        <Route path="resumes">
-          <Route index element={<ResumesListPage />} />
-          <Route path="create" element={<CreateResumePage />} />
-          <Route path="upload" element={<UploadResumePage />} />
-          <Route
-            id={resumeEditRouteId}
-            path=":resumeId/edit"
-            loader={resumeEditRouteLoader}
-            element={<EditResumePage />}
-          />
+        <Route element={<Outlet />} errorElement={<ErrorBoundary embedded />}>
+          <Route path="resumes">
+            <Route index element={<ResumesListPage />} />
+            <Route path="create" element={<CreateResumePage />} />
+            <Route path="upload" element={<UploadResumePage />} />
+            <Route
+              id={resumeEditRouteId}
+              path=":resumeId/edit"
+              loader={resumeEditRouteLoader}
+              element={<EditResumePage />}
+            />
+          </Route>
+          <Route path="cover-letters">
+            <Route index element={<CoverLettersListPage />} />
+            <Route path="create" element={<CreateCoverLetterPage />} />
+            <Route path="upload" element={<UploadCoverLetterPage />} />
+            <Route
+              id="cover-letter-edit"
+              path=":coverLetterId/edit"
+              loader={coverLetterEditRouteLoader}
+              element={<EditCoverLetterPage />}
+            />
+          </Route>
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="tags" element={<TagsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
-        <Route path="cover-letters">
-          <Route index element={<CoverLettersListPage />} />
-          <Route path="create" element={<CreateCoverLetterPage />} />
-          <Route path="upload" element={<UploadCoverLetterPage />} />
-          <Route
-            id="cover-letter-edit"
-            path=":coverLetterId/edit"
-            loader={coverLetterEditRouteLoader}
-            element={<EditCoverLetterPage />}
-          />
-        </Route>
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="tags" element={<TagsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       <Route
