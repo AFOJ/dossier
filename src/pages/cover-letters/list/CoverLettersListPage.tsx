@@ -30,7 +30,7 @@ export default function CoverLettersListPage() {
   const previewModal = useModal(CoverLetterPreviewDialog, {
     contentClassName: "max-w-none sm:max-w-2xl",
     closeOnBackdropClick: false,
-    closeOnEscape: true
+    closeOnEscape: false
   })
   const toast = useToast()
 
