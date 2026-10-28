@@ -274,7 +274,7 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
         projects: section.projects.map((project) => ({
           name: project.name.trim(),
           url: cleanOptional(project.url),
-          technologies: project.technologies.map((tech) => tech.trim()),
+          technologies: project.technologies.map((technology) => technology.trim()).filter(Boolean),
           start_date: cleanOptional(project.start_date),
           end_date: ["Present", "In progress"].includes(cleanOptional(project.end_date) ?? "")
             ? cleanOptional(project.start_date)

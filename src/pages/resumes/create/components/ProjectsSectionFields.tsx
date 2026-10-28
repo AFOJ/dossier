@@ -31,7 +31,7 @@ import {
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { DragDropHorizontalIcon, ArrowDownIcon, Trash } from "@hugeicons/core-free-icons"
-import { useState, memo } from "react"
+import { useState, useEffect, useRef, memo } from "react"
 import { CSS } from "@dnd-kit/utilities"
 import { useSortable } from "@dnd-kit/sortable"
 import { useFocusLastRow } from "@/hooks/useFocusLastRow"
@@ -177,11 +177,25 @@ export function ProjectsEditor(props: Readonly<ProjectsEditorProps>) {
   const { sectionIndex, projects, onChange, clearErrors } = props
 
   const {
-    formState: { errors },
+    formState: { errors, isSubmitted },
+    trigger,
   } = useResumeFieldContext()
 
   const sectionErrors = getSectionErrors(errors, sectionIndex) as ProjectsSectionErrors | undefined
   const sectionError = sectionErrors?.projects?.message
+  const projectsPath = `sections.${sectionIndex}.projects` as const
+  const projectOrder = JSON.stringify(
+    projects.map((project, projectIndex) => itemKey(project, projectIndex)),
+  )
+  const previousProjectOrder = useRef(projectOrder)
+
+  useEffect(() => {
+    if (previousProjectOrder.current === projectOrder) return
+    previousProjectOrder.current = projectOrder
+    const needsValidation = isSubmitted || sectionErrors?.projects !== undefined
+    clearErrors(projectsPath)
+    if (needsValidation) void trigger(projectsPath)
+  }, [projectOrder, projectsPath, clearErrors, trigger, isSubmitted, sectionErrors])
 
   const containerRef = useFocusLastRow(projects.length)
 
@@ -251,7 +265,6 @@ export function ProjectsEditor(props: Readonly<ProjectsEditorProps>) {
               index={index}
               onChange={(next) => onChange(replaceKeyed(projects, index, next))}
               onRemove={() => {
-                clearErrors(`sections.${sectionIndex}.projects.${index}`)
                 onChange(projects.filter((_, projectIndex) => projectIndex !== index))
               }}
             />

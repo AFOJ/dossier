@@ -685,3 +685,21 @@ it("reorders skills using the shared tags and supports undo", async () => {
   await user.click(screen.getByRole("button", { name: "Undo" }))
   expect(screen.getByRole("button", { name: "Move React up" })).toBeDisabled()
 })
+
+it("revalidates project errors at their new indexes after removing an earlier project", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Projects")
+  await user.type(screen.getByLabelText(/^Project name/), "Valid project")
+  await user.click(screen.getByRole("button", { name: "Add project" }))
+  await user.click(screen.getByRole("button", { name: "Create resume" }))
+  expect(await screen.findByText("Project name is required")).toBeInTheDocument()
+  expect(screen.getAllByLabelText(/^Project name/)[1]).toHaveAttribute("aria-invalid", "true")
+  await user.click(screen.getByRole("button", { name: "Remove Valid project project" }))
+  await waitFor(() =>
+    expect(screen.getByLabelText(/^Project name/)).toHaveAttribute("aria-invalid", "true"),
+  )
+  expect(screen.getByText("Project name is required")).toBeInTheDocument()
+})

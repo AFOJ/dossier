@@ -356,6 +356,9 @@ describe("skill groups", () => {
     expect(sectionsSignature([skillsSection("s1", ["React"])])).not.toBe(
       sectionsSignature([skillsSection("s1", ["Vue"])]),
     )
+    expect(
+      replaySections([skillsSection("s1", ["React"])], [skillsSection("s1", ["Vue"])])[0],
+    ).toMatchObject({ groups: [{ items: ["React"] }] })
   })
 
   it("describes an added skill", () => {

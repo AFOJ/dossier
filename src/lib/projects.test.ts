@@ -53,7 +53,7 @@ describe("projects integration", () => {
     const entry = withKey({
       ...project,
       url: " https://github.com/example ",
-      technologies: ["React", "TypeScript"],
+      technologies: [" React ", "", "  ", "TypeScript"],
       bullets: [
         withKey({ type: "text" as const, text: "Built it" }),
         withKey({ type: "text-with-title" as const, title: "Impact", text: "Saved time" }),
