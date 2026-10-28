@@ -7,6 +7,7 @@ type TagInputProps = {
   value: string[]
   onChange: (tags: string[]) => void
   placeholder?: string
+  reorderable?: boolean
   ariaLabel?: string
 }
 
@@ -41,16 +42,48 @@ export function TagInput(props: Readonly<TagInputProps>) {
         "hover:border-gray-400 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-600",
       )}
     >
-      {value.map((tag) => (
+      {value.map((tag, tagIndex) => (
         <span
-          key={tag}
+          key={`${tag}-${tagIndex}`}
           className="flex items-center gap-1 rounded-md bg-gray-100 py-0.5 pr-1 pl-2 text-sm text-gray-700"
         >
           {tag}
+          {props.reorderable && (
+            <>
+              <button
+                type="button"
+                aria-label={`Move ${tag} up`}
+                disabled={tagIndex === 0}
+                onClick={() => {
+                  const next = [...value],
+                    index = tagIndex
+                  ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
+                  onChange(next)
+                }}
+                className="rounded px-1 disabled:opacity-30"
+              >
+                &uarr;
+              </button>
+              <button
+                type="button"
+                aria-label={`Move ${tag} down`}
+                disabled={tagIndex === value.length - 1}
+                onClick={() => {
+                  const next = [...value],
+                    index = tagIndex
+                  ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
+                  onChange(next)
+                }}
+                className="rounded px-1 disabled:opacity-30"
+              >
+                &darr;
+              </button>
+            </>
+          )}
           <button
             type="button"
             aria-label={`Remove ${tag}`}
-            onClick={() => onChange(value.filter((item) => item !== tag))}
+            onClick={() => onChange(value.filter((_, index) => index !== tagIndex))}
             className="rounded p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={12} strokeWidth={2} />
