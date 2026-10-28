@@ -95,15 +95,32 @@ export async function getAllResumes(): Promise<Resume[]> {
   return resumes.map((resume) => ({ ...resume, tagIds: normaliseTagIds(resume.tagIds) }))
 }
 
+export class ResumeConflictError extends Error {
+  constructor() {
+    super(
+      "This resume changed since it was opened. Refresh before saving. Your changes have not been saved.",
+    )
+    this.name = "ResumeConflictError"
+  }
+}
+
 export async function updateResume(
   id: string,
   changes: Partial<Pick<Resume, "title" | "sections" | "tagIds" | "syncProfile" | "contact">>,
+  options: { expectedUpdatedAt?: Date } = {},
 ): Promise<void> {
   await db.transaction("rw", RESUME_TABLE, db.entityCache, async () => {
+    const current = await RESUME_TABLE.get(id)
+    if (
+      options.expectedUpdatedAt &&
+      (!current || current.updatedAt.getTime() !== options.expectedUpdatedAt.getTime())
+    ) {
+      throw new ResumeConflictError()
+    }
     await RESUME_TABLE.update(id, {
       ...changes,
       ...(changes.tagIds === undefined ? {} : { tagIds: normaliseTagIds(changes.tagIds) }),
-      updatedAt: new Date(),
+      updatedAt: new Date(Math.max(Date.now(), (current?.updatedAt.getTime() ?? 0) + 1)),
     })
     await clearProcessedEntityCache({ entityType: "resume", entityId: id })
   })

@@ -1,5 +1,6 @@
 import "fake-indexeddb/auto"
 import {
+  ResumeConflictError,
   createResume,
   getResume,
   getAllResumes,
@@ -145,5 +146,26 @@ describe("Resume Service", () => {
       totalPages: 3,
     })
     expect(result.items).toHaveLength(1)
+  })
+})
+
+it("atomically rejects stale saves without replacing the newer document", async () => {
+  const resumeId = await createResume("Original", [])
+  const loaded = (await getResume(resumeId))!
+  await updateResume(
+    resumeId,
+    { title: "Other tab", sections: [{ type: "paragraph", title: "New", text: "Preserve this" }] },
+    { expectedUpdatedAt: loaded.updatedAt },
+  )
+  await expect(
+    updateResume(
+      resumeId,
+      { title: "Stale tab", sections: [] },
+      { expectedUpdatedAt: loaded.updatedAt },
+    ),
+  ).rejects.toBeInstanceOf(ResumeConflictError)
+  expect(await getResume(resumeId)).toMatchObject({
+    title: "Other tab",
+    sections: [{ type: "paragraph", title: "New", text: "Preserve this" }],
   })
 })

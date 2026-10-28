@@ -4,7 +4,8 @@ import type { Profile, Resume } from "@/db/db"
 import { updateResume } from "@/db/resume"
 import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
-vi.mock("@/db/resume", () => ({
+vi.mock("@/db/resume", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/db/resume")>()),
   updateResume: vi.fn(),
 }))
 
@@ -187,20 +188,24 @@ describe("useEditResumeForm", () => {
       await result.current.onSubmit()
     })
 
-    expect(updateResume).toHaveBeenCalledWith("resume-1", {
-      title: "Updated Title",
-      sections: defaultSections,
-      tagIds: [],
-      syncProfile: false,
-      contact: {
-        full_name: "Snapshot Person",
-        email: null,
-        phone: null,
-        location: null,
-        links: [],
-        role: null,
+    expect(updateResume).toHaveBeenCalledWith(
+      "resume-1",
+      {
+        title: "Updated Title",
+        sections: defaultSections,
+        tagIds: [],
+        syncProfile: false,
+        contact: {
+          full_name: "Snapshot Person",
+          email: null,
+          phone: null,
+          location: null,
+          links: [],
+          role: null,
+        },
       },
-    })
+      { expectedUpdatedAt: expect.any(Date) },
+    )
     expect(mockToast.success).toHaveBeenCalled()
     expect(mockNavigate).toHaveBeenCalledWith("/resumes")
 

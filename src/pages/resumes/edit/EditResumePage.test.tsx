@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { createMemoryRouter, Link, RouterProvider } from "react-router-dom"
 import EditResumePage from "@/pages/resumes/edit/EditResumePage"
 import { downloadJson } from "@/lib/download"
-import { updateResume } from "@/db/resume"
+import { ResumeConflictError, updateResume } from "@/db/resume"
 import type { Profile, Resume } from "@/db/db"
 import { ModalProvider } from "@/components/modal"
 
@@ -13,7 +13,8 @@ vi.mock("@/lib/download", async (importOriginal) => ({
   downloadJson: vi.fn(),
 }))
 
-vi.mock("@/db/resume", () => ({
+vi.mock("@/db/resume", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/db/resume")>()),
   updateResume: vi.fn(),
 }))
 
@@ -284,6 +285,7 @@ it("reopens a current project and saves an end-only flexible date", async () => 
         },
       ],
     }),
+    { expectedUpdatedAt: resume.updatedAt },
   )
 })
 
@@ -323,4 +325,51 @@ it("keeps legacy list sections editable", async () => {
   renderPage(resume)
   expect(await screen.findByRole("button", { name: /Save changes/ }, READY)).toBeInTheDocument()
   expect(screen.queryByText("Refresh to edit this document")).not.toBeInTheDocument()
+})
+
+it.each([
+  {
+    section: { type: "experience", title: "Experience" },
+    heading: "This document cannot be edited safely",
+  },
+  {
+    section: { type: "paragraph", title: "Summary", text: "Text", newField: "Keep me" },
+    heading: "Refresh to edit this document",
+  },
+  {
+    section: {
+      type: "skills",
+      title: "Skills",
+      groups: [{ title: "Tools", items: ["React"], newField: "Keep me" }],
+    },
+    heading: "Refresh to edit this document",
+  },
+])("blocks unpreservable section data: $section.type", async ({ section, heading }) => {
+  vi.clearAllMocks()
+  const user = userEvent.setup()
+  const resume = makeResume()
+  resume.sections = [section] as unknown as Resume["sections"]
+  renderPage(resume)
+  expect(await screen.findByRole("heading", { name: heading }, READY)).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Download original JSON" }))
+  expect(downloadJson).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({ sections: [section] }),
+  )
+  expect(updateResume).not.toHaveBeenCalled()
+})
+
+it("keeps local edits and requires refresh after a conflicting save", async () => {
+  vi.clearAllMocks()
+  vi.mocked(updateResume).mockRejectedValueOnce(new ResumeConflictError())
+  const user = userEvent.setup()
+  renderPage()
+  const title = await screen.findByLabelText(/^Title/, undefined, READY)
+  await user.clear(title)
+  await user.type(title, "Local edits")
+  await user.click(screen.getByRole("button", { name: /Save changes/ }))
+  expect(await screen.findByRole("button", { name: "Refresh resume" })).toBeInTheDocument()
+  expect(title).toHaveValue("Local edits")
+  expect(screen.getByRole("button", { name: /Save changes/ })).toBeDisabled()
+  expect(screen.queryByText("Resumes list")).not.toBeInTheDocument()
 })
