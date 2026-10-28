@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/components/toast"
 import type { Profile, Resume } from "@/db/db"
 import type { ResumeSection } from "@/db/types"
-import { updateResume } from "@/db/resume"
+import { ResumeConflictError, updateResume } from "@/db/resume"
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
 
 import { useUndoHistory } from "@/hooks/useUndoHistory"
@@ -21,6 +21,8 @@ export function useEditResumeForm(resume: Resume, profile: Profile) {
   const toast = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loadedUpdatedAt] = useState(() => resume.updatedAt)
+  const [hasSaveConflict, setHasSaveConflict] = useState(false)
 
   const defaultValues = useMemo(() => toEditValues(resume, profile), [resume, profile])
 
@@ -51,26 +53,31 @@ export function useEditResumeForm(resume: Resume, profile: Profile) {
   }, [clearHistory, defaultValues, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
+    if (hasSaveConflict) return
     try {
       setIsSubmitting(true)
       form.clearErrors("root")
 
-      await updateResume(resume.id!, {
-        title: data.title,
-        sections: data.sections,
-        tagIds: data.tagIds,
-        syncProfile: data.syncProfile,
-        contact: data.syncProfile
-          ? null
-          : {
-              full_name: data.fullName ?? "",
-              email: data.email || null,
-              phone: data.phone || null,
-              location: data.location || null,
-              links: data.socials,
-              role: data.jobTitle || null,
-            },
-      })
+      await updateResume(
+        resume.id!,
+        {
+          title: data.title,
+          sections: data.sections,
+          tagIds: data.tagIds,
+          syncProfile: data.syncProfile,
+          contact: data.syncProfile
+            ? null
+            : {
+                full_name: data.fullName ?? "",
+                email: data.email || null,
+                phone: data.phone || null,
+                location: data.location || null,
+                links: data.socials,
+                role: data.jobTitle || null,
+              },
+        },
+        { expectedUpdatedAt: loadedUpdatedAt },
+      )
 
       // Reset to the raw (keyed) current values so the form is pristine
       // without losing the identity keys used for stable list rendering.
@@ -80,6 +87,11 @@ export function useEditResumeForm(resume: Resume, profile: Profile) {
       releaseUnsavedChangesGuard()
       navigate("/resumes")
     } catch (error) {
+      if (error instanceof ResumeConflictError) {
+        setHasSaveConflict(true)
+        form.setError("root", { type: "conflict", message: error.message })
+        return
+      }
       form.setError("root", {
         type: "manual",
         message: "Failed to save resume. Please try again.",
@@ -121,6 +133,7 @@ export function useEditResumeForm(resume: Resume, profile: Profile) {
     form,
     isDirty,
     isSubmitting,
+    hasSaveConflict,
     discard,
     onSubmit,
     addSection,

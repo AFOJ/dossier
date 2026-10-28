@@ -1,4 +1,4 @@
-import { useRouteLoaderData } from "react-router-dom"
+import { useNavigate, useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
@@ -22,6 +22,8 @@ import type { Profile, Resume } from "@/db/db"
 import { ProfileSyncCard } from "@/pages/resumes/create/components/ProfileSyncCard"
 import { SectionAddMenu } from "@/pages/resumes/create/components/SectionAddMenu"
 import { SectionList } from "@/pages/resumes/create/components/SectionList"
+import { getResumeCompatibilityIssue } from "@/lib/resumeCompatibility"
+import { ResumeCompatibilityNotice } from "./ResumeCompatibilityNotice"
 import { useEditResumeForm } from "@/pages/resumes/edit/hooks/useEditResumeForm"
 
 export default function EditResumePage() {
@@ -30,15 +32,27 @@ export default function EditResumePage() {
 
   usePageTitle("Edit Resume")
 
+  const compatibilityIssue = getResumeCompatibilityIssue(resume.sections)
+  if (compatibilityIssue) {
+    return (
+      <ResumeCompatibilityNotice
+        resume={resume}
+        unsupported={compatibilityIssue === "unsupported"}
+      />
+    )
+  }
+
   return <EditResumeForm key={resume.id} resume={resume} profile={profile} />
 }
 
 function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
   const { resume, profile } = props
+  const navigate = useNavigate()
   const {
     form,
     onSubmit,
     isSubmitting,
+    hasSaveConflict,
     formError,
     isDirty,
     discard,
@@ -122,6 +136,11 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
           {formError && (
             <div className="rounded-[10px] bg-red-50 border border-red-200 p-4 text-sm text-gray-600">
               {formError}
+              {hasSaveConflict && (
+                <Button type="button" onClick={() => navigate(0)}>
+                  Refresh resume
+                </Button>
+              )}
             </div>
           )}
 
@@ -145,7 +164,7 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
                 </Button>
               </span>
             </Tooltip>
-            <Button type="submit" disabled={!isDirty || isSubmitting}>
+            <Button type="submit" disabled={!isDirty || isSubmitting || hasSaveConflict}>
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </FormSubmitBar>

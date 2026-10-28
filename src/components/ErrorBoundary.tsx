@@ -55,7 +55,7 @@ function resolveHttpError(error: HttpErrorInfo) {
   }
 }
 
-type ErrorBoundaryProps = { onRetry?: () => void }
+type ErrorBoundaryProps = { onRetry?: () => void; embedded?: boolean }
 
 export function ErrorBoundary(props: Readonly<ErrorBoundaryProps>) {
   const navigate = useNavigate()
@@ -65,40 +65,46 @@ export function ErrorBoundary(props: Readonly<ErrorBoundaryProps>) {
     ? resolveHttpError(httpInfo)
     : {
         title: "Something went wrong",
-        message:
-          error instanceof Error && error.message.trim() !== ""
+        message: props.embedded
+          ? FALLBACK_MESSAGE
+          : error instanceof Error && error.message.trim() !== ""
             ? error.message
             : typeof error === "string" && error.trim() !== ""
               ? error
               : FALLBACK_MESSAGE,
       }
 
+  const Container = props.embedded ? "div" : "main"
+
   usePageTitle(resolved.title)
 
   return (
-    <main className="flex w-full justify-center">
+    <Container className="flex w-full justify-center">
       <section className="mt-20 flex w-full max-w-md flex-col items-center gap-4 p-4 text-center">
         <IsometricFace />
         <Heading2>{resolved.title}</Heading2>
         <Subheading>{resolved.message}</Subheading>
         <div className="flex gap-3">
-          <Button icon={Refresh04Icon} onClick={() => props.onRetry?.() ?? navigate(0)}>
-            Try again
+          <Button
+            icon={Refresh04Icon}
+            onClick={() => (props.onRetry ? props.onRetry() : navigate(0))}
+          >
+            {props.embedded ? "Refresh page" : "Try again"}
           </Button>
           <Button
             icon={Home01Icon}
-            render={<a href="/" />}
+            render={<a href={props.embedded ? "/resumes" : "/"} />}
             nativeButton={false}
             intent="secondary"
             onClick={(event) => {
               event.preventDefault()
-              navigate("/")
+              navigate(props.embedded ? "/resumes" : "/")
             }}
           >
-            Go home
+            {props.embedded ? "Back to resumes" : "Go home"}
           </Button>
         </div>
       </section>
-    </main>
+    </Container>
   )
 }
