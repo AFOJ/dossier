@@ -29,6 +29,8 @@ export default function ResumesListPage() {
   })
   const previewModal = useModal(ResumePreviewDialog, {
     contentClassName: "max-w-none sm:max-w-2xl",
+    closeOnBackdropClick: false,
+    closeOnEscape: true
   })
   const toast = useToast()
 
