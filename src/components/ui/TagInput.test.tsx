@@ -28,7 +28,7 @@ describe("shared TagInput", () => {
     await user.type(input, "React{Enter}TypeScript,")
     expect(screen.getByRole("status")).toHaveTextContent('["React","TypeScript"]')
     expect(screen.queryByRole("button", { name: "Move React up" })).not.toBeInTheDocument()
-    await user.type(input, "React{Enter}")
+    await user.type(input, "react{Enter} REACT ,")
     expect(screen.getByRole("status")).toHaveTextContent('["React","TypeScript"]')
     await user.click(screen.getByRole("button", { name: "Remove React" }))
     await user.type(input, "{Backspace}")
@@ -38,7 +38,9 @@ describe("shared TagInput", () => {
   it("preserves duplicate tags from older imports and removes only the selected occurrence", async () => {
     const user = userEvent.setup()
     render(<Harness initial={["React", "TypeScript", "React"]} reorderable />)
-    await user.click(screen.getAllByRole("button", { name: "Move React up" })[1])
+    const moveSecondReactUp = screen.getAllByRole("button", { name: "Move React up" })[1]
+    await user.click(moveSecondReactUp)
+    expect(moveSecondReactUp).toHaveFocus()
     expect(screen.getByRole("status")).toHaveTextContent('["React","React","TypeScript"]')
     await user.click(screen.getAllByRole("button", { name: "Remove React" })[0])
     expect(screen.getByRole("status")).toHaveTextContent('["React","TypeScript"]')

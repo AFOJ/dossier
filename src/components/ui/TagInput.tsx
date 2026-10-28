@@ -14,10 +14,19 @@ type TagInputProps = {
 export function TagInput(props: Readonly<TagInputProps>) {
   const { value, onChange, placeholder = "Type a skill and press Enter", ariaLabel } = props
   const [draft, setDraft] = useState("")
+  const tagOccurrences = new Map<string, number>()
+  const tagKeys = value.map((tag) => {
+    const occurrence = tagOccurrences.get(tag) ?? 0
+    tagOccurrences.set(tag, occurrence + 1)
+    return JSON.stringify([tag, occurrence])
+  })
 
   const commitDraft = () => {
     const tag = draft.trim()
-    if (tag !== "" && !value.includes(tag)) {
+    const isDuplicate = value.some(
+      (existingTag) => existingTag.trim().toLowerCase() === tag.toLowerCase(),
+    )
+    if (tag !== "" && !isDuplicate) {
       onChange([...value, tag])
     }
     setDraft("")
@@ -44,7 +53,7 @@ export function TagInput(props: Readonly<TagInputProps>) {
     >
       {value.map((tag, tagIndex) => (
         <span
-          key={`${tag}-${tagIndex}`}
+          key={tagKeys[tagIndex]}
           className="flex items-center gap-1 rounded-md bg-gray-100 py-0.5 pr-1 pl-2 text-sm text-gray-700"
         >
           {tag}
