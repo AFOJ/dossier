@@ -175,6 +175,7 @@ function GroupRowImpl(props: Readonly<GroupRowProps>) {
         error={groupErrors?.items?.message}
       >
         <TagInput
+          reorderable
           ariaLabel={`Skills for group ${index + 1}`}
           value={group.items}
           onChange={(items) => onChange({ ...group, items })}

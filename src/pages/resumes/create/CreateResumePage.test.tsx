@@ -597,3 +597,19 @@ describe("undoing structural changes", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })
+
+it("reorders skills using the shared tags and supports undo", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Skills")
+  await user.type(
+    screen.getByRole("textbox", { name: "Skills for group 1" }),
+    "React{Enter}TypeScript{Enter}",
+  )
+  await user.click(screen.getByRole("button", { name: "Move TypeScript up" }))
+  expect(screen.getByRole("button", { name: "Move TypeScript up" })).toBeDisabled()
+  await user.click(screen.getByRole("button", { name: "Undo" }))
+  expect(screen.getByRole("button", { name: "Move React up" })).toBeDisabled()
+})

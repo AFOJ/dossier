@@ -352,8 +352,8 @@ describe("skill groups", () => {
     )
   })
 
-  it("ignores rewriting a skill without changing the count", () => {
-    expect(sectionsSignature([skillsSection("s1", ["React"])])).toBe(
+  it("tracks replacing a skill without changing the count", () => {
+    expect(sectionsSignature([skillsSection("s1", ["React"])])).not.toBe(
       sectionsSignature([skillsSection("s1", ["Vue"])]),
     )
   })

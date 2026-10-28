@@ -109,7 +109,13 @@ function hasKey(item: unknown): boolean {
  * rather than collapsing to a single indistinguishable entry.
  */
 function keysAt(items: readonly unknown[]): string[] {
-  return items.map((item, index) => (hasKey(item) ? keyOf(item) : `#${index}`))
+  return items.map((item, index) =>
+    typeof item === "string"
+      ? `tag:${JSON.stringify(item)}`
+      : hasKey(item)
+        ? keyOf(item)
+        : `#${index}`,
+  )
 }
 
 function plural(noun: Noun, count: number): string {
