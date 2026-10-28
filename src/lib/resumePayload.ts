@@ -1,6 +1,11 @@
 import type { Resume } from "@/db/db"
 import { getProfile } from "@/db/profile"
-import type { ExperienceCompanyRoleBullet, ResumeSection, SkillGroup } from "@/db/types"
+import type {
+  ExperienceCompanyRoleBullet,
+  ResumeSection,
+  ResumeProject,
+  SkillGroup,
+} from "@/db/types"
 
 export interface ResumePayloadLink {
   label: string
@@ -55,6 +60,7 @@ export interface ResumePayloadListItem {
 }
 
 export type ResumePayloadSection =
+  | { type: "projects"; title: string; projects: ResumeProject[] }
   | ({ type: "paragraph"; text: string } & WithOptionalTitle)
   | ({
       type: "education"
@@ -259,6 +265,28 @@ function toSectionPayload(section: ResumeSection): ResumePayloadSection {
             })),
           }
         }),
+      }
+    }
+    case "projects": {
+      return {
+        type: "projects",
+        title: section.title.trim(),
+        projects: section.projects.map((project) => ({
+          name: project.name.trim(),
+          url: cleanOptional(project.url),
+          technologies: project.technologies.map((technology) => technology.trim()).filter(Boolean),
+          start_date: cleanOptional(project.start_date),
+          end_date: ["Present", "In progress"].includes(cleanOptional(project.end_date) ?? "")
+            ? cleanOptional(project.start_date)
+              ? "Present"
+              : "In progress"
+            : cleanOptional(project.end_date),
+          bullets: project.bullets.map((bullet) =>
+            bullet.type === "text"
+              ? { type: "text", text: bullet.text }
+              : { type: "text-with-title", title: bullet.title, text: bullet.text },
+          ),
+        })),
       }
     }
     case "list": {

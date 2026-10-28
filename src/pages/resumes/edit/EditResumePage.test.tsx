@@ -50,7 +50,7 @@ function makeProfile(): Profile {
 // tight when the whole suite runs in parallel.
 const READY = { timeout: 5_000 }
 
-function renderPage() {
+function renderPage(resume: Resume = makeResume()) {
   // The edit route is nested under "protected" in the real app, which is where
   // the page reads the profile from.
   const router = createMemoryRouter(
@@ -63,7 +63,7 @@ function renderPage() {
           {
             id: "resume-edit",
             path: "/resumes/:resumeId/edit",
-            loader: () => ({ resume: makeResume() }),
+            loader: () => ({ resume }),
             element: (
               <ModalProvider>
                 <EditResumePage />
@@ -245,4 +245,38 @@ describe("EditResumePage submit bar", () => {
     expect(await screen.findByText("Resumes list")).toBeInTheDocument()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
+})
+
+it("reopens a current project and saves an end-only flexible date", async () => {
+  vi.clearAllMocks()
+  vi.mocked(updateResume).mockResolvedValueOnce(undefined)
+  const user = userEvent.setup()
+  const resume = makeResume()
+  resume.sections = [
+    {
+      type: "projects",
+      title: "Projects",
+      projects: [{ name: "Dashboard", end_date: "Present", technologies: [], bullets: [] }],
+    },
+  ]
+  renderPage(resume)
+  const current = await screen.findByRole("switch", { name: /currently working on this/ }, READY)
+  expect(current).toBeChecked()
+  expect(screen.queryByLabelText("End date")).not.toBeInTheDocument()
+  await user.click(current)
+  await user.type(screen.getByLabelText("End date"), "Autumn 2025")
+  await user.click(screen.getByRole("button", { name: /Save changes/ }))
+  await screen.findByText("Resumes list", {}, READY)
+  expect(updateResume).toHaveBeenCalledWith(
+    "resume-1",
+    expect.objectContaining({
+      sections: [
+        {
+          type: "projects",
+          title: "Projects",
+          projects: [{ name: "Dashboard", end_date: "Autumn 2025", technologies: [], bullets: [] }],
+        },
+      ],
+    }),
+  )
 })

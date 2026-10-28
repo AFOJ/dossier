@@ -12,7 +12,16 @@ import type { FormSection } from "@/pages/resumes/create/hooks/useCreateResumeFo
 type Keyed = { _key?: unknown }
 
 type Noun =
-  "section" | "company" | "role" | "bullet" | "school" | "skill group" | "skill" | "list item"
+  | "project"
+  | "technology"
+  | "section"
+  | "company"
+  | "role"
+  | "bullet"
+  | "school"
+  | "skill group"
+  | "skill"
+  | "list item"
 
 type ChildrenOf = (item: unknown) => {
   /** Property on the parent that holds the children, so it can be written back. */
@@ -26,6 +35,7 @@ const NO_CHILDREN: ChildrenOf = () => ({ field: "", items: [], noun: "skill" })
 const sectionChildren: ChildrenOf = (item) => {
   const section = item as {
     type: FormSection["type"]
+    projects?: unknown[]
     companies?: unknown[]
     institutions?: unknown[]
     groups?: unknown[]
@@ -33,6 +43,8 @@ const sectionChildren: ChildrenOf = (item) => {
   }
 
   switch (section.type) {
+    case "projects":
+      return { field: "projects", items: section.projects ?? [], noun: "project" }
     case "education":
       return { field: "institutions", items: section.institutions ?? [], noun: "school" }
     case "skills":
@@ -72,6 +84,8 @@ function childrenOfFor(noun: Noun): ChildrenOf {
       return sectionChildren
     case "company":
       return companyChildren
+    case "project":
+      return roleChildren
     case "role":
       return roleChildren
     case "skill group":
@@ -82,6 +96,8 @@ function childrenOfFor(noun: Noun): ChildrenOf {
 }
 
 const NOUNS: Record<Noun, string> = {
+  project: "project",
+  technology: "technology",
   section: "section",
   company: "company",
   role: "role",
@@ -109,13 +125,21 @@ function hasKey(item: unknown): boolean {
  * rather than collapsing to a single indistinguishable entry.
  */
 function keysAt(items: readonly unknown[]): string[] {
-  return items.map((item, index) => (hasKey(item) ? keyOf(item) : `#${index}`))
+  return items.map((item, index) =>
+    typeof item === "string"
+      ? `tag:${JSON.stringify(item)}`
+      : hasKey(item)
+        ? keyOf(item)
+        : `#${index}`,
+  )
 }
 
 function plural(noun: Noun, count: number): string {
   if (count === 1) {
     return NOUNS[noun]
   }
+
+  if (noun === "technology") return "technologies"
 
   if (noun === "skill group") {
     return "skill groups"
@@ -130,6 +154,8 @@ function collectKeys(items: readonly unknown[], noun: Noun, out: string[]): void
   out.push(...keysAt(items))
 
   for (const item of items) {
+    if (noun === "project")
+      out.push(`technologies:${JSON.stringify((item as { technologies: string[] }).technologies)}`)
     const child = childrenOf(item)
     collectKeys(child.items, child.noun, out)
   }
@@ -186,6 +212,17 @@ function diffAtLevel(
       continue
     }
 
+    if (noun === "project") {
+      const difference = diffAtLevel(
+        (before[index] as { technologies: string[] }).technologies,
+        (after[index] as { technologies: string[] }).technologies,
+        "technology",
+      )
+      if (difference) return difference
+      const beforeTech = (before[index] as { technologies: string[] }).technologies
+      const afterTech = (after[index] as { technologies: string[] }).technologies
+      if (beforeTech.join("\0") !== afterTech.join("\0")) return "reorder technologies"
+    }
     const beforeChildren = childrenOf(before[index])
     const deeper = diffAtLevel(
       beforeChildren.items,
@@ -257,6 +294,9 @@ function replayList(target: readonly unknown[], live: readonly unknown[], noun: 
 
     return {
       ...matched,
+      ...(noun === "project"
+        ? { technologies: (item as { technologies: string[] }).technologies }
+        : {}),
       [targetChildren.field]: replayList(
         targetChildren.items,
         liveChildren.items,

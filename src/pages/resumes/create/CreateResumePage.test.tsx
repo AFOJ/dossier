@@ -597,3 +597,109 @@ describe("undoing structural changes", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })
+
+it("creates projects with flexible dates, current-work state, technologies and bullets", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  vi.mocked(createResume).mockResolvedValueOnce("projects-resume")
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Projects")
+  expect(screen.getByLabelText(/^Section title/)).toHaveValue("Projects")
+  await user.type(screen.getByLabelText(/^Project name/), "Dashboard")
+  await user.type(screen.getByLabelText("Start date"), "Summer 2024")
+  const current = screen.getByRole("switch", { name: /currently working on this/ })
+  expect(current).not.toBeChecked()
+  await user.type(screen.getByLabelText("End date"), "03-2025")
+  await user.click(current)
+  expect(screen.queryByLabelText("End date")).not.toBeInTheDocument()
+  await user.click(current)
+  expect(screen.getByLabelText("End date")).toHaveValue("")
+  await user.click(current)
+  await user.type(
+    screen.getByRole("textbox", { name: "Technologies for project 1" }),
+    "React{Enter}TypeScript{Enter}",
+  )
+  await user.click(screen.getByRole("button", { name: "Move TypeScript up" }))
+  await user.click(screen.getByRole("button", { name: "Add bullet" }))
+  await user.click(await screen.findByRole("menuitem", { name: /^Simple bullet/ }))
+  await user.type(screen.getByRole("textbox", { name: "Dashboard bullet 1" }), "Built a dashboard")
+  await user.click(screen.getByRole("button", { name: "Create resume" }))
+  await waitFor(() =>
+    expect(createResume).toHaveBeenCalledWith(
+      expect.any(String),
+      [
+        {
+          type: "projects",
+          title: "Projects",
+          projects: [
+            {
+              name: "Dashboard",
+              start_date: "Summer 2024",
+              end_date: "Present",
+              technologies: ["TypeScript", "React"],
+              bullets: [{ type: "text", text: "Built a dashboard" }],
+            },
+          ],
+        },
+      ],
+      expect.any(Object),
+    ),
+  )
+})
+
+it("adds and removes projects and restores nested content through undo and redo", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Projects")
+  await user.type(screen.getByLabelText(/^Project name/), "Dashboard")
+  await user.click(screen.getByRole("button", { name: "Add project" }))
+  await user.type(screen.getAllByLabelText(/^Project name/)[1], "Library")
+  await user.click(screen.getByRole("button", { name: "Remove Dashboard project" }))
+  expect(screen.getAllByLabelText(/^Project name/)).toHaveLength(1)
+  await user.click(screen.getByRole("button", { name: "Undo" }))
+  expect(
+    screen.getAllByLabelText(/^Project name/).map((input) => (input as HTMLInputElement).value),
+  ).toEqual(["Dashboard", "Library"])
+  await user.click(screen.getByRole("button", { name: "Redo" }))
+  expect(screen.getAllByLabelText(/^Project name/)).toHaveLength(1)
+  await user.click(screen.getByRole("button", { name: "Remove Library project" }))
+  await user.click(screen.getByRole("button", { name: "Create resume" }))
+  expect(await screen.findByText("Add at least one project to this section")).toBeInTheDocument()
+})
+
+it("reorders skills using the shared tags and supports undo", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Skills")
+  await user.type(
+    screen.getByRole("textbox", { name: "Skills for group 1" }),
+    "React{Enter}TypeScript{Enter}",
+  )
+  await user.click(screen.getByRole("button", { name: "Move TypeScript up" }))
+  expect(screen.getByRole("button", { name: "Move TypeScript up" })).toBeDisabled()
+  await user.click(screen.getByRole("button", { name: "Undo" }))
+  expect(screen.getByRole("button", { name: "Move React up" })).toBeDisabled()
+})
+
+it("revalidates project errors at their new indexes after removing an earlier project", async () => {
+  vi.clearAllMocks()
+  mockUseProtectedRouteData.mockReturnValue({ profile })
+  const user = userEvent.setup()
+  renderPage()
+  await addSectionViaMenu(user, "Projects")
+  await user.type(screen.getByLabelText(/^Project name/), "Valid project")
+  await user.click(screen.getByRole("button", { name: "Add project" }))
+  await user.click(screen.getByRole("button", { name: "Create resume" }))
+  expect(await screen.findByText("Project name is required")).toBeInTheDocument()
+  expect(screen.getAllByLabelText(/^Project name/)[1]).toHaveAttribute("aria-invalid", "true")
+  await user.click(screen.getByRole("button", { name: "Remove Valid project project" }))
+  await waitFor(() =>
+    expect(screen.getByLabelText(/^Project name/)).toHaveAttribute("aria-invalid", "true"),
+  )
+  expect(screen.getByText("Project name is required")).toBeInTheDocument()
+})

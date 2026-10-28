@@ -38,6 +38,15 @@ export interface ExperienceCompany {
   roles: ExperienceCompanyRole[]
 }
 
+export interface ResumeProject {
+  name: string
+  url?: string
+  technologies: string[]
+  start_date?: string
+  end_date?: string
+  bullets: ExperienceCompanyRoleBullet[]
+}
+
 export interface ListItem {
   title?: string
   url?: string
@@ -46,6 +55,7 @@ export interface ListItem {
 }
 
 export type ResumeSection =
+  | { type: "projects"; title: string; projects: ResumeProject[] }
   | { type: "paragraph"; title: string; text: string }
   | { type: "education"; title: string; institutions: EducationalInstitution[] }
   | { type: "skills"; title: string; groups: SkillGroup[] }

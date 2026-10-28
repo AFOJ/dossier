@@ -5,5 +5,6 @@ export const SECTION_TYPES: readonly SectionType[] = [
   "education",
   "skills",
   "experience",
+  "projects",
   "list",
 ]

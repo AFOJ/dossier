@@ -9,7 +9,42 @@ export const resumeBulletSchema = z.discriminatedUnion("type", [
   }),
 ])
 
+export const resumeProjectSchema = z.object({
+  name: z.string().refine((value) => value.trim() !== "", "Project name is required"),
+  url: z
+    .string()
+    .optional()
+    .refine(
+      (value) => !value?.trim() || z.url().safeParse(value.trim()).success,
+      "Must be a valid URL",
+    ),
+  technologies: z.array(z.string()),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  bullets: z.array(resumeBulletSchema).superRefine((bullets, ctx) => {
+    bullets.forEach((bullet, index) => {
+      if (!bullet.text.trim())
+        ctx.addIssue({
+          code: "custom",
+          path: [index, "text"],
+          message: bullet.type === "text" ? "Bullet cannot be empty" : "Bullet text is required",
+        })
+      if (bullet.type === "text-with-title" && !bullet.title.trim())
+        ctx.addIssue({
+          code: "custom",
+          path: [index, "title"],
+          message: "Bullet heading is required",
+        })
+    })
+  }),
+})
+
 export const resumeSectionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("projects"),
+    title: z.string().refine((value) => value.trim() !== "", "Title is required"),
+    projects: z.array(resumeProjectSchema).min(1, "Add at least one project to this section"),
+  }),
   z.object({
     type: z.literal("paragraph"),
     title: z.string().min(1, "Title is required"),
