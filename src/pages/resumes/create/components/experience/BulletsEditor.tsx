@@ -25,6 +25,7 @@ import {
   replaceKeyed,
   withKey,
   type ExperienceSectionErrors,
+  type ProjectsSectionErrors,
   type ResumeFormData,
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import { BulletFields } from "@/pages/resumes/create/components/experience/BulletFields"
@@ -33,8 +34,9 @@ import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 
 type BulletsEditorProps = {
   sectionIndex: number
-  companyIndex: number
-  roleIndex: number
+  companyIndex?: number
+  roleIndex?: number
+  projectIndex?: number
   roleLabel: string
   bullets: ExperienceCompanyRoleBullet[]
   onChange: (bullets: ExperienceCompanyRoleBullet[]) => void
@@ -42,7 +44,16 @@ type BulletsEditorProps = {
 }
 
 export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
-  const { sectionIndex, companyIndex, roleIndex, roleLabel, bullets, onChange, clearErrors } = props
+  const {
+    sectionIndex,
+    companyIndex,
+    roleIndex,
+    projectIndex,
+    roleLabel,
+    bullets,
+    onChange,
+    clearErrors,
+  } = props
 
   const {
     formState: { errors },
@@ -50,8 +61,16 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
 
   const sectionErrors = getSectionErrors(errors, sectionIndex) as
     ExperienceSectionErrors | undefined
-  const companyErrors = sectionErrors?.companies?.[companyIndex]
-  const roleErrors = companyErrors?.roles?.[roleIndex]
+  const companyErrors =
+    companyIndex === undefined ? undefined : sectionErrors?.companies?.[companyIndex]
+  const roleErrors =
+    projectIndex === undefined
+      ? roleIndex === undefined
+        ? undefined
+        : companyErrors?.roles?.[roleIndex]
+      : (getSectionErrors(errors, sectionIndex) as ProjectsSectionErrors | undefined)?.projects?.[
+          projectIndex
+        ]
 
   const containerRef = useFocusLastRow(bullets.length)
 
@@ -109,6 +128,11 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
         strategy={verticalListSortingStrategy}
       >
         <div ref={containerRef} className="flex flex-col gap-3">
+          {roleErrors?.bullets?.message && (
+            <p role="alert" className="text-sm text-red-700">
+              {roleErrors.bullets.message}
+            </p>
+          )}
           {bullets.map((bullet, index) => {
             const bulletErrors = roleErrors?.bullets?.[index]
             const hasErrors = bulletErrors !== undefined
@@ -125,7 +149,9 @@ export function BulletsEditor(props: Readonly<BulletsEditorProps>) {
                 hasErrors={hasErrors}
                 onRemove={() => {
                   clearErrors(
-                    `sections.${sectionIndex}.companies.${companyIndex}.roles.${roleIndex}.bullets.${index}`,
+                    projectIndex === undefined
+                      ? `sections.${sectionIndex}.companies.${companyIndex!}.roles.${roleIndex!}.bullets.${index}`
+                      : `sections.${sectionIndex}.projects.${projectIndex}.bullets.${index}`,
                   )
                   onChange(bullets.filter((_, i) => i !== index))
                 }}

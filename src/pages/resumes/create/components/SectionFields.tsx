@@ -1,3 +1,4 @@
+import { ProjectsEditor } from "./ProjectsSectionFields"
 import { memo, useId } from "react"
 import { Textarea } from "@/components/ui"
 import { Field } from "@/components/ui"
@@ -75,6 +76,15 @@ function SectionFieldsImpl(props: Readonly<SectionFieldsProps>) {
           sectionIndex={index}
           companies={section.companies}
           onChange={(companies) => onChange({ ...section, type: "experience", companies })}
+          clearErrors={clearErrors}
+        />
+      )
+    case "projects":
+      return (
+        <ProjectsEditor
+          sectionIndex={index}
+          projects={section.projects}
+          onChange={(projects) => onChange({ ...section, projects })}
           clearErrors={clearErrors}
         />
       )

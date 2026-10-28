@@ -208,3 +208,30 @@ describe("useEditResumeForm", () => {
     expect(result.current.isDirty).toBe(false)
   })
 })
+
+it("restores projects with Present dates and nested editor identities", () => {
+  const resume = makeResume({
+    sections: [
+      {
+        type: "projects",
+        title: "Projects",
+        projects: [
+          {
+            name: "Dashboard",
+            technologies: [],
+            end_date: "Present",
+            bullets: [{ type: "text", text: "Built it" }],
+          },
+        ],
+      },
+    ],
+  })
+  const { result } = renderHook(() => useEditResumeForm(resume, profile))
+  const section = result.current.form.getValues("sections")[0]
+  expect(section).toMatchObject({
+    type: "projects",
+    projects: [
+      { end_date: "Present", _key: expect.any(String), bullets: [{ _key: expect.any(String) }] },
+    ],
+  })
+})

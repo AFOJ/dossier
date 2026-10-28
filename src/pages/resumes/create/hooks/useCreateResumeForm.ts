@@ -400,6 +400,20 @@ export interface ExperienceSectionErrors {
   companies?: ExperienceCompanyErrors[] & { message?: string }
 }
 
+export interface ProjectErrors {
+  name?: { message: string }
+  url?: { message: string }
+  start_date?: { message: string }
+  end_date?: { message: string }
+  technologies?: { message?: string; [index: number]: { message?: string } }
+  bullets?: BulletErrors[] & { message?: string }
+}
+export interface ProjectsSectionErrors {
+  type: "projects"
+  title?: { message: string }
+  projects?: ProjectErrors[] & { message?: string }
+}
+
 export interface ListItemErrors {
   title?: { message: string }
   url?: { message: string }
@@ -419,6 +433,7 @@ export type SectionErrors =
   | SkillsSectionErrors
   | ExperienceSectionErrors
   | ListSectionErrors
+  | ProjectsSectionErrors
 
 export function getSectionErrors(errors: unknown, sectionIndex: number): SectionErrors | undefined {
   const nodes = errors as { sections?: SectionErrors[] } | undefined
@@ -512,6 +527,12 @@ export function replaceKeyed<T>(items: readonly T[], index: number, next: T): T[
 }
 
 const DEFAULT_SECTIONS: Record<SectionType, () => FormSection> = {
+  projects: () =>
+    withKey({
+      type: "projects",
+      title: "Projects",
+      projects: [withKey({ name: "", technologies: [], bullets: [] })],
+    }),
   paragraph: () => withKey({ type: "paragraph", title: "", text: "" }),
   education: () => withKey({ type: "education", title: "", institutions: [] }),
   skills: () =>

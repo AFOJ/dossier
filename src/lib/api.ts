@@ -1,5 +1,6 @@
 import type {
   SectionErrors,
+  ProjectsSectionErrors,
   ParagraphSectionErrors,
   EducationSectionErrors,
   SkillsSectionErrors,
@@ -294,6 +295,28 @@ function buildSectionErrors(path: string[], message: string): Partial<SectionErr
     case "text":
       return { text: { message } }
 
+    case "projects": {
+      const projects = [] as NonNullable<ProjectsSectionErrors["projects"]>
+      if (rest.length === 0) projects.message = message
+      else {
+        const index = Number(rest[0])
+        if (!Number.isInteger(index) || index < 0) return {}
+        const project: Record<string, unknown> = {}
+        const field = rest[1]
+        if (!field) return {}
+        if ((field === "bullets" || field === "technologies") && rest[2] !== undefined) {
+          const nested = [] as unknown[] & { message?: string }
+          const nestedIndex = Number(rest[2])
+          if (!Number.isInteger(nestedIndex) || nestedIndex < 0) return {}
+          nested[nestedIndex] = rest[3] ? { [rest[3]]: { message } } : { message }
+          project[field] = nested
+        } else if (field === "bullets" || field === "technologies") {
+          project[field] = Object.assign([], { message })
+        } else project[field] = { message }
+        projects[index] = project
+      }
+      return { type: "projects", projects }
+    }
     case "institutions": {
       const index = parseInt(rest[0], 10)
       const subField = rest[1]
@@ -499,6 +522,35 @@ function mergeSectionErrors(
   }
 
   switch (type) {
+    case "projects": {
+      const e = existing as ProjectsSectionErrors
+      const inc = incoming as Partial<ProjectsSectionErrors>
+      const merge = (left: unknown, right: unknown): unknown => {
+        if (right === undefined) return left
+        if (left === undefined) return right
+        if (
+          typeof left !== "object" ||
+          left === null ||
+          typeof right !== "object" ||
+          right === null
+        )
+          return right
+        const result = (Array.isArray(left) || Array.isArray(right) ? [] : {}) as Record<
+          string,
+          unknown
+        >
+        const a = left as Record<string, unknown>,
+          b = right as Record<string, unknown>
+        for (const key of new Set([...Object.keys(a), ...Object.keys(b)]))
+          result[key] = merge(a[key], b[key])
+        return result
+      }
+      return {
+        type: "projects",
+        title: inc.title ?? e.title,
+        projects: merge(e.projects, inc.projects) as ProjectsSectionErrors["projects"],
+      }
+    }
     case "paragraph": {
       const e = existing as ParagraphSectionErrors
       const inc = incoming as Partial<ParagraphSectionErrors>

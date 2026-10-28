@@ -183,6 +183,15 @@ function profileToContactValues(profile: Profile) {
 
 function withGeneratedKeys(section: ResumeSection): ResumeSection {
   switch (section.type) {
+    case "projects":
+      return {
+        ...section,
+        projects: section.projects.map((project) => ({
+          ...project,
+          _key: crypto.randomUUID(),
+          bullets: project.bullets.map((bullet) => ({ ...bullet, _key: crypto.randomUUID() })),
+        })),
+      }
     case "paragraph":
       return section
     case "education":
