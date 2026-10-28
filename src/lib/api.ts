@@ -523,8 +523,8 @@ function mergeSectionErrors(
 
   switch (type) {
     case "projects": {
-      const e = existing as ProjectsSectionErrors
-      const inc = incoming as Partial<ProjectsSectionErrors>
+      const existingProjectErrors = existing as ProjectsSectionErrors
+      const incomingProjectErrors = incoming as Partial<ProjectsSectionErrors>
       const merge = (left: unknown, right: unknown): unknown => {
         if (right === undefined) return left
         if (left === undefined) return right
@@ -539,16 +539,19 @@ function mergeSectionErrors(
           string,
           unknown
         >
-        const a = left as Record<string, unknown>,
-          b = right as Record<string, unknown>
-        for (const key of new Set([...Object.keys(a), ...Object.keys(b)]))
-          result[key] = merge(a[key], b[key])
+        const existingFields = left as Record<string, unknown>,
+          incomingFields = right as Record<string, unknown>
+        for (const key of new Set([...Object.keys(existingFields), ...Object.keys(incomingFields)]))
+          result[key] = merge(existingFields[key], incomingFields[key])
         return result
       }
       return {
         type: "projects",
-        title: inc.title ?? e.title,
-        projects: merge(e.projects, inc.projects) as ProjectsSectionErrors["projects"],
+        title: incomingProjectErrors.title ?? existingProjectErrors.title,
+        projects: merge(
+          existingProjectErrors.projects,
+          incomingProjectErrors.projects,
+        ) as ProjectsSectionErrors["projects"],
       }
     }
     case "paragraph": {

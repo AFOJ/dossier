@@ -191,7 +191,7 @@ export function ProjectsEditor(props: Readonly<ProjectsEditorProps>) {
   )
 
   const findIndexById = (id: string) =>
-    projects.findIndex((project, i) => itemKey(project, i) === id)
+    projects.findIndex((project, projectIndex) => itemKey(project, projectIndex) === id)
 
   const describe = (id: UniqueIdentifier): string => {
     const key = String(id)
@@ -233,7 +233,7 @@ export function ProjectsEditor(props: Readonly<ProjectsEditorProps>) {
       }}
     >
       <SortableContext
-        items={projects.map((project, i) => itemKey(project, i))}
+        items={projects.map((project, projectIndex) => itemKey(project, projectIndex))}
         strategy={verticalListSortingStrategy}
       >
         <div ref={containerRef} className="flex flex-col gap-3">
@@ -252,7 +252,7 @@ export function ProjectsEditor(props: Readonly<ProjectsEditorProps>) {
               onChange={(next) => onChange(replaceKeyed(projects, index, next))}
               onRemove={() => {
                 clearErrors(`sections.${sectionIndex}.projects.${index}`)
-                onChange(projects.filter((_, i) => i !== index))
+                onChange(projects.filter((_, projectIndex) => projectIndex !== index))
               }}
             />
           ))}

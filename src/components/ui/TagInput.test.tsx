@@ -2,7 +2,7 @@ import { useState } from "react"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect } from "vitest"
-import { TagInput } from "./TagInput"
+import { TagInput } from "@/components/ui"
 
 function Harness({
   initial = [],
