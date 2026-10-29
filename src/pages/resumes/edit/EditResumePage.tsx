@@ -1,5 +1,6 @@
+import { useRef } from "react"
 import { useNavigate, useRouteLoaderData } from "react-router-dom"
-import { Controller, FormProvider } from "react-hook-form"
+import { Controller, FormProvider, useWatch } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import {
@@ -7,6 +8,7 @@ import {
   Divider,
   Field,
   FormSubmitBar,
+  EditingContextBar,
   Heading1,
   Input,
   Subheading,
@@ -47,6 +49,7 @@ export default function EditResumePage() {
 
 function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
   const { resume, profile } = props
+  const titleFieldRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const {
     form,
@@ -68,6 +71,8 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
   } = useEditResumeForm(resume, profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
+  const draftTitle = useWatch({ control: form.control, name: "title" })
+
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
@@ -79,6 +84,13 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
 
   return (
     <section className="flex flex-col gap-6 pb-20">
+      <EditingContextBar
+        heading="Edit resume"
+        title={draftTitle}
+        fallbackTitle={resume.title}
+        titleFieldRef={titleFieldRef}
+        titleInputId="resume-title"
+      />
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Edit resume</Heading1>
@@ -89,6 +101,7 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
       <FormProvider {...form}>
         <form onSubmit={onSubmit} className="contents">
           <Field
+            ref={titleFieldRef}
             label="Title"
             inputId="resume-title"
             required

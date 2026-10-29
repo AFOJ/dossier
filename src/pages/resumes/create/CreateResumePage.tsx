@@ -1,6 +1,16 @@
-import { Controller, FormProvider } from "react-hook-form"
+import { useRef } from "react"
+import { Controller, FormProvider, useWatch } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
-import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
+import {
+  Button,
+  Divider,
+  Field,
+  FormSubmitBar,
+  EditingContextBar,
+  Heading1,
+  Input,
+  Subheading,
+} from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useUndoHotkeys } from "@/hooks/useUndoHotkeys"
 import { HistoryButtons } from "@/pages/resumes/create/components/HistoryButtons"
@@ -17,6 +27,7 @@ import {
 } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 
 export default function CreateResumePage() {
+  const titleFieldRef = useRef<HTMLDivElement>(null)
   const { profile } = useProtectedRouteData()
   const { settings, isLoaded } = useSettings()
   const {
@@ -38,6 +49,8 @@ export default function CreateResumePage() {
 
   usePageTitle("Create Resume")
 
+  const draftTitle = useWatch({ control: form.control, name: "title" })
+
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
@@ -49,6 +62,13 @@ export default function CreateResumePage() {
 
   return (
     <section className="flex flex-col gap-6 pb-20">
+      <EditingContextBar
+        heading="Create resume"
+        title={draftTitle}
+        fallbackTitle="New resume"
+        titleFieldRef={titleFieldRef}
+        titleInputId="resume-title"
+      />
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Create Resume</Heading1>
@@ -59,6 +79,7 @@ export default function CreateResumePage() {
       <FormProvider {...form}>
         <form onSubmit={onSubmit} className="contents">
           <Field
+            ref={titleFieldRef}
             label="Title"
             inputId="resume-title"
             required

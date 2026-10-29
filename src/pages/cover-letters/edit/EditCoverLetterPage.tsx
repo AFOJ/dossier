@@ -1,7 +1,16 @@
-import { Suspense, lazy } from "react"
+import { Suspense, lazy, useRef } from "react"
 import { useRouteLoaderData } from "react-router-dom"
-import { Controller, FormProvider } from "react-hook-form"
-import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
+import { Controller, FormProvider, useWatch } from "react-hook-form"
+import {
+  Button,
+  Divider,
+  Field,
+  FormSubmitBar,
+  EditingContextBar,
+  Heading1,
+  Input,
+  Subheading,
+} from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
@@ -31,13 +40,23 @@ function EditCoverLetterForm({
   coverLetter,
   profile,
 }: Readonly<{ coverLetter: CoverLetter; profile: Profile }>) {
+  const titleFieldRef = useRef<HTMLDivElement>(null)
   const { form, onSubmit, isSubmitting, formError, isDirty, revert, setSyncProfile } =
     useEditCoverLetterForm(coverLetter, profile)
+
+  const draftTitle = useWatch({ control: form.control, name: "title" })
 
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   return (
     <section className="flex flex-col gap-6 pb-20">
+      <EditingContextBar
+        heading="Edit cover letter"
+        title={draftTitle}
+        fallbackTitle={coverLetter.title}
+        titleFieldRef={titleFieldRef}
+        titleInputId="cover-letter-title"
+      />
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Edit cover letter</Heading1>
@@ -48,6 +67,7 @@ function EditCoverLetterForm({
       <FormProvider {...form}>
         <form onSubmit={onSubmit} className="contents">
           <Field
+            ref={titleFieldRef}
             label="Title"
             inputId="cover-letter-title"
             required

@@ -1,6 +1,15 @@
-import { Suspense, lazy } from "react"
-import { Controller, FormProvider } from "react-hook-form"
-import { Button, Divider, Field, FormSubmitBar, Heading1, Input, Subheading } from "@/components/ui"
+import { Suspense, lazy, useRef } from "react"
+import { Controller, FormProvider, useWatch } from "react-hook-form"
+import {
+  Button,
+  Divider,
+  Field,
+  FormSubmitBar,
+  EditingContextBar,
+  Heading1,
+  Input,
+  Subheading,
+} from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { TagCombobox } from "@/components/tags"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
@@ -18,6 +27,7 @@ const RichTextEditor = lazy(() => {
 })
 
 export default function CreateCoverLetterPage() {
+  const titleFieldRef = useRef<HTMLDivElement>(null)
   const { profile } = useProtectedRouteData()
   const { settings, isLoaded } = useSettings()
   const { form, onSubmit, isSubmitting, formError, setSyncProfile } = useCreateCoverLetterForm(
@@ -26,12 +36,21 @@ export default function CreateCoverLetterPage() {
     isLoaded,
   )
 
+  const draftTitle = useWatch({ control: form.control, name: "title" })
+
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   usePageTitle("Create Cover Letter")
 
   return (
     <section className="flex flex-col gap-6 pb-20">
+      <EditingContextBar
+        heading="Create cover letter"
+        title={draftTitle}
+        fallbackTitle="New cover letter"
+        titleFieldRef={titleFieldRef}
+        titleInputId="cover-letter-title"
+      />
       <header>
         <div className="flex flex-col gap-1">
           <Heading1>Create Cover Letter</Heading1>
@@ -42,6 +61,7 @@ export default function CreateCoverLetterPage() {
       <FormProvider {...form}>
         <form onSubmit={onSubmit} className="contents">
           <Field
+            ref={titleFieldRef}
             label="Title"
             inputId="cover-letter-title"
             required
