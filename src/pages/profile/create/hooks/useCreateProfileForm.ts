@@ -21,7 +21,7 @@ export function useCreateProfileForm(defaultValues?: Partial<ProfileFormData>) {
     },
   })
 
-  const onSubmit = form.handleSubmit(async (data) => {
+  const saveProfile = async (data: ProfileFormData) => {
     try {
       setIsSubmitting(true)
 
@@ -47,10 +47,12 @@ export function useCreateProfileForm(defaultValues?: Partial<ProfileFormData>) {
     } finally {
       setIsSubmitting(false)
     }
-  })
+  }
+  const onSubmit = form.handleSubmit(saveProfile)
 
   return {
     form,
+    saveProfile,
     formError: form.formState.errors.root?.message,
     onSubmit,
     isSubmitting,

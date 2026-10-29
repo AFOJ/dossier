@@ -5,7 +5,14 @@ import { Button } from "@/components/ui"
 import { useToast } from "@/components/toast"
 import { importProfile } from "@/db/profile"
 
-export function RestoreFromExport({ compact = false }: Readonly<{ compact?: boolean }>) {
+export function RestoreFromExport({
+  compact = false,
+  onImportingChange,
+}: Readonly<{
+  compact?: boolean
+  onImportingChange?: (importing: boolean) => void
+}>) {
+  const importLock = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -16,10 +23,12 @@ export function RestoreFromExport({ compact = false }: Readonly<{ compact?: bool
     const file = event.target.files?.[0]
     event.target.value = ""
 
-    if (!file) {
+    if (!file || importLock.current) {
       return
     }
 
+    importLock.current = true
+    onImportingChange?.(true)
     setIsImporting(true)
     setError(null)
 
@@ -31,6 +40,8 @@ export function RestoreFromExport({ compact = false }: Readonly<{ compact?: bool
       setError("This file is not a valid Dossier export. Please check the file and try again.")
       console.error("Failed to import data:", error)
     } finally {
+      importLock.current = false
+      onImportingChange?.(false)
       setIsImporting(false)
     }
   }
@@ -74,7 +85,7 @@ export function RestoreFromExport({ compact = false }: Readonly<{ compact?: bool
         aria-disabled={isImporting}
         aria-busy={isImporting}
         onClick={() => {
-          if (!isImporting) inputRef.current?.click()
+          if (!importLock.current) inputRef.current?.click()
         }}
         className={compact ? "h-11 w-full whitespace-normal" : "shrink-0 self-start sm:self-auto"}
       >

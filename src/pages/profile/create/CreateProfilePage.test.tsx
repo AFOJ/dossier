@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, afterEach, expect, it, vi } from "vitest"
 import CreateProfilePage from "./CreateProfilePage"
@@ -137,6 +137,14 @@ it("allows blank optional steps, retains entries and keeps focus for a failed-sa
   await user.click(screen.getByRole("button", { name: "Create my profile" }))
   expect(await screen.findByRole("alert")).toHaveTextContent("Failed to save profile")
   expect(screen.getByRole("button", { name: "Create my profile" })).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Back" }))
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  expect(screen.getByLabelText("Location")).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  await user.tab()
+  await user.tab()
+  expect(screen.getByRole("button", { name: "Create my profile" })).toHaveFocus()
   await user.keyboard("{Enter}")
   await waitFor(() => expect(navigate).toHaveBeenCalledWith("/resumes"))
   await waitFor(() =>
@@ -160,6 +168,9 @@ it.each([true, false])(
     const user = userEvent.setup()
     const { container } = render(<CreateProfilePage />)
     const input = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    const openPicker = vi.spyOn(input, "click")
+    await user.click(screen.getByRole("button", { name: "Import an existing profile" }))
+    expect(openPicker).toHaveBeenCalledTimes(1)
     await user.upload(
       input,
       new File(['{"profile":{}}'], "backup.json", { type: "application/json" }),
@@ -172,3 +183,86 @@ it.each([true, false])(
     }
   },
 )
+
+function deferred<Value>() {
+  let resolve!: (value: Value) => void
+  const promise = new Promise<Value>((complete) => {
+    resolve = complete
+  })
+  return { promise, resolve }
+}
+
+async function goToLinks() {
+  const user = await startSetup()
+  await user.type(screen.getByLabelText(/Full name/), "Alex Morgan")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  return user
+}
+
+it("locks submissions before validation and holds the lock until saving finishes", async () => {
+  const save = deferred<number>()
+  vi.mocked(upsertProfile).mockReturnValue(save.promise)
+  await goToLinks()
+  const form = screen.getByRole("button", { name: "Create my profile" }).closest("form")!
+  act(() => {
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+  })
+  await waitFor(() => expect(upsertProfile).toHaveBeenCalledTimes(1))
+  fireEvent.submit(form)
+  expect(upsertProfile).toHaveBeenCalledTimes(1)
+  await act(async () => {
+    save.resolve(1)
+  })
+  expect(navigate).toHaveBeenCalledTimes(1)
+})
+
+it.each([0, 2])("discards pending validation after Back from step %s", async (step) => {
+  if (step === 0) {
+    const user = await startSetup()
+    await user.type(screen.getByLabelText(/Full name/), "Alex Morgan")
+  } else await goToLinks()
+  const backButton = screen.getByRole("button", { name: "Back" })
+  const form = backButton.closest("form")!
+  await act(async () => {
+    fireEvent.submit(form)
+    fireEvent.click(backButton)
+  })
+  if (step === 0) {
+    expect(screen.getByRole("heading", { name: "Set up your Dossier profile" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Create my profile" })).toHaveFocus()
+  } else {
+    expect(screen.getByRole("heading", { name: "Contact details" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Location")).toHaveFocus()
+  }
+  expect(upsertProfile).not.toHaveBeenCalled()
+  expect(navigate).not.toHaveBeenCalled()
+})
+
+it("keeps setup blocked while a backup is read and restored", async () => {
+  const read = deferred<string>()
+  const restore = deferred<void>()
+  vi.mocked(importProfile).mockReturnValue(restore.promise)
+  const user = userEvent.setup()
+  const { container } = render(<CreateProfilePage />)
+  const file = new File(["{}"], "backup.json", { type: "application/json" })
+  Object.defineProperty(file, "text", { value: () => read.promise })
+  await user.upload(container.querySelector<HTMLInputElement>('input[type="file"]')!, file)
+  const setupButton = screen.getByRole("button", { name: "Create my profile" })
+  expect(setupButton).toHaveAttribute("aria-disabled", "true")
+  await user.click(setupButton)
+  expect(screen.queryByLabelText(/Full name/)).not.toBeInTheDocument()
+  expect(importProfile).not.toHaveBeenCalled()
+  await act(async () => {
+    read.resolve('{"profile":{}}')
+  })
+  expect(importProfile).toHaveBeenCalledTimes(1)
+  await user.click(setupButton)
+  expect(screen.queryByLabelText(/Full name/)).not.toBeInTheDocument()
+  expect(upsertProfile).not.toHaveBeenCalled()
+  await act(async () => {
+    restore.resolve()
+  })
+  expect(navigate).toHaveBeenCalledWith("/profile")
+})

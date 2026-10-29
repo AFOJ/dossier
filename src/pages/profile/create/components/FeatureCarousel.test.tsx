@@ -67,7 +67,7 @@ it("keeps rotating on hover, pauses for keyboard interaction, and supports expli
 it("keeps reduced-motion playback manual while retaining slide selection", () => {
   mockMedia(true)
   render(<FeatureCarousel />)
-  act(() => vi.advanceTimersByTime(18000))
+  act(() => vi.advanceTimersByTime(6500))
   expect(screen.getByRole("heading")).toHaveTextContent("Your details, ready to reuse.")
   expect(screen.queryByRole("button", { name: /carousel/ })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole("button", { name: /Show feature 2/ }))

@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui"
 import { cn } from "@/utils"
-import { FormProvider } from "react-hook-form"
+import { FormProvider, type FieldPath } from "react-hook-form"
+import type { ProfileFormData } from "@/pages/profile/schema"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { RestoreFromExport } from "./components/RestoreFromExport"
 import { FeatureCarousel } from "./components/FeatureCarousel"
@@ -11,9 +12,18 @@ import { useCreateProfileForm } from "./hooks/useCreateProfileForm"
 const stepTitles = ["About you", "Contact details", "Your links"]
 
 export default function CreateProfilePage() {
-  const { form, isSubmitting, onSubmit, formError } = useCreateProfileForm()
+  const { form, isSubmitting, saveProfile, formError } = useCreateProfileForm()
   const [step, setStep] = useState(-1)
   const previousStep = useRef(step)
+  const submissionLock = useRef(false)
+  const navigationRevision = useRef(0)
+  const importInProgress = useRef(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const pendingErrorFocus = useRef<FieldPath<ProfileFormData> | null>(null)
+  const changeStep = (nextStep: number) => {
+    navigationRevision.current += 1
+    setStep(nextStep)
+  }
   const formRef = useRef<HTMLFormElement>(null)
   const setupButtonRef = useRef<HTMLButtonElement>(null)
   usePageTitle(
@@ -26,40 +36,66 @@ export default function CreateProfilePage() {
       setupButtonRef.current?.focus()
       return
     }
+    if (pendingErrorFocus.current) {
+      form.setFocus(pendingErrorFocus.current)
+      pendingErrorFocus.current = null
+      return
+    }
     const firstInput = formRef.current?.querySelector<HTMLInputElement>(
       'input:not([disabled]):not([type="hidden"])',
     )
     const firstButton = formRef.current?.querySelector<HTMLButtonElement>("button:not([disabled])")
     const focusTarget = firstInput ?? firstButton
     focusTarget?.focus()
-  }, [step])
+  }, [step, form])
 
-  const advance = async () => {
-    const valid = await form.trigger(
-      step === 0 ? ["fullName", "jobTitle"] : ["location", "email", "phone"],
-      { shouldFocus: true },
-    )
-    if (valid) setStep(step + 1)
-  }
   const submitStep = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (isSubmitting) return
-    if (step < 2) {
-      await advance()
-      return
+    if (submissionLock.current || importInProgress.current || isSubmitting) return
+    submissionLock.current = true
+    const revision = navigationRevision.current
+    try {
+      const submittedValues = structuredClone(form.getValues())
+      const stepFields: FieldPath<ProfileFormData>[] =
+        step === 0 ? ["fullName", "jobTitle"] : ["location", "email", "phone"]
+      const valid = await form.trigger(step < 2 ? stepFields : undefined, { shouldFocus: false })
+      if (revision !== navigationRevision.current) return
+      if (!valid) {
+        const fieldNames: FieldPath<ProfileFormData>[] =
+          step < 2
+            ? stepFields
+            : [
+                "fullName",
+                "jobTitle",
+                "location",
+                "email",
+                "phone",
+                ...form
+                  .getValues("socials")
+                  .flatMap((_, index) => [
+                    `socials.${index}.label` as const,
+                    `socials.${index}.url` as const,
+                  ]),
+              ]
+        const invalidField = fieldNames.find((field) => form.getFieldState(field).invalid)
+        if (invalidField) {
+          const invalidStep = ["fullName", "jobTitle"].includes(invalidField)
+            ? 0
+            : invalidField.startsWith("socials.")
+              ? 2
+              : 1
+          if (invalidStep !== step) {
+            pendingErrorFocus.current = invalidField
+            changeStep(invalidStep)
+          } else form.setFocus(invalidField)
+        }
+        return
+      }
+      if (step < 2) changeStep(step + 1)
+      else await saveProfile(submittedValues)
+    } finally {
+      submissionLock.current = false
     }
-    if (!(await form.trigger(undefined, { shouldFocus: true }))) {
-      if (form.getFieldState("fullName").invalid || form.getFieldState("jobTitle").invalid)
-        setStep(0)
-      else if (
-        form.getFieldState("email").invalid ||
-        form.getFieldState("location").invalid ||
-        form.getFieldState("phone").invalid
-      )
-        setStep(1)
-      return
-    }
-    await onSubmit(event)
   }
 
   return (
@@ -86,11 +122,20 @@ export default function CreateProfilePage() {
                   <Button
                     ref={setupButtonRef}
                     className="h-11 w-full whitespace-normal"
-                    onClick={() => setStep(0)}
+                    aria-disabled={isImporting}
+                    onClick={() => {
+                      if (!importInProgress.current) changeStep(0)
+                    }}
                   >
                     Create my profile
                   </Button>
-                  <RestoreFromExport compact />
+                  <RestoreFromExport
+                    compact
+                    onImportingChange={(importing) => {
+                      importInProgress.current = importing
+                      setIsImporting(importing)
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -144,7 +189,10 @@ export default function CreateProfilePage() {
                     type="button"
                     intent="secondary"
                     disabled={isSubmitting}
-                    onClick={() => setStep(step - 1)}
+                    onClick={() => {
+                      form.clearErrors("root")
+                      changeStep(step - 1)
+                    }}
                   >
                     Back
                   </Button>
