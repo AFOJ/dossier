@@ -1,10 +1,18 @@
 import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Button, Card, Divider } from "@/components/ui"
+import { Upload01Icon } from "@hugeicons/core-free-icons"
+import { Button } from "@/components/ui"
 import { useToast } from "@/components/toast"
 import { importProfile } from "@/db/profile"
 
-export function RestoreFromExport() {
+export function RestoreFromExport({
+  compact = false,
+  onImportingChange,
+}: Readonly<{
+  compact?: boolean
+  onImportingChange?: (importing: boolean) => void
+}>) {
+  const importLock = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -15,10 +23,12 @@ export function RestoreFromExport() {
     const file = event.target.files?.[0]
     event.target.value = ""
 
-    if (!file) {
+    if (!file || importLock.current) {
       return
     }
 
+    importLock.current = true
+    onImportingChange?.(true)
     setIsImporting(true)
     setError(null)
 
@@ -30,49 +40,61 @@ export function RestoreFromExport() {
       setError("This file is not a valid Dossier export. Please check the file and try again.")
       console.error("Failed to import data:", error)
     } finally {
+      importLock.current = false
+      onImportingChange?.(false)
       setIsImporting(false)
     }
   }
 
   return (
-    <>
-      <Card className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex w-full flex-col items-start gap-3">
+      {(!compact || error) && (
         <div>
-          <p className="text-sm font-semibold text-gray-900">
-            Already have a Dossier profile export?
-          </p>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Restore your profile and documents from an exported file instead of starting fresh.
-          </p>
+          {!compact && (
+            <>
+              <p className="text-sm font-semibold text-gray-900">
+                Already have a Dossier profile export?
+              </p>
+              <p className="mt-0.5 text-sm text-gray-500">
+                Restore your profile and documents from an exported file instead of starting fresh.
+              </p>
+            </>
+          )}
           {error && (
             <p role="alert" className="mt-2 text-sm text-red-700">
               {error}
             </p>
           )}
         </div>
+      )}
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/json,.json"
-          onChange={handleFileChange}
-          className="hidden"
-          aria-hidden
-          tabIndex={-1}
-        />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={handleFileChange}
+        className="hidden"
+        aria-hidden
+        tabIndex={-1}
+      />
 
-        <Button
-          type="button"
-          intent="secondary"
-          disabled={isImporting}
-          onClick={() => inputRef.current?.click()}
-          className="shrink-0 self-start sm:self-auto"
-        >
-          {isImporting ? "Importing..." : "Import from export file"}
-        </Button>
-      </Card>
-
-      <Divider className="border-gray-300" />
-    </>
+      <Button
+        type="button"
+        intent="secondary"
+        icon={Upload01Icon}
+        aria-disabled={isImporting}
+        aria-busy={isImporting}
+        onClick={() => {
+          if (!importLock.current) inputRef.current?.click()
+        }}
+        className={compact ? "h-11 w-full whitespace-normal" : "shrink-0 self-start sm:self-auto"}
+      >
+        {isImporting
+          ? "Importing..."
+          : compact
+            ? "Import an existing profile"
+            : "Import from export file"}
+      </Button>
+    </div>
   )
 }
