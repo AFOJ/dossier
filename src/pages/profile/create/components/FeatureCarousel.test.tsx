@@ -26,9 +26,14 @@ afterEach(() => {
 
 it("keeps rotating on hover, pauses for keyboard interaction, and supports explicit restart", () => {
   const { container, unmount } = render(<FeatureCarousel />)
+  expect(container.querySelector("#onboarding-feature svg")).toBeInTheDocument()
+  expect(container.querySelector("#onboarding-feature img")).not.toBeInTheDocument()
   act(() => vi.advanceTimersByTime(6000))
   expect(screen.getByRole("heading")).toHaveTextContent("Your work goes with you.")
-  expect(container.querySelector("img")).toHaveAttribute("src", "/onboarding/portability.svg")
+  expect(container.querySelector("#onboarding-feature svg")).toHaveAttribute(
+    "viewBox",
+    "0 0 103 128",
+  )
   const carousel = screen.getByRole("region", { name: "Dossier features" })
   fireEvent.mouseEnter(carousel)
   act(() => vi.advanceTimersByTime(6000))

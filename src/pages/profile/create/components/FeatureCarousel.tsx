@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons"
+import {
+  IsometricReuse,
+  IsometricCart,
+  IsometricShieldLock,
+} from "@/components/illustrations/IsometricOnboardingIllustrations"
 import { Button, Icon } from "@/components/ui"
 import { cn } from "@/utils"
 import "./FeatureCarousel.css"
@@ -8,17 +13,17 @@ const features = [
   {
     title: "Your details, ready to reuse.",
     description: "Set up your details once. Reuse them across resumes and cover letters.",
-    icon: "/onboarding/reuse.svg",
+    Illustration: IsometricReuse,
   },
   {
     title: "Your work goes with you.",
     description: "Export your profile and documents. Pick up where you left off on another device.",
-    icon: "/onboarding/portability.svg",
+    Illustration: IsometricCart,
   },
   {
     title: "Your career. Your data.",
     description: "Stored in your browser, on your device. No account required.",
-    icon: "/onboarding/privacy.svg",
+    Illustration: IsometricShieldLock,
   },
 ]
 
@@ -53,6 +58,7 @@ export function FeatureCarousel() {
   )
   const rotating = !paused && !reducedMotion && desktop && pageVisible
   const feature = features[activeSlide]
+  const Illustration = feature.Illustration
 
   useEffect(() => {
     if (!rotating) return
@@ -115,7 +121,7 @@ export function FeatureCarousel() {
           className="feature-slide flex min-w-0 flex-col items-center text-center"
         >
           <div aria-hidden="true" className="flex h-64 items-center justify-center">
-            <img src={feature.icon} alt="" className="size-44" />
+            <Illustration aria-hidden="true" className="size-44 text-slate-500" />
           </div>
           <div className="min-h-36 w-full max-w-sm">
             <h2 className="text-3xl font-semibold tracking-tight text-gray-950">{feature.title}</h2>
