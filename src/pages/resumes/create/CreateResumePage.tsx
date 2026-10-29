@@ -1,5 +1,5 @@
 import { useRef } from "react"
-import { Controller, FormProvider, useWatch } from "react-hook-form"
+import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import {
   Button,
@@ -49,8 +49,6 @@ export default function CreateResumePage() {
 
   usePageTitle("Create Resume")
 
-  const draftTitle = useWatch({ control: form.control, name: "title" })
-
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
@@ -64,7 +62,7 @@ export default function CreateResumePage() {
     <section className="flex flex-col gap-6 pb-20">
       <EditingContextBar
         heading="Create resume"
-        title={draftTitle}
+        control={form.control}
         fallbackTitle="New resume"
         titleFieldRef={titleFieldRef}
         titleInputId="resume-title"

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useRef } from "react"
-import { Controller, FormProvider, useWatch } from "react-hook-form"
+import { Controller, FormProvider } from "react-hook-form"
 import {
   Button,
   Divider,
@@ -36,8 +36,6 @@ export default function CreateCoverLetterPage() {
     isLoaded,
   )
 
-  const draftTitle = useWatch({ control: form.control, name: "title" })
-
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   usePageTitle("Create Cover Letter")
@@ -46,7 +44,7 @@ export default function CreateCoverLetterPage() {
     <section className="flex flex-col gap-6 pb-20">
       <EditingContextBar
         heading="Create cover letter"
-        title={draftTitle}
+        control={form.control}
         fallbackTitle="New cover letter"
         titleFieldRef={titleFieldRef}
         titleInputId="cover-letter-title"

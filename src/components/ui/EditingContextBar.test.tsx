@@ -1,5 +1,5 @@
 import { useRef } from "react"
-import { useForm, useWatch } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
@@ -9,19 +9,21 @@ let intersectionCallback: IntersectionObserverCallback
 let resizeCallback: ResizeObserverCallback
 let headerHeight = 56
 let observerOptions: IntersectionObserverInit | undefined
-const disconnectIntersection = vi.fn()
-const disconnectResize = vi.fn()
+type ObserverRecord = { observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }
+let intersectionObservers: ObserverRecord[] = []
+let resizeObservers: ObserverRecord[] = []
+const renderForm = vi.fn()
 
 function Harness() {
+  renderForm()
   const form = useForm<{ title: string }>({ defaultValues: { title: "Saved document" } })
-  const title = useWatch({ control: form.control, name: "title" })
   const titleFieldRef = useRef<HTMLDivElement>(null)
   return (
     <>
       <header data-app-mobile-header="" />
       <EditingContextBar
         heading="Edit resume"
-        title={title}
+        control={form.control}
         fallbackTitle="Saved document"
         titleFieldRef={titleFieldRef}
         titleInputId="test-title"
@@ -50,6 +52,8 @@ function scrollPastTitle(isPast: boolean) {
 }
 
 beforeEach(() => {
+  intersectionObservers = []
+  resizeObservers = []
   headerHeight = 56
   vi.stubGlobal(
     "IntersectionObserver",
@@ -57,9 +61,10 @@ beforeEach(() => {
       constructor(callback: IntersectionObserverCallback, options: IntersectionObserverInit) {
         intersectionCallback = callback
         observerOptions = options
+        intersectionObservers.push(this)
       }
-      observe() {}
-      disconnect = disconnectIntersection
+      observe = vi.fn()
+      disconnect = vi.fn()
     },
   )
   vi.stubGlobal(
@@ -67,9 +72,10 @@ beforeEach(() => {
     class {
       constructor(callback: ResizeObserverCallback) {
         resizeCallback = callback
+        resizeObservers.push(this)
       }
-      observe() {}
-      disconnect = disconnectResize
+      observe = vi.fn()
+      disconnect = vi.fn()
     },
   )
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
@@ -80,7 +86,7 @@ beforeEach(() => {
       bottom: 300,
     } as DOMRect
   })
-  vi.spyOn(window, "scrollTo").mockImplementation(() => {})
+  vi.spyOn(HTMLElement.prototype, "scrollIntoView").mockImplementation(() => {})
 })
 afterEach(() => {
   vi.restoreAllMocks()
@@ -96,10 +102,19 @@ it("shows context only above the title threshold, follows title edits, and measu
   scrollPastTitle(true)
   expect(screen.getByRole("region")).toHaveStyle({ top: "56px" })
   expect(screen.queryByRole("button", { name: /Show full title/ })).not.toBeInTheDocument()
+  const formRendersBeforeTyping = renderForm.mock.calls.length
   await user.clear(screen.getByLabelText("Title"))
   expect(screen.getByRole("region")).toHaveTextContent("Saved document")
   await user.type(screen.getByLabelText("Title"), "Draft document")
   expect(screen.getByRole("region")).toHaveTextContent("Draft document")
+  expect(renderForm).toHaveBeenCalledTimes(formRendersBeforeTyping)
+  expect(intersectionObservers.at(-1)?.observe).toHaveBeenCalledWith(
+    screen.getByLabelText("Title").parentElement,
+  )
+  expect(resizeObservers.at(-1)?.observe).toHaveBeenCalledWith(screen.getByRole("region"))
+  expect(resizeObservers.at(-1)?.observe).toHaveBeenCalledWith(
+    document.querySelector("[data-app-mobile-header]"),
+  )
   headerHeight = 0
   act(() => resizeCallback([], {} as ResizeObserver))
   expect(observerOptions?.rootMargin).toBe("-0px 0px 0px 0px")
@@ -122,15 +137,22 @@ it.each([false, true])(
     expect(screen.getByRole("region")).toBeInTheDocument()
     await user.click(returnButton)
     expect(screen.getByLabelText("Title")).toHaveFocus()
-    expect(window.scrollTo).toHaveBeenCalledWith({
-      top: 0,
+    expect(screen.getByLabelText("Title").scrollIntoView).toHaveBeenCalledWith({
+      block: "start",
       behavior: reducedMotion ? "instant" : "smooth",
     })
     expect(screen.queryByRole("region")).not.toBeInTheDocument()
+    const activeIntersection = intersectionObservers.at(-1)!
+    const contextBar = document.querySelector('[aria-label="Document editing context"]')!
+    const activeResize = resizeObservers.findLast((observer) =>
+      observer.observe.mock.calls.some(([target]) => target === contextBar),
+    )!
+    expect(activeIntersection.disconnect).not.toHaveBeenCalled()
+    expect(activeResize.disconnect).not.toHaveBeenCalled()
     unmount()
     expect(document.documentElement.style.scrollPaddingTop).toBe("")
-    expect(disconnectIntersection).toHaveBeenCalled()
-    expect(disconnectResize).toHaveBeenCalled()
+    expect(activeIntersection.disconnect).toHaveBeenCalledTimes(1)
+    expect(activeResize.disconnect).toHaveBeenCalledTimes(1)
   },
 )
 
@@ -143,13 +165,17 @@ it("exposes overflowing titles through a keyboard disclosure and resets it after
     name: /Saved document.*Show full title/,
   })
   expect(titleButton).toHaveAttribute("aria-expanded", "false")
-  expect(titleButton).toHaveAttribute("aria-controls", expect.any(String))
+  const titleContent = screen.getByText("Saved document", { selector: "span" })
+  expect(document.getElementById(titleButton.getAttribute("aria-controls")!)).toBe(titleContent)
+  expect(titleContent).toHaveClass("line-clamp-2")
   act(() => titleButton.focus())
   await user.keyboard("{Enter}")
   expect(titleButton).toHaveAttribute("aria-expanded", "true")
+  expect(titleContent).not.toHaveClass("line-clamp-2")
   expect(titleButton).toHaveFocus()
   await user.keyboard(" ")
   expect(titleButton).toHaveAttribute("aria-expanded", "false")
+  expect(titleContent).toHaveClass("line-clamp-2")
   await user.keyboard("{Enter}")
   scrollPastTitle(false)
   expect(screen.getByRole("region")).toBeInTheDocument()

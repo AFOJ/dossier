@@ -1,6 +1,6 @@
 import { Suspense, lazy, useRef } from "react"
 import { useRouteLoaderData } from "react-router-dom"
-import { Controller, FormProvider, useWatch } from "react-hook-form"
+import { Controller, FormProvider } from "react-hook-form"
 import {
   Button,
   Divider,
@@ -44,15 +44,13 @@ function EditCoverLetterForm({
   const { form, onSubmit, isSubmitting, formError, isDirty, revert, setSyncProfile } =
     useEditCoverLetterForm(coverLetter, profile)
 
-  const draftTitle = useWatch({ control: form.control, name: "title" })
-
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   return (
     <section className="flex flex-col gap-6 pb-20">
       <EditingContextBar
         heading="Edit cover letter"
-        title={draftTitle}
+        control={form.control}
         fallbackTitle={coverLetter.title}
         titleFieldRef={titleFieldRef}
         titleInputId="cover-letter-title"

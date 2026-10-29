@@ -1,6 +1,6 @@
 import { useRef } from "react"
 import { useNavigate, useRouteLoaderData } from "react-router-dom"
-import { Controller, FormProvider, useWatch } from "react-hook-form"
+import { Controller, FormProvider } from "react-hook-form"
 import type { UseFormClearErrors } from "react-hook-form"
 import type { ResumeFormData } from "@/pages/resumes/create/hooks/useCreateResumeForm"
 import {
@@ -71,8 +71,6 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
   } = useEditResumeForm(resume, profile)
   const { clearErrors }: { clearErrors: UseFormClearErrors<ResumeFormData> } = form
 
-  const draftTitle = useWatch({ control: form.control, name: "title" })
-
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
   useUndoHotkeys({
@@ -86,7 +84,7 @@ function EditResumeForm(props: Readonly<{ resume: Resume; profile: Profile }>) {
     <section className="flex flex-col gap-6 pb-20">
       <EditingContextBar
         heading="Edit resume"
-        title={draftTitle}
+        control={form.control}
         fallbackTitle={resume.title}
         titleFieldRef={titleFieldRef}
         titleInputId="resume-title"

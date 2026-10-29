@@ -1,26 +1,28 @@
 import { useEffect, useId, useRef, useState, type RefObject } from "react"
+import { useWatch, type Control, type FieldValues, type Path } from "react-hook-form"
 import { ArrowDown01Icon, ArrowUpToLineIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/Button"
 import { Tooltip } from "@/components/ui/Tooltip"
 import { cn } from "@/utils"
 
-type Props = {
+type Props<FormValues extends FieldValues> = {
   heading: string
-  title: string
+  control: Control<FormValues>
   fallbackTitle: string
   titleFieldRef: RefObject<HTMLDivElement | null>
   titleInputId: string
 }
 
-export function EditingContextBar({
+export function EditingContextBar<FormValues extends FieldValues>({
   heading,
-  title: draftTitle,
+  control,
   fallbackTitle,
   titleFieldRef,
   titleInputId,
-}: Readonly<Props>) {
-  const title = draftTitle?.trim() || fallbackTitle
+}: Readonly<Props<FormValues>>) {
+  const draftTitle = useWatch({ control, name: "title" as Path<FormValues> })
+  const title = (typeof draftTitle === "string" && draftTitle.trim()) || fallbackTitle
   const barRef = useRef<HTMLDivElement>(null)
   const titleTextRef = useRef<HTMLSpanElement>(null)
   const titleContentId = useId()
@@ -93,9 +95,13 @@ export function EditingContextBar({
 
   const returnToTop = () => {
     setTitleExpanded(false)
-    document.getElementById(titleInputId)?.focus({ preventScroll: true })
+    const titleInput = document.getElementById(titleInputId)
+    titleInput?.focus({ preventScroll: true })
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" })
+    titleInput?.scrollIntoView({
+      block: "start",
+      behavior: reducedMotion ? "instant" : "smooth",
+    })
   }
 
   return (
