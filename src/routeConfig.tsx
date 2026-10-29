@@ -7,19 +7,6 @@ import { getCoverLetter } from "@/db/coverLetter"
 import { getResume } from "@/db/resume"
 import type { ProtectedRouteData } from "@/hooks/useProtectedRouteData"
 import ProtectedLayout from "@/layouts/ProtectedLayout"
-import LandingPage from "@/pages/landing"
-import CreateProfilePage from "@/pages/profile/create"
-import ProfilePage from "@/pages/profile/view"
-import CreateCoverLetterPage from "@/pages/cover-letters/create"
-import EditCoverLetterPage from "@/pages/cover-letters/edit"
-import CoverLettersListPage from "@/pages/cover-letters/list"
-import UploadCoverLetterPage from "@/pages/cover-letters/upload"
-import CreateResumePage from "@/pages/resumes/create"
-import EditResumePage from "@/pages/resumes/edit"
-import ResumesListPage from "@/pages/resumes/list"
-import UploadResumePage from "@/pages/resumes/upload"
-import TagsPage from "@/pages/tags"
-import SettingsPage from "@/pages/settings"
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -75,7 +62,11 @@ export function createAppRoutes() {
   function HydrateFallback() {
     return (
       <div className="grid min-h-dvh place-items-center bg-white">
-        <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+        <div
+          role="status"
+          aria-label="Loading page"
+          className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 motion-reduce:animate-none"
+        />
       </div>
     )
   }
@@ -93,7 +84,7 @@ export function createAppRoutes() {
     <Route path="/" element={<RootLayout />} errorElement={<ErrorBoundary />}>
       <Route
         index
-        element={<LandingPage />}
+        lazy={async () => ({ Component: (await import("@/pages/landing")).default })}
         loader={landingRouteLoader}
         hydrateFallbackElement={<HydrateFallback />}
       />
@@ -103,7 +94,10 @@ export function createAppRoutes() {
         loader={publicOnlyRouteLoader}
         hydrateFallbackElement={<HydrateFallback />}
       >
-        <Route path="setup" element={<CreateProfilePage />} />
+        <Route
+          path="setup"
+          lazy={async () => ({ Component: (await import("@/pages/profile/create")).default })}
+        />
       </Route>
 
       <Route
@@ -114,30 +108,65 @@ export function createAppRoutes() {
       >
         <Route element={<Outlet />} errorElement={<ErrorBoundary embedded />}>
           <Route path="resumes">
-            <Route index element={<ResumesListPage />} />
-            <Route path="create" element={<CreateResumePage />} />
-            <Route path="upload" element={<UploadResumePage />} />
+            <Route
+              index
+              lazy={async () => ({ Component: (await import("@/pages/resumes/list")).default })}
+            />
+            <Route
+              path="create"
+              lazy={async () => ({ Component: (await import("@/pages/resumes/create")).default })}
+            />
+            <Route
+              path="upload"
+              lazy={async () => ({ Component: (await import("@/pages/resumes/upload")).default })}
+            />
             <Route
               id={resumeEditRouteId}
               path=":resumeId/edit"
               loader={resumeEditRouteLoader}
-              element={<EditResumePage />}
+              lazy={async () => ({ Component: (await import("@/pages/resumes/edit")).default })}
             />
           </Route>
           <Route path="cover-letters">
-            <Route index element={<CoverLettersListPage />} />
-            <Route path="create" element={<CreateCoverLetterPage />} />
-            <Route path="upload" element={<UploadCoverLetterPage />} />
+            <Route
+              index
+              lazy={async () => ({
+                Component: (await import("@/pages/cover-letters/list")).default,
+              })}
+            />
+            <Route
+              path="create"
+              lazy={async () => ({
+                Component: (await import("@/pages/cover-letters/create")).default,
+              })}
+            />
+            <Route
+              path="upload"
+              lazy={async () => ({
+                Component: (await import("@/pages/cover-letters/upload")).default,
+              })}
+            />
             <Route
               id="cover-letter-edit"
               path=":coverLetterId/edit"
               loader={coverLetterEditRouteLoader}
-              element={<EditCoverLetterPage />}
+              lazy={async () => ({
+                Component: (await import("@/pages/cover-letters/edit")).default,
+              })}
             />
           </Route>
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="tags" element={<TagsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route
+            path="profile"
+            lazy={async () => ({ Component: (await import("@/pages/profile/view")).default })}
+          />
+          <Route
+            path="tags"
+            lazy={async () => ({ Component: (await import("@/pages/tags")).default })}
+          />
+          <Route
+            path="settings"
+            lazy={async () => ({ Component: (await import("@/pages/settings")).default })}
+          />
         </Route>
       </Route>
 
