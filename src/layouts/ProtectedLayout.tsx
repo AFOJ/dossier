@@ -27,7 +27,10 @@ export default function ProtectedLayout() {
 
 function MobileHeader() {
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+    <header
+      data-app-mobile-header=""
+      className="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden"
+    >
       <Drawer.Trigger
         aria-label="Open navigation menu"
         className="inline-flex size-10 items-center justify-center rounded-[10px] text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-400"
