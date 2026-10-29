@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.8.0](https://github.com/AFOJ/dossier/compare/dossier-v1.7.0...dossier-v1.8.0) (2026-10-29)
+
+
+### Features
+
+* add accessible context headers to document forms ([#48](https://github.com/AFOJ/dossier/issues/48)) ([a825c82](https://github.com/AFOJ/dossier/commit/a825c824a3ede890e18fecc04fc6b5bf2a55c010))
+* add new project section to resumes ([#46](https://github.com/AFOJ/dossier/issues/46)) ([194cb81](https://github.com/AFOJ/dossier/commit/194cb81c01fe8c70b5a9f658a69d7964cd2df6a1))
+* improve onboarding experience ([#49](https://github.com/AFOJ/dossier/issues/49)) ([27fffe4](https://github.com/AFOJ/dossier/commit/27fffe40de501e4db68bfe1998223c37a3048ef5))
+
+
+### Bug Fixes
+
+* preserve sidebar navigation when page content fails ([#47](https://github.com/AFOJ/dossier/issues/47)) ([019ac9c](https://github.com/AFOJ/dossier/commit/019ac9c3960212aa1c03bc73b71d4744bf64e560))
+* prevent accidentally closing document preview modals ([#44](https://github.com/AFOJ/dossier/issues/44)) ([8aa99ba](https://github.com/AFOJ/dossier/commit/8aa99ba5839ba1cf0f70ca134eec1bdf2a36f9dd))
+
+
+### Performance Improvements
+
+* load page components on demand ([#6](https://github.com/AFOJ/dossier/issues/6)) ([600b701](https://github.com/AFOJ/dossier/commit/600b7011302aabef3fce62a3ddad610668b912f1))
+
 ## [1.7.0](https://github.com/AFOJ/dossier/compare/dossier-v1.6.1...dossier-v1.7.0) (2026-10-11)
 
 
