@@ -4,6 +4,7 @@ import { cn } from "@/utils"
 import { FormProvider } from "react-hook-form"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { RestoreFromExport } from "./components/RestoreFromExport"
+import { FeatureCarousel } from "./components/FeatureCarousel"
 import { SetupProfileFields } from "./components/SetupProfileFields"
 import { useCreateProfileForm } from "./hooks/useCreateProfileForm"
 
@@ -69,7 +70,7 @@ export default function CreateProfilePage() {
           : ""}
       </p>
       {step === -1 ? (
-        <div className="grid flex-1 gap-6">
+        <div className="grid flex-1 gap-6 lg:grid-cols-2">
           <section className="flex min-w-0 flex-col px-2 py-2 sm:px-8 sm:py-3">
             <div className="hidden items-center gap-2 self-start lg:flex" aria-label="Dossier">
               <img src="/d-logo.svg" alt="" className="size-8" />
@@ -94,6 +95,7 @@ export default function CreateProfilePage() {
               </div>
             </div>
           </section>
+          <FeatureCarousel />
         </div>
       ) : (
         <>

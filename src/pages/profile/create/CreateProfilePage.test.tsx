@@ -21,13 +21,19 @@ async function startSetup() {
   return user
 }
 
-it("offers setup and import", async () => {
+it("offers setup and import, with manually selected feature slides", async () => {
   const user = userEvent.setup()
   render(<CreateProfilePage />)
   expect(screen.getByRole("heading", { name: "Set up your Dossier profile" })).toBeInTheDocument()
   expect(screen.queryByLabelText(/Full name/)).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "Import an existing profile" })).toBeInTheDocument()
+  const privacyButton = screen.getByRole("button", { name: /Show feature 3/ })
+  privacyButton.focus()
+  await user.keyboard("{Enter}")
+  expect(screen.getByRole("heading", { name: "Your career. Your data." })).toBeInTheDocument()
+  expect(privacyButton).toHaveAttribute("aria-current", "true")
   await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  expect(screen.queryByRole("region", { name: "Dossier features" })).not.toBeInTheDocument()
   expect(screen.getByLabelText(/Full name/)).toHaveFocus()
 })
 
