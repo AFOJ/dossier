@@ -1,244 +1,168 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import CreateProfilePage from "@/pages/profile/create/CreateProfilePage"
-import { upsertProfile, importProfile } from "@/db/profile"
+import { beforeEach, afterEach, expect, it, vi } from "vitest"
+import CreateProfilePage from "./CreateProfilePage"
+import { importProfile, upsertProfile } from "@/db/profile"
 
-// Only mock the network boundary and router — everything else (zod validation,
-// react-hook-form, useFieldArray reordering) runs for real.
-vi.mock("@/db/profile", () => ({
-  upsertProfile: vi.fn(),
-  importProfile: vi.fn(),
-}))
+vi.mock("@/db/profile", () => ({ importProfile: vi.fn(), upsertProfile: vi.fn() }))
+const navigate = vi.fn()
+vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }))
+beforeEach(() => {
+  vi.resetAllMocks()
+})
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
-const mockNavigate = vi.fn()
-vi.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate,
-}))
-
-function setup() {
+async function startSetup() {
   const user = userEvent.setup()
   render(<CreateProfilePage />)
-  return { user }
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  return user
 }
 
-function getSubmitButton() {
-  return screen.getByRole("button", { name: /create my profile/i })
-}
-
-async function fillRequiredFullName(user: ReturnType<typeof userEvent.setup>, name = "John Doe") {
-  const fullName = screen.getByPlaceholderText("John Doe")
-  await user.clear(fullName)
-  await user.type(fullName, name)
-}
-
-describe("CreateProfilePage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it("blocks submission and surfaces the real zod error when full name is empty", async () => {
-    const { user } = setup()
-
-    await user.click(getSubmitButton())
-
-    expect(await screen.findByText("Full name is required")).toBeInTheDocument()
-    expect(upsertProfile).not.toHaveBeenCalled()
-    expect(mockNavigate).not.toHaveBeenCalled()
-  })
-
-  it("enforces the min-length rule (not just required) and clears the error once fixed", async () => {
-    const { user } = setup()
-    const fullName = screen.getByPlaceholderText("John Doe")
-
-    await user.type(fullName, "J")
-    await user.click(getSubmitButton())
-    expect(await screen.findByText("Full name must be at least 2 characters")).toBeInTheDocument()
-
-    await user.type(fullName, "ohn")
-    await user.click(getSubmitButton())
-
-    await waitFor(() => {
-      expect(screen.queryByText("Full name must be at least 2 characters")).not.toBeInTheDocument()
-    })
-  })
-
-  it("only validates email format when a value is present (optional-or-valid rule)", async () => {
-    const { user } = setup()
-    await fillRequiredFullName(user)
-
-    const email = screen.getByPlaceholderText("john@doe.com")
-
-    // empty email is valid -> submitting should not complain about email
-    await user.click(getSubmitButton())
-    await waitFor(() => expect(upsertProfile).toHaveBeenCalled())
-    expect(screen.queryByText(/invalid email/i)).not.toBeInTheDocument()
-
-    vi.clearAllMocks()
-
-    // invalid, non-empty email should now fail
-    await user.type(email, "not-an-email")
-    await user.click(getSubmitButton())
-    expect(await screen.findByText("Invalid email address")).toBeInTheDocument()
-    expect(upsertProfile).not.toHaveBeenCalled()
-  })
-
-  it("validates each social link row (label required, url must be a valid URL) and submits correct payload once fixed", async () => {
-    vi.mocked(upsertProfile).mockResolvedValueOnce(1)
-    const { user } = setup()
-    await fillRequiredFullName(user)
-
-    await user.click(screen.getByRole("button", { name: /add social link/i }))
-    await user.click(getSubmitButton())
-
-    expect(await screen.findByText("Label is required")).toBeInTheDocument()
-    expect(await screen.findByText("Must be a valid URL")).toBeInTheDocument()
-    expect(upsertProfile).not.toHaveBeenCalled()
-
-    const label = screen.getByPlaceholderText("Label (e.g. GitHub)")
-    const url = screen.getByPlaceholderText("URL")
-    await user.type(label, "GitHub")
-    await user.type(url, "not-a-url")
-    await user.click(getSubmitButton())
-    expect(await screen.findByText("Must be a valid URL")).toBeInTheDocument()
-
-    await user.clear(url)
-    await user.type(url, "https://github.com/johndoe")
-    await user.click(getSubmitButton())
-
-    await waitFor(() => {
-      expect(upsertProfile).toHaveBeenCalledWith(
-        expect.objectContaining({
-          full_name: "John Doe",
-          links: [{ label: "GitHub", url: "https://github.com/johndoe" }],
-        }),
-      )
-    })
-    expect(mockNavigate).toHaveBeenCalledWith("/resumes")
-  })
-
-  it("removes the correct row when there are multiple social links (index integrity)", async () => {
-    const { user } = setup()
-    const addButton = screen.getByRole("button", { name: /add social link/i })
-
-    await user.click(addButton)
-    await user.click(addButton)
-    await user.click(addButton)
-
-    const labels = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
-    const urls = screen.getAllByPlaceholderText("URL")
-    await user.type(labels[0], "GitHub")
-    await user.type(urls[0], "https://github.com/a")
-    await user.type(labels[1], "LinkedIn")
-    await user.type(urls[1], "https://linkedin.com/b")
-    await user.type(labels[2], "Twitter")
-    await user.type(urls[2], "https://twitter.com/c")
-
-    // remove the middle row
-    await user.click(screen.getByRole("button", { name: "Remove link 2" }))
-
-    const remainingLabels = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
-    expect(remainingLabels).toHaveLength(2)
-    expect(remainingLabels[0]).toHaveValue("GitHub")
-    expect(remainingLabels[1]).toHaveValue("Twitter")
-  })
-
-  it("shows a drag handle per social link row instead of up/down controls", async () => {
-    const { user } = setup()
-    const addButton = screen.getByRole("button", { name: /add social link/i })
-    await user.click(addButton)
-    await user.click(addButton)
-
-    expect(screen.getByRole("button", { name: "Reorder link 1" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Reorder link 2" })).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Move link 1 up" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Move link 1 down" })).not.toBeInTheDocument()
-  })
-
-  it("focuses the label input when a social link is added", async () => {
-    const { user } = setup()
-
-    await user.click(screen.getByRole("button", { name: /add social link/i }))
-
-    const labels = screen.getAllByPlaceholderText("Label (e.g. GitHub)")
-    expect(labels[labels.length - 1]).toHaveFocus()
-  })
-
-  it("disables the submit button while the save is in flight and re-enables it after", async () => {
-    let resolvePromise!: (value: number) => void
-    vi.mocked(upsertProfile).mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolvePromise = resolve
-        }),
-    )
-    const { user } = setup()
-    await fillRequiredFullName(user)
-
-    const submit = getSubmitButton()
-    await user.click(submit)
-
-    await waitFor(() => expect(submit).toBeDisabled())
-
-    resolvePromise(1)
-
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/resumes"))
-  })
-
-  it("shows the root error banner on a failed save and does not navigate away", async () => {
-    vi.mocked(upsertProfile).mockRejectedValueOnce(new Error("IndexedDB failure"))
-    vi.spyOn(console, "error").mockImplementation(() => {})
-    const { user } = setup()
-    await fillRequiredFullName(user)
-
-    await user.click(getSubmitButton())
-
-    expect(await screen.findByText("Failed to save profile. Please try again.")).toBeInTheDocument()
-    expect(mockNavigate).not.toHaveBeenCalled()
-  })
+it("offers setup and import", async () => {
+  const user = userEvent.setup()
+  render(<CreateProfilePage />)
+  expect(screen.getByRole("heading", { name: "Set up your Dossier profile" })).toBeInTheDocument()
+  expect(screen.queryByLabelText(/Full name/)).not.toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Import an existing profile" })).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  expect(screen.getByLabelText(/Full name/)).toHaveFocus()
 })
 
-describe("CreateProfilePage — restore from export", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  async function uploadExportFile(user: ReturnType<typeof userEvent.setup>, content: string) {
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement
-
-    const file = new File([content], "dossier-export.json", {
-      type: "application/json",
-    })
-
-    await user.upload(input, file)
-  }
-
-  it("imports a valid export and navigates to resumes", async () => {
-    vi.mocked(importProfile).mockResolvedValueOnce(undefined)
-    const { user } = setup()
-
-    await uploadExportFile(user, JSON.stringify({ version: 1, profile: {}, resumes: [] }))
-
-    expect(importProfile).toHaveBeenCalledWith(
-      JSON.stringify({ version: 1, profile: {}, resumes: [] }),
-    )
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/profile")
-    })
-  })
-
-  it("shows an inline error and stays on the page when the file is invalid", async () => {
-    vi.mocked(importProfile).mockRejectedValueOnce(new Error("Bad file"))
-    vi.spyOn(console, "error").mockImplementation(() => {})
-    const { user } = setup()
-
-    await uploadExportFile(user, "{}")
-
-    expect(
-      await screen.findByText(
-        "This file is not a valid Dossier export. Please check the file and try again.",
-      ),
-    ).toBeInTheDocument()
-    expect(mockNavigate).not.toHaveBeenCalled()
-  })
+it("validates each step and keeps entries through back navigation", async () => {
+  const user = await startSetup()
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(await screen.findByText("Full name is required")).toBeInTheDocument()
+  expect(screen.getByLabelText(/Full name/)).toHaveFocus()
+  expect(screen.getByLabelText(/Full name/)).toHaveAccessibleDescription("Full name is required")
+  await user.type(screen.getByLabelText(/Full name/), "A")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(await screen.findByText("Full name must be at least 2 characters")).toBeInTheDocument()
+  await user.type(screen.getByLabelText(/Full name/), "lex Morgan")
+  expect(screen.queryByRole("group", { name: "Job title suggestions" })).not.toBeInTheDocument()
+  expect(screen.getByRole("textbox", { name: /Job title/ })).toHaveAccessibleDescription(
+    "You can change your job title at any time.",
+  )
+  await user.type(screen.getByRole("textbox", { name: /Job title/ }), "Architect")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(screen.getByLabelText("Location")).toHaveFocus()
+  expect(screen.getByRole("heading", { name: "Contact details" })).toHaveAccessibleDescription(
+    "Step 2 of 3 Optional. You can add these later.",
+  )
+  expect(document.title).toContain("Step 2 of 3: Contact details")
+  expect(screen.getByRole("status")).toHaveTextContent("Step 2 of 3: Contact details. Optional.")
+  await user.tab()
+  expect(screen.getByLabelText("Email")).toHaveFocus()
+  await user.type(screen.getByLabelText("Email"), "invalid")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(await screen.findByText("Invalid email address")).toBeInTheDocument()
+  expect(screen.getByLabelText("Email")).toHaveFocus()
+  await user.clear(screen.getByLabelText("Email"))
+  await user.type(screen.getByLabelText("Email"), "alex@example.com")
+  await user.click(screen.getByRole("button", { name: "Back" }))
+  expect(screen.getByLabelText(/Full name/)).toHaveFocus()
+  expect(screen.getByLabelText(/Full name/)).toHaveValue("Alex Morgan")
+  expect(screen.getByRole("textbox", { name: /Job title/ })).toHaveValue("Architect")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(screen.getByLabelText("Email")).toHaveValue("alex@example.com")
+  expect(upsertProfile).not.toHaveBeenCalled()
 })
+
+it("validates links, preserves them between steps, and saves the full profile", async () => {
+  vi.mocked(upsertProfile).mockResolvedValue(1)
+  const user = await startSetup()
+  await user.type(screen.getByLabelText(/Full name/), "Alex Morgan")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  await user.type(screen.getByLabelText("Location"), "London")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(screen.getByRole("button", { name: "Add social link" })).toHaveFocus()
+  await user.keyboard("{Enter}")
+  expect(screen.getByLabelText("Label")).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  expect(await screen.findByText("Label is required")).toBeInTheDocument()
+  expect(screen.getByText("Must be a valid URL")).toBeInTheDocument()
+  await user.type(screen.getByLabelText("Label"), "Portfolio")
+  expect(screen.getByRole("group", { name: "Portfolio" })).toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Remove Portfolio" })).toBeInTheDocument()
+  await user.type(screen.getByLabelText("URL"), "https://example.com")
+  await user.click(screen.getByRole("button", { name: "Add social link" }))
+  const emptyRow = screen.getByRole("group", { name: "link 2" })
+  expect(within(emptyRow).getByLabelText("Label")).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Remove link 2" }))
+  expect(screen.getByLabelText("Label")).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Add social link" }))
+  await user.click(screen.getByRole("button", { name: "Remove Portfolio" }))
+  expect(screen.getByLabelText("Label")).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Remove link 1" }))
+  expect(screen.getByRole("button", { name: "Add social link" })).toHaveFocus()
+  await user.keyboard("{Enter}")
+  await user.type(screen.getByLabelText("Label"), "Portfolio")
+  await user.type(screen.getByLabelText("URL"), "https://example.com")
+  await user.click(screen.getByRole("button", { name: "Back" }))
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  expect(screen.getByLabelText("Label")).toHaveValue("Portfolio")
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  await waitFor(() =>
+    expect(upsertProfile).toHaveBeenCalledWith({
+      full_name: "Alex Morgan",
+      role: null,
+      location: "London",
+      phone: null,
+      email: null,
+      links: [{ label: "Portfolio", url: "https://example.com" }],
+    }),
+  )
+  expect(navigate).toHaveBeenCalledWith("/resumes")
+})
+
+it("allows blank optional steps, retains entries and keeps focus for a failed-save retry", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => {})
+  vi.mocked(upsertProfile).mockRejectedValueOnce(new Error("Save failed")).mockResolvedValue(1)
+  const user = await startSetup()
+  await user.type(screen.getByLabelText(/Full name/), "Alex Morgan")
+  await user.click(screen.getByRole("button", { name: "Back" }))
+  expect(screen.getByRole("button", { name: "Create my profile" })).toHaveFocus()
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  expect(screen.getByLabelText(/Full name/)).toHaveValue("Alex Morgan")
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  await user.click(screen.getByRole("button", { name: "Continue" }))
+  await user.click(screen.getByRole("button", { name: "Create my profile" }))
+  expect(await screen.findByRole("alert")).toHaveTextContent("Failed to save profile")
+  expect(screen.getByRole("button", { name: "Create my profile" })).toHaveFocus()
+  await user.keyboard("{Enter}")
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith("/resumes"))
+  await waitFor(() =>
+    expect(upsertProfile).toHaveBeenCalledWith({
+      full_name: "Alex Morgan",
+      role: null,
+      location: null,
+      email: null,
+      phone: null,
+      links: [],
+    }),
+  )
+})
+
+it.each([true, false])(
+  "imports from the welcome screen and handles success: %s",
+  async (success) => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    if (success) vi.mocked(importProfile).mockResolvedValue(undefined)
+    else vi.mocked(importProfile).mockRejectedValue(new Error("Invalid backup"))
+    const user = userEvent.setup()
+    const { container } = render(<CreateProfilePage />)
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    await user.upload(
+      input,
+      new File(['{"profile":{}}'], "backup.json", { type: "application/json" }),
+    )
+    expect(importProfile).toHaveBeenCalledWith('{"profile":{}}')
+    if (success) await waitFor(() => expect(navigate).toHaveBeenCalledWith("/profile"))
+    else {
+      expect(await screen.findByRole("alert")).toHaveTextContent("not a valid Dossier export")
+      expect(navigate).not.toHaveBeenCalled()
+    }
+  },
+)

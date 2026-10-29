@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react"
 import { Add01Icon, DragDropHorizontalIcon, Trash } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -24,7 +25,10 @@ import { useProfileFieldContext } from "@/pages/profile/schema"
 import { useFocusLastRow } from "@/hooks/useFocusLastRow"
 import { cn } from "@/utils"
 
-export function SocialLinksFields() {
+export function SocialLinksFields({
+  headingClassName,
+  showLabels = false,
+}: Readonly<{ headingClassName?: string; showLabels?: boolean }>) {
   const { control } = useProfileFieldContext()
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -32,6 +36,23 @@ export function SocialLinksFields() {
   })
   const socials = useWatch({ control, name: "socials" })
   const containerRef = useFocusLastRow(fields.length)
+  const addButtonRef = useRef<HTMLButtonElement>(null)
+  const pendingFocus = useRef<string | null>(null)
+
+  useLayoutEffect(() => {
+    if (pendingFocus.current === null) return
+    const nextRow = Array.from(
+      containerRef.current?.querySelectorAll<HTMLElement>("[data-link-id]") ?? [],
+    ).find((row) => row.dataset.linkId === pendingFocus.current)
+    const target = nextRow?.querySelector<HTMLInputElement>("input") ?? addButtonRef.current
+    pendingFocus.current = null
+    target?.focus()
+  }, [fields, containerRef])
+
+  const removeLink = (index: number) => {
+    pendingFocus.current = fields[index + 1]?.id ?? fields[index - 1]?.id ?? "add"
+    remove(index)
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -59,7 +80,7 @@ export function SocialLinksFields() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Heading2>Social links</Heading2>
+      <Heading2 className={headingClassName}>Social links</Heading2>
 
       <DndContext
         sensors={sensors}
@@ -67,6 +88,10 @@ export function SocialLinksFields() {
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         onDragEnd={handleDragEnd}
         accessibility={{
+          screenReaderInstructions: {
+            draggable:
+              "To reorder a link, press Space. Use the up and down arrow keys to move it, then press Space to drop it, or Escape to cancel.",
+          },
           announcements: {
             onDragStart: ({ active }) =>
               `Grabbed ${describe(active.id)}. Use arrow keys to move it, then press Space to drop.`,
@@ -90,12 +115,16 @@ export function SocialLinksFields() {
                 key={field.id}
                 id={field.id}
                 index={index}
-                onRemove={() => remove(index)}
+                onRemove={() => removeLink(index)}
+                showLabels={showLabels}
               />
             ))}
 
+            {showLabels && fields.length > 0 && <hr className="my-1 border-gray-200" />}
+
             <Button
               type="button"
+              ref={addButtonRef}
               icon={Add01Icon}
               intent="secondary"
               iconClassname="text-gray-400"
@@ -115,38 +144,48 @@ type SocialLinkRowProps = {
   id: string
   index: number
   onRemove: () => void
+  showLabels: boolean
 }
 
 function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
-  const { id, index, onRemove } = props
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { id, index, onRemove, showLabels } = props
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id,
   })
   const {
     register,
+    control,
     formState: { errors },
   } = useProfileFieldContext()
 
+  const label = useWatch({ control, name: `socials.${index}.label` })
+  const rowName = label?.trim() || `link ${index + 1}`
   const fieldErrors = errors.socials?.[index]
 
-  return (
-    <div
-      ref={setNodeRef}
-      data-row=""
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("flex items-center gap-2", isDragging && "relative z-10 opacity-50")}
-    >
+  const actions = (
+    <>
       <button
+        ref={setActivatorNodeRef}
         type="button"
         {...attributes}
         {...listeners}
         onClick={(event) => event.stopPropagation()}
-        aria-label={`Reorder link ${index + 1}`}
+        aria-label={`Reorder ${showLabels ? rowName : `link ${index + 1}`}`}
         className={cn(
           "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
           "text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600",
           "focus:outline-none focus:ring-1 focus:ring-gray-600",
           "cursor-grab touch-none active:cursor-grabbing",
+          showLabels &&
+            "col-start-1 row-start-1 mt-7 size-9 border border-gray-400/40 bg-white text-gray-500 hover:bg-gray-50 focus:ring-offset-1",
         )}
       >
         <HugeiconsIcon icon={DragDropHorizontalIcon} size={16} aria-hidden />
@@ -158,13 +197,43 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
         iconClassname="text-gray-500 hover:text-red-500"
         icon={Trash}
         onClick={onRemove}
-        aria-label={`Remove link ${index + 1}`}
-        className="w-9 shrink-0 px-0"
+        aria-label={`Remove ${showLabels ? rowName : `link ${index + 1}`}`}
+        className={cn("w-9 shrink-0 px-0", showLabels && "col-start-2 row-start-1 mt-7")}
       />
+    </>
+  )
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+  return (
+    <div
+      ref={setNodeRef}
+      data-row=""
+      data-link-id={id}
+      role={showLabels ? "group" : undefined}
+      aria-label={showLabels ? rowName : undefined}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(
+        showLabels
+          ? "grid grid-cols-[auto_auto_minmax(0,1fr)] items-start gap-x-2 gap-y-3"
+          : "flex items-center gap-2",
+        isDragging && "relative z-10 opacity-50",
+      )}
+    >
+      {actions}
+
+      <div
+        className={cn(
+          "min-w-0 flex-1",
+          showLabels
+            ? "col-start-3 row-start-1 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+            : "flex flex-col gap-2 sm:flex-row",
+        )}
+      >
         <div className="min-w-0 flex-1">
-          <Field inputId={`socials.${index}.label`} error={fieldErrors?.label?.message}>
+          <Field
+            label={showLabels ? "Label" : undefined}
+            inputId={`socials.${index}.label`}
+            error={fieldErrors?.label?.message}
+          >
             <Input
               id={`socials.${index}.label`}
               placeholder="Label (e.g. GitHub)"
@@ -175,7 +244,11 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <Field inputId={`socials.${index}.url`} error={fieldErrors?.url?.message}>
+          <Field
+            label={showLabels ? "URL" : undefined}
+            inputId={`socials.${index}.url`}
+            error={fieldErrors?.url?.message}
+          >
             <Input
               id={`socials.${index}.url`}
               placeholder="URL"
