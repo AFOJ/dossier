@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
@@ -171,9 +171,33 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(screen.getByLabelText("New resume title")).toHaveFocus())
     expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
     expect(screen.getByLabelText("New resume title")).toHaveAccessibleDescription(
-      expect.any(String),
+      expect.stringContaining("Enter a title format."),
     )
     expect((await getSettings()).documents).toEqual(DEFAULT_SETTINGS.documents)
+  })
+
+  it("saves only edited fields and adopts changes saved by another tab", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole("switch")
+    fireEvent.change(screen.getByLabelText("New resume title"), { target: { value: "My CV" } })
+    // Simulate another tab saving a field in the same group and a different group.
+    await act(async () => {
+      await upsertSettings({
+        documents: { defaultSyncProfile: false },
+        exports: { pdfFilenamePattern: "shared" },
+      })
+    })
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    expect((await getSettings()).documents).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "My CV",
+    })
+    expect((await getSettings()).exports.pdfFilenamePattern).toBe("shared")
+    expect(screen.getByRole("switch")).not.toBeChecked()
+    await user.click(screen.getByRole("tab", { name: "Exports" }))
+    expect(screen.getByRole("radio", { name: "Shared format" })).toBeChecked()
   })
 
   it("supports keyboard tab navigation", async () => {

@@ -1,6 +1,12 @@
 import { z } from "zod"
 import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
-import { getSettings, parseStoredSettings, SETTINGS_ID, type Settings } from "@/db/settings"
+import {
+  getSettings,
+  parseStoredSettings,
+  toCompatibleSettings,
+  SETTINGS_ID,
+  type Settings,
+} from "@/db/settings"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import {
@@ -110,7 +116,7 @@ export async function exportProfile(): Promise<ExportFile> {
     tags,
     resumes,
     coverLetters,
-    settings,
+    settings: toCompatibleSettings(settings),
   }
 }
 
@@ -273,7 +279,7 @@ export async function importProfile(fileContent: string): Promise<void> {
       await db.settings.clear()
 
       await db.profiles.add(profile)
-      await db.settings.put({ ...settings, id: SETTINGS_ID })
+      await db.settings.put({ ...toCompatibleSettings(settings), id: SETTINGS_ID })
 
       if (restoredTags.length > 0) {
         await db.tags.bulkPut(restoredTags)

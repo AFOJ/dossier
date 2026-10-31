@@ -59,10 +59,11 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
         form.setValue("exports.pdfFilenamePattern", "ad-hoc", { shouldDirty: true })
       }
     }
-    if (field)
+    if (field) {
       requestAnimationFrame(() => {
         form.setFocus(`${group}.${field}` as Parameters<typeof form.setFocus>[0])
       })
+    }
   })
   const { profile } = useProtectedRouteData()
   const values = form.watch()

@@ -1,5 +1,4 @@
-import { slugify } from "@/utils"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   getExportFilenameWithSettings,
   getProcessedPdfFilename,
@@ -13,6 +12,14 @@ import {
 } from "@/lib/titleFormat"
 
 const DATE = new Date(2026, 8, 17)
+
+function normalizeDateToken(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+}
 
 describe("getProcessedPdfFilename", () => {
   it("reproduces the historical resume name under the default format", () => {
@@ -62,21 +69,46 @@ describe("getProcessedPdfFilename", () => {
       year: "numeric",
     })
     expect(getProcessedPdfFilename("resume", "My Resume", "{title} ({dateShort})", DATE)).toBe(
-      `my-resume (${slugify(dateShort)}).pdf`,
+      `my-resume (${normalizeDateToken(dateShort)}).pdf`,
     )
   })
 
   it("normalizes generated date tokens while preserving custom format text", () => {
     const date = new Date(2026, 9, 31)
-    const renderedDate = slugify(
+    const renderedDate = normalizeDateToken(
       date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
     )
     expect(
       getProcessedPdfFilename("resume", "My Document", "oj-abba-{title}-resume-{date}.pdf", date),
     ).toBe(`oj-abba-my-document-resume-${renderedDate}.pdf`)
     expect(getProcessedPdfFilename("resume", "My Document", "Custom_{month}-{day}.PDF", date)).toBe(
-      `Custom_${slugify(date.toLocaleDateString(undefined, { month: "long" }))}-31.PDF`,
+      `Custom_${normalizeDateToken(date.toLocaleDateString(undefined, { month: "long" }))}-31.PDF`,
     )
+  })
+
+  it.each([
+    ["ar-EG", "سبتمبر"],
+    ["ja-JP", "9月"],
+    ["ru-RU", "сентябрь"],
+  ])("preserves localized month text in PDF and JSON filenames (%s)", (locale, month) => {
+    const date = new Date(2026, 8, 17)
+    const original = date.toLocaleDateString.bind(date)
+    const dateFormat = vi
+      .spyOn(date, "toLocaleDateString")
+      .mockImplementation((_locales, options) => original(locale, options))
+    try {
+      expect(getProcessedPdfFilename("resume", "My Resume", "{month}", date)).toBe(`${month}.pdf`)
+      expect(
+        getExportFilenameWithSettings(
+          "resume",
+          "My Resume",
+          { exports: { defaultExportFilenameFormat: "{month}" } },
+          date,
+        ),
+      ).toBe(`${month}.json`)
+    } finally {
+      dateFormat.mockRestore()
+    }
   })
 
   it("leaves unknown tokens verbatim", () => {
@@ -140,9 +172,17 @@ describe("getPdfFilenameWithSettings", () => {
 describe("getExportFilenameWithSettings", () => {
   const settings = { defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT }
 
+  const shortDate = normalizeDateToken(
+    DATE.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
+  )
+
   it("renders the default format and keeps the .json suffix", () => {
     expect(getExportFilenameWithSettings("resume", "My Resume", { exports: settings }, DATE)).toBe(
-      "resume-my-resume-export-sep-17-2026.json",
+      `resume-my-resume-export-${shortDate}.json`,
     )
   })
 
@@ -159,7 +199,7 @@ describe("getExportFilenameWithSettings", () => {
 
   it("falls back to the kind when the title is empty", () => {
     expect(getExportFilenameWithSettings("resume", "", { exports: settings }, DATE)).toBe(
-      "resume-resume-export-sep-17-2026.json",
+      `resume-resume-export-${shortDate}.json`,
     )
   })
 })

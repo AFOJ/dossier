@@ -108,15 +108,33 @@ export type SettingsUpdate = {
   [Group in keyof Settings]?: Partial<Settings[Group]>
 }
 
+/** Compatibility aliases for builds released before grouped settings.
+ * Only the original fields are mirrored; future preferences stay in their group. */
+export function toCompatibleSettings(settings: Settings) {
+  return {
+    ...settings,
+    defaultSyncProfile: settings.documents.defaultSyncProfile,
+    defaultResumeTitleFormat: settings.documents.defaultResumeTitleFormat,
+    defaultExportFilenameFormat: settings.exports.defaultExportFilenameFormat,
+    defaultResumePdfFilenameFormat: settings.exports.defaultResumePdfFilenameFormat,
+    defaultCoverLetterPdfFilenameFormat: settings.exports.defaultCoverLetterPdfFilenameFormat,
+    defaultPdfFilenameFormat: settings.exports.defaultPdfFilenameFormat,
+    pdfFilenamePattern: settings.exports.pdfFilenamePattern,
+  }
+}
+
 /** Merge within groups in one transaction so concurrent partial updates survive. */
-export async function upsertSettings(data: SettingsUpdate): Promise<void> {
-  await db.transaction("rw", db.settings, async () => {
+export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
+  return db.transaction("rw", db.settings, async () => {
     const current = parseStoredSettings(await db.settings.get(SETTINGS_ID))
     const merged = appSettingsSchema.safeParse({
       documents: { ...current.documents, ...data.documents },
       exports: { ...current.exports, ...data.exports },
     })
-    if (!merged.success) throw new Error("Invalid app settings.")
-    await db.settings.put({ ...merged.data, id: SETTINGS_ID })
+    if (!merged.success) {
+      throw new Error("Invalid app settings.")
+    }
+    await db.settings.put({ ...toCompatibleSettings(merged.data), id: SETTINGS_ID })
+    return merged.data
   })
 }

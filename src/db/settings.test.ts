@@ -1,3 +1,5 @@
+import { z } from "zod"
+import { appSettingsSchema } from "@/db/schemas"
 import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it } from "vitest"
 import { db, type AppSettings } from "@/db/db"
@@ -15,6 +17,12 @@ beforeEach(async () => {
 function writeRawRow(row: unknown) {
   return db.settings.put(row as AppSettings)
 }
+
+// The pre-grouping schema reads only these seven flat fields and strips groups.
+const legacySettingsSchema = z.object({
+  ...appSettingsSchema.shape.documents.shape,
+  ...appSettingsSchema.shape.exports.shape,
+})
 
 describe("settings compatibility", () => {
   it("provides fresh defaults for absent or malformed groups", () => {
@@ -55,7 +63,7 @@ describe("settings compatibility", () => {
     })
   })
 
-  it("merges partial groups and writes only the canonical shape", async () => {
+  it("merges partial groups and mirrors the original fields for older builds", async () => {
     await writeRawRow({
       id: SETTINGS_ID,
       defaultSyncProfile: false,
@@ -69,7 +77,29 @@ describe("settings compatibility", () => {
       defaultResumeTitleFormat: "New title",
     })
     expect(saved.exports).toEqual({ ...DEFAULT_SETTINGS.exports, pdfFilenamePattern: "shared" })
-    expect(await db.settings.toArray()).toEqual([{ ...saved, id: SETTINGS_ID }])
+    const rows = await db.settings.toArray()
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ ...saved, id: SETTINGS_ID })
+    expect(legacySettingsSchema.parse(rows[0])).toEqual({ ...saved.documents, ...saved.exports })
+  })
+
+  it("keeps preferences when an older tab reads and replaces the settings row", async () => {
+    await upsertSettings({
+      documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "My CV" },
+      exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "shared" },
+    })
+    const legacy = legacySettingsSchema.parse(await db.settings.get(SETTINGS_ID))
+    await writeRawRow({ ...legacy, defaultPdfFilenameFormat: "updated-{title}", id: SETTINGS_ID })
+    const saved = await getSettings()
+    expect(saved.documents).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "My CV",
+    })
+    expect(saved.exports).toMatchObject({
+      defaultExportFilenameFormat: "custom-{title}",
+      pdfFilenamePattern: "shared",
+      defaultPdfFilenameFormat: "updated-{title}",
+    })
   })
 
   it("preserves concurrent updates to different fields within the same group", async () => {

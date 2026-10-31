@@ -1,3 +1,5 @@
+import { z } from "zod"
+import { appSettingsSchema } from "@/db/schemas"
 import { describe, it, expect, beforeEach } from "vitest"
 import { DEFAULT_SETTINGS, getSettings, upsertSettings, parseStoredSettings } from "@/db/settings"
 import "fake-indexeddb/auto"
@@ -534,10 +536,22 @@ describe("importProfile", () => {
     const saved = await getSettings()
     const backup = await exportProfile()
     expect(backup.version).toBe(4)
-    expect(backup.settings).toEqual(saved)
-    expect(backup.settings).not.toHaveProperty("defaultSyncProfile")
+    expect(backup.settings).toMatchObject(saved)
+    const legacySettings = z
+      .object({
+        ...appSettingsSchema.shape.documents.shape,
+        ...appSettingsSchema.shape.exports.shape,
+      })
+      .parse(backup.settings)
+    expect(legacySettings).toEqual({ ...saved.documents, ...saved.exports })
     await db.settings.clear()
     await importProfile(JSON.stringify(backup))
+    expect(await getSettings()).toEqual(saved)
+    // An older importer strips the groups and persists these flat settings.
+    await db.settings.put({
+      ...legacySettings,
+      id: "app",
+    } as unknown as import("@/db/db").AppSettings)
     expect(await getSettings()).toEqual(saved)
   })
 
