@@ -59,10 +59,10 @@ export function getExportFilenameWithSettings(
 
 function renderFilenameFormat(format: string, tokens: Record<string, string>): string {
   return format.replace(/\{([a-zA-Z]+)\}/g, (match, token) => {
-    const value = tokens[token]
-    if (value === undefined) {
+    if (!Object.hasOwn(tokens, token)) {
       return match
     }
+    const value = tokens[token]
     return value
       .normalize("NFKC")
       .toLowerCase()

@@ -111,11 +111,22 @@ describe("getProcessedPdfFilename", () => {
     }
   })
 
-  it("leaves unknown tokens verbatim", () => {
-    expect(getProcessedPdfFilename("resume", "My Resume", "{title}-{nope}.pdf", DATE)).toBe(
-      "my-resume-{nope}.pdf",
-    )
-  })
+  it.each(["nope", "constructor", "toString", "hasOwnProperty"])(
+    "leaves unknown or inherited token {%s} unchanged",
+    (token) => {
+      expect(getProcessedPdfFilename("resume", "My Resume", `{title}-{${token}}.pdf`, DATE)).toBe(
+        `my-resume-{${token}}.pdf`,
+      )
+      expect(
+        getExportFilenameWithSettings(
+          "resume",
+          "My Resume",
+          { exports: { defaultExportFilenameFormat: `{title}-{${token}}` } },
+          DATE,
+        ),
+      ).toBe(`my-resume-{${token}}.json`)
+    },
+  )
 
   it("sanitizes invalid filename characters", () => {
     expect(getProcessedPdfFilename("resume", 'A: "Quoted"?', "{title}", DATE)).toBe("a-quoted.pdf")
