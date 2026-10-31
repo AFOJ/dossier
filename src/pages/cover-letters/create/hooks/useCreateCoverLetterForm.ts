@@ -104,7 +104,7 @@ export function useCreateCoverLetterForm(
       subject: "",
       date: "",
       body: "",
-      syncProfile: settings.defaultSyncProfile,
+      syncProfile: settings.documents.defaultSyncProfile,
       ...(profile ? profileToContactValues(profile) : emptyContactValues()),
     },
   })
@@ -113,9 +113,9 @@ export function useCreateCoverLetterForm(
 
   const hydrate = useCallback(
     (setUnlessTouched: (name: "syncProfile", value: unknown) => void) => {
-      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
+      setUnlessTouched("syncProfile", settings.documents.defaultSyncProfile)
     },
-    [settings.defaultSyncProfile],
+    [settings.documents.defaultSyncProfile],
   )
 
   useSettingsHydration({ form, settingsLoaded, hydrate })

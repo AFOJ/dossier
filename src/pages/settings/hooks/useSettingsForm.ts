@@ -17,21 +17,38 @@ export function useSettingsForm(settings: Settings) {
     defaultValues: settings,
   })
 
+  const { dirtyFields } = form.formState
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
-  const onSubmit = form.handleSubmit(async (data) => {
+  const saveSettings = async (data: Settings) => {
     try {
-      await upsertSettings(data)
-      form.reset(data)
+      const saved = await upsertSettings({
+        documents: changedFields(data.documents, dirtyFields.documents),
+        exports: changedFields(data.exports, dirtyFields.exports),
+      })
+      form.reset(saved)
       toast.success("Settings saved", "Your preferences have been updated.")
     } catch (error) {
       toast.error("Failed to save settings", "Please try again.")
       console.error("Failed to save settings:", error)
     }
-  })
+  }
 
   return {
     form,
-    onSubmit,
+    saveSettings,
   }
+}
+
+function changedFields<Group extends Record<string, unknown>>(
+  values: Group,
+  dirtyFields: Partial<Record<keyof Group, unknown>> | undefined,
+): Partial<Group> {
+  const changes: Partial<Group> = {}
+  for (const key of Object.keys(values) as (keyof Group)[]) {
+    if (dirtyFields?.[key] === true) {
+      changes[key] = values[key]
+    }
+  }
+  return changes
 }

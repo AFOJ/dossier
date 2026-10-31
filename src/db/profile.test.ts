@@ -1,5 +1,7 @@
+import { z } from "zod"
+import { appSettingsSchema } from "@/db/schemas"
 import { describe, it, expect, beforeEach } from "vitest"
-import { DEFAULT_SETTINGS, getSettings, upsertSettings } from "@/db/settings"
+import { DEFAULT_SETTINGS, getSettings, upsertSettings, parseStoredSettings } from "@/db/settings"
 import "fake-indexeddb/auto"
 import { db, type Profile } from "@/db/db"
 import { createCoverLetter } from "@/db/coverLetter"
@@ -141,7 +143,7 @@ describe("exportProfile", () => {
 
     const data = await exportProfile()
 
-    expect(data.version).toBe(3)
+    expect(data.version).toBe(4)
     expect(data.exportedAt).toEqual(expect.any(String))
     expect(data.profile).toEqual({
       full_name: "John Doe",
@@ -516,19 +518,49 @@ describe("importProfile", () => {
   it("restores settings from a valid export", async () => {
     // Seeded with values that differ from validExport.settings so the assertions
     // can only pass if the import actually wrote them.
-    await upsertSettings({ defaultSyncProfile: true, defaultResumeTitleFormat: "Keep me?" })
+    await upsertSettings({
+      documents: { defaultSyncProfile: true, defaultResumeTitleFormat: "Keep me?" },
+    })
 
     await importProfile(JSON.stringify(validExport))
 
-    expect(await getSettings()).toEqual({
-      defaultSyncProfile: false,
-      defaultResumeTitleFormat: "{profile.name}",
-      defaultExportFilenameFormat: "{kind}-{title}-export-{dateShort}",
-      defaultResumePdfFilenameFormat: "{title}-resume.pdf",
-      defaultCoverLetterPdfFilenameFormat: "{title}-cover-letter.pdf",
-      defaultPdfFilenameFormat: "{title}-{kind}.pdf",
-      pdfFilenamePattern: "ad-hoc",
+    expect(await getSettings()).toEqual(parseStoredSettings(validExport.settings))
+  })
+
+  it("round-trips grouped settings through version 4 backups", async () => {
+    await upsertProfile(baseProfile)
+    await upsertSettings({
+      documents: { defaultSyncProfile: false },
+      exports: { defaultExportFilenameFormat: "backup-{title}" },
     })
+    const saved = await getSettings()
+    const backup = await exportProfile()
+    expect(backup.version).toBe(4)
+    expect(backup.settings).toMatchObject(saved)
+    const legacySettings = z
+      .object({
+        ...appSettingsSchema.shape.documents.shape,
+        ...appSettingsSchema.shape.exports.shape,
+      })
+      .parse(backup.settings)
+    expect(legacySettings).toEqual({ ...saved.documents, ...saved.exports })
+    await db.settings.clear()
+    await importProfile(JSON.stringify(backup))
+    expect(await getSettings()).toEqual(saved)
+    // An older importer strips the groups and persists these flat settings.
+    await db.settings.put({
+      ...legacySettings,
+      id: "app",
+    } as unknown as import("@/db/db").AppSettings)
+    expect(await getSettings()).toEqual(saved)
+  })
+
+  it("rejects future backup versions without replacing local data", async () => {
+    await upsertProfile(baseProfile)
+    await expect(importProfile(JSON.stringify({ ...validExport, version: 5 }))).rejects.toThrow(
+      InvalidExportFileError,
+    )
+    expect((await getProfile())?.full_name).toBe(baseProfile.full_name)
   })
 
   it("restores backups written before settings support", async () => {
@@ -565,10 +597,14 @@ describe("importProfile", () => {
 
     const settings = await getSettings()
 
-    expect(settings.defaultSyncProfile).toBe(validExport.settings.defaultSyncProfile)
-    expect(settings.defaultResumeTitleFormat).toBe(validExport.settings.defaultResumeTitleFormat)
-    expect(settings.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.pdfFilenamePattern)
-    expect(settings.defaultPdfFilenameFormat).toBe(DEFAULT_SETTINGS.defaultPdfFilenameFormat)
+    expect(settings.documents.defaultSyncProfile).toBe(validExport.settings.defaultSyncProfile)
+    expect(settings.documents.defaultResumeTitleFormat).toBe(
+      validExport.settings.defaultResumeTitleFormat,
+    )
+    expect(settings.exports.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.exports.pdfFilenamePattern)
+    expect(settings.exports.defaultPdfFilenameFormat).toBe(
+      DEFAULT_SETTINGS.exports.defaultPdfFilenameFormat,
+    )
   })
 
   it("rejects invalid JSON", async () => {

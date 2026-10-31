@@ -182,7 +182,10 @@ describe("useCreateResumeForm", () => {
     const { result } = renderHook(() =>
       useCreateResumeForm(profile, {
         ...DEFAULT_SETTINGS,
-        defaultResumeTitleFormat: "{profile.role} CV {year}",
+        documents: {
+          ...DEFAULT_SETTINGS.documents,
+          defaultResumeTitleFormat: "{profile.role} CV {year}",
+        },
       }),
     )
 
@@ -196,7 +199,10 @@ describe("useCreateResumeForm", () => {
   it("honours the default sync setting", () => {
     const synced = renderHook(() => useCreateResumeForm(profile, DEFAULT_SETTINGS))
     const unsynced = renderHook(() =>
-      useCreateResumeForm(profile, { ...DEFAULT_SETTINGS, defaultSyncProfile: false }),
+      useCreateResumeForm(profile, {
+        ...DEFAULT_SETTINGS,
+        documents: { ...DEFAULT_SETTINGS.documents, defaultSyncProfile: false },
+      }),
     )
 
     expect(synced.result.current.form.getValues("syncProfile")).toBe(true)
@@ -204,7 +210,10 @@ describe("useCreateResumeForm", () => {
   })
 
   it("applies stored settings that arrive after mount", () => {
-    const stored = { ...DEFAULT_SETTINGS, defaultSyncProfile: false }
+    const stored = {
+      ...DEFAULT_SETTINGS,
+      documents: { ...DEFAULT_SETTINGS.documents, defaultSyncProfile: false },
+    }
     // useSettings hands the form DEFAULT_SETTINGS until the stored row resolves.
     const { result, rerender } = renderHook(
       ({ loaded }: { loaded: boolean }) =>
@@ -223,8 +232,11 @@ describe("useCreateResumeForm", () => {
   it("keeps an edited field but still applies settings to the untouched ones", () => {
     const stored = {
       ...DEFAULT_SETTINGS,
-      defaultSyncProfile: false,
-      defaultResumeTitleFormat: "{profile.role} CV {year}",
+      documents: {
+        ...DEFAULT_SETTINGS.documents,
+        defaultSyncProfile: false,
+        defaultResumeTitleFormat: "{profile.role} CV {year}",
+      },
     }
     const { result, rerender } = renderHook(
       ({ loaded }: { loaded: boolean }) =>

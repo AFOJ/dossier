@@ -1,6 +1,12 @@
 import { z } from "zod"
 import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
-import { getSettings, parseStoredSettings, SETTINGS_ID, type Settings } from "@/db/settings"
+import {
+  getSettings,
+  parseStoredSettings,
+  toCompatibleSettings,
+  SETTINGS_ID,
+  type Settings,
+} from "@/db/settings"
 import { getAllCoverLetters } from "@/db/coverLetter"
 import { clearProcessedEntityCacheForEntities } from "@/db/entityCache"
 import {
@@ -71,7 +77,7 @@ export async function deleteProfile(): Promise<void> {
 }
 
 export interface ExportFile {
-  version: 3
+  version: 4
   exportedAt: string
   profile: Omit<Profile, "id">
   tags: Tag[]
@@ -104,23 +110,21 @@ export async function exportProfile(): Promise<ExportFile> {
   ])
 
   return {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     profile: profileData,
     tags,
     resumes,
     coverLetters,
-    settings,
+    settings: toCompatibleSettings(settings),
   }
 }
 
 export const exportFileSchema = z
   .object({
-    // Any numeric version is accepted so future formats do not need a code
-    // change here. Backups written before tags existed omit `tags` and document
-    // `tagIds`, which the defaults below turn into empty arrays. The strict
-    // objects still reject anything whose shape we do not recognise.
-    version: z.number().int(),
+    // Versions 1–3 use flat settings; version 4 groups them by purpose.
+    // Refuse unknown versions before a restore can replace local data.
+    version: z.number().int().min(1).max(4),
     exportedAt: z.string(),
     profile: exportContactSchema,
     tags: z
@@ -275,7 +279,7 @@ export async function importProfile(fileContent: string): Promise<void> {
       await db.settings.clear()
 
       await db.profiles.add(profile)
-      await db.settings.put({ ...settings, id: SETTINGS_ID })
+      await db.settings.put({ ...toCompatibleSettings(settings), id: SETTINGS_ID })
 
       if (restoredTags.length > 0) {
         await db.tags.bulkPut(restoredTags)

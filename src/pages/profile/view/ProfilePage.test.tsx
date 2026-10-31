@@ -23,8 +23,8 @@ vi.mock("@/db/profile", () => ({
 vi.mock("@/lib/download", () => ({
   downloadJson: vi.fn(),
   getExportFilenameWithSettings: vi.fn(
-    (kind: string, label: string, settings: { defaultExportFilenameFormat: string }) =>
-      `${settings.defaultExportFilenameFormat}-${kind}-${label}`,
+    (kind: string, label: string, settings: { exports: { defaultExportFilenameFormat: string } }) =>
+      `${settings.exports.defaultExportFilenameFormat}-${kind}-${label}`,
   ),
 }))
 
@@ -140,7 +140,7 @@ describe("ProfilePage", () => {
   it("exports the profile and resumes as a downloaded JSON file", async () => {
     const user = userEvent.setup()
     const exportData = {
-      version: 3 as const,
+      version: 4 as const,
       exportedAt: "2026-08-23T00:00:00.000Z",
       profile,
       tags: [],
@@ -159,11 +159,13 @@ describe("ProfilePage", () => {
         "profile",
         "backup",
         expect.objectContaining({
-          defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
+          exports: expect.objectContaining({
+            defaultExportFilenameFormat: DEFAULT_SETTINGS.exports.defaultExportFilenameFormat,
+          }),
         }),
       )
       expect(downloadJson).toHaveBeenCalledWith(
-        `${DEFAULT_SETTINGS.defaultExportFilenameFormat}-profile-backup`,
+        `${DEFAULT_SETTINGS.exports.defaultExportFilenameFormat}-profile-backup`,
         exportData,
       )
     })

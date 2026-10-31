@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
@@ -79,146 +79,137 @@ describe("SettingsPage", () => {
     await db.settings.clear()
     settingsMock.useSettings.mockImplementation(settingsMock.real)
   })
-
   afterEach(async () => {
     await db.settings.clear()
   })
 
-  it("shows a skeleton with an accessible status before the settings have loaded", async () => {
+  it("waits for stored settings before mounting the form", async () => {
     settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: false })
-    const { container } = renderPage()
-
+    const { container, unmount } = renderPage()
     expect(await screen.findByRole("status")).toHaveTextContent("Loading settings")
     expect(container.querySelector('[aria-busy="true"]')).not.toBeNull()
-    expect(
-      screen.queryByRole("switch", { name: "Sync new documents to my profile" }),
-    ).not.toBeInTheDocument()
-  })
-
-  it("replaces the skeleton once the settings have loaded", async () => {
-    settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: false })
-    const { unmount } = renderPage()
-
-    expect(await screen.findByRole("status")).toHaveTextContent("Loading settings")
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument()
     unmount()
-
     settingsMock.useSettings.mockReturnValue({ settings: DEFAULT_SETTINGS, isLoaded: true })
-    const loaded = renderPage()
-
+    renderPage()
     expect(await screen.findByRole("status")).toHaveTextContent("Settings loaded")
     expect(
       screen.getByRole("switch", { name: "Sync new documents to my profile" }),
     ).toBeInTheDocument()
-    expect(loaded.container.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
-  it("renders the sections", async () => {
-    renderPage()
-
-    expect(await screen.findByText("Settings")).toBeInTheDocument()
-    expect(screen.getByText("Documents")).toBeInTheDocument()
-    expect(screen.getByText("Data")).toBeInTheDocument()
-    expect(screen.getByText("Export your data")).toBeInTheDocument()
-    expect(screen.getByText("Danger zone")).toBeInTheDocument()
-  })
-
-  it("renders a filename format field per document kind", async () => {
-    renderPage()
-
-    expect(await screen.findByLabelText("Resume PDF filename")).toHaveValue("{title}-resume.pdf")
-    expect(screen.getByLabelText("Cover letter PDF filename")).toHaveValue(
-      "{title}-cover-letter.pdf",
-    )
-  })
-
-  it("shows stored settings rather than the defaults once they have loaded", async () => {
+  it("loads saved groups and keeps one save action across tabs", async () => {
     await upsertSettings({
-      defaultSyncProfile: false,
-      defaultResumePdfFilenameFormat: "{title}-cv.pdf",
+      documents: { defaultSyncProfile: false },
+      exports: { defaultResumePdfFilenameFormat: "{title}-cv.pdf" },
     })
-
+    const user = userEvent.setup()
     renderPage()
-
-    const syncSwitch = await screen.findByRole("switch", {
-      name: "Sync new documents to my profile",
-    })
-    await waitFor(() => expect(syncSwitch).not.toBeChecked())
+    expect(await screen.findByRole("switch")).not.toBeChecked()
+    expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
+    await user.click(screen.getByRole("tab", { name: "Exports" }))
     expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-cv.pdf")
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
+    await user.click(screen.getByRole("tab", { name: "Data" }))
+    expect(screen.getByText("Export your data")).toBeVisible()
+    expect(screen.getByText("Danger zone")).toBeVisible()
+    expect(screen.getAllByRole("button", { name: "Save changes" })).toHaveLength(1)
+  })
+
+  it("retains edits across tabs, saves grouped values and reverts to the saved state", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole("switch"))
+    fireEvent.change(screen.getByLabelText("New resume title"), {
+      target: { value: "{profile.name} CV" },
+    })
+    expect(screen.getByText(/Currently produces:/)).toHaveTextContent("John Doe CV")
+    await user.click(screen.getByRole("tab", { name: "Exports" }))
+    fireEvent.change(screen.getByLabelText("Resume PDF filename"), {
+      target: { value: "{title}-custom" },
+    })
+    expect(screen.getByText("Example: my-document-custom.pdf")).toBeInTheDocument()
+    await user.click(screen.getByRole("tab", { name: "Data" }))
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    expect((await getSettings()).documents.defaultSyncProfile).toBe(false)
+    expect((await getSettings()).exports.defaultResumePdfFilenameFormat).toBe("{title}-custom")
+    await user.click(screen.getByRole("tab", { name: "Documents" }))
+    expect(screen.getByLabelText("New resume title")).toHaveValue("{profile.name} CV")
+    await user.click(screen.getByRole("switch"))
+    await user.click(screen.getByRole("button", { name: "Revert" }))
+    expect(screen.getByRole("switch")).not.toBeChecked()
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
   })
 
-  it("defaults to the ad hoc PDF filename pattern and switches to shared", async () => {
+  it("switches PDF patterns without losing the inactive formats", async () => {
     const user = userEvent.setup()
     renderPage()
-
-    const radios = await screen.findAllByRole("radio")
-    expect(radios).toHaveLength(2)
-    expect(screen.getByRole("radio", { checked: true })).toBeInTheDocument()
-    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-resume.pdf")
-    expect(screen.queryByLabelText("PDF filename")).not.toBeInTheDocument()
-
-    await user.click(radios[0])
-
-    expect(await screen.findByLabelText("PDF filename")).toHaveValue("{title}-{kind}.pdf")
+    await user.click(await screen.findByRole("tab", { name: "Exports" }))
+    fireEvent.change(screen.getByLabelText("Resume PDF filename"), {
+      target: { value: "{title}-cv" },
+    })
+    await user.click(screen.getByRole("radio", { name: "Shared format" }))
+    expect(screen.getByLabelText("PDF filename")).toHaveValue("{title}-{kind}.pdf")
     expect(screen.queryByLabelText("Resume PDF filename")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled()
-  })
-
-  it("toggles the sync profile setting", async () => {
-    const user = userEvent.setup()
-    renderPage()
-
-    const syncSwitch = await screen.findByRole("switch", {
-      name: "Sync new documents to my profile",
-    })
-    expect(syncSwitch).toBeChecked()
-
-    await user.click(syncSwitch)
-    expect(syncSwitch).not.toBeChecked()
-  })
-
-  it("updates the title format and shows a live preview", async () => {
-    const user = userEvent.setup()
-    renderPage()
-
-    await screen.findByText("New resume title")
-    const input = screen.getByLabelText("New resume title")
-    expect(input).toHaveValue("{profile.role} Resume")
-    expect(await screen.findByText("Currently produces:")).toHaveTextContent("Engineer Resume")
-
-    await user.clear(input)
-    // Use native value setter to bypass userEvent keyboard parsing of braces
-    await act(async () => {
-      const nativeInput = input as HTMLInputElement
-      const nativeValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set
-      nativeValueSetter?.call(nativeInput, "{profile.name} CV {year}")
-      nativeInput.dispatchEvent(new Event("input", { bubbles: true }))
-    })
-
-    const preview = await screen.findByText(/Currently produces:/)
-    expect(preview).toHaveTextContent(`John Doe CV ${new Date().getFullYear()}`)
-  })
-
-  it("saves the settings on submit", async () => {
-    const user = userEvent.setup()
-    renderPage()
-
-    // Toggle sync off to make the form dirty
-    const syncSwitch = await screen.findByRole("switch", {
-      name: "Sync new documents to my profile",
-    })
-    await user.click(syncSwitch)
-
+    await user.click(screen.getByRole("radio", { name: "Separate formats" }))
+    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-cv")
+    await user.clear(screen.getByLabelText("Resume PDF filename"))
+    await user.click(screen.getByRole("radio", { name: "Shared format" }))
     await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByLabelText("Resume PDF filename")).toHaveFocus())
+    expect(screen.getByRole("radio", { name: "Separate formats" })).toBeChecked()
+  })
 
-    // Wait for the save to complete and the button to become disabled
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
+  it("reveals and focuses invalid settings when saved from another tab", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole("switch")
+    await user.clear(screen.getByLabelText("New resume title"))
+    await user.click(screen.getByRole("tab", { name: "Data" }))
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByLabelText("New resume title")).toHaveFocus())
+    expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByLabelText("New resume title")).toHaveAccessibleDescription(
+      expect.stringContaining("Enter a title format."),
+    )
+    expect((await getSettings()).documents).toEqual(DEFAULT_SETTINGS.documents)
+  })
+
+  it("saves only edited fields and adopts changes saved by another tab", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole("switch")
+    fireEvent.change(screen.getByLabelText("New resume title"), { target: { value: "My CV" } })
+    // Simulate another tab saving a field in the same group and a different group.
+    await act(async () => {
+      await upsertSettings({
+        documents: { defaultSyncProfile: false },
+        exports: { pdfFilenamePattern: "shared" },
+      })
     })
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    expect((await getSettings()).documents).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "My CV",
+    })
+    expect((await getSettings()).exports.pdfFilenamePattern).toBe("shared")
+    expect(screen.getByRole("switch")).not.toBeChecked()
+    await user.click(screen.getByRole("tab", { name: "Exports" }))
+    expect(screen.getByRole("radio", { name: "Shared format" })).toBeChecked()
+  })
 
-    expect((await getSettings()).defaultSyncProfile).toBe(false)
+  it("supports keyboard tab navigation", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    const documentsTab = await screen.findByRole("tab", { name: "Documents" })
+    documentsTab.focus()
+    await user.keyboard("{ArrowRight}")
+    expect(screen.getByRole("tab", { name: "Exports" })).toHaveFocus()
+    expect(screen.getByRole("tab", { name: "Exports" })).toHaveAttribute("aria-selected", "true")
+    await user.keyboard("{End}")
+    expect(screen.getByRole("tab", { name: "Data" })).toHaveFocus()
+    expect(screen.getByRole("tabpanel", { name: "Data" })).toBeVisible()
   })
 })
