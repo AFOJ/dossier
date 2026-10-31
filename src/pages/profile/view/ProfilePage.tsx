@@ -59,7 +59,7 @@ export default function ProfilePage() {
           <PersonalInfoFields />
 
           <Divider className="border-gray-300" />
-          <SocialLinksFields />
+          <SocialLinksFields showLabels hideLabels />
 
           {formError && (
             <div className="rounded-[10px] bg-red-50 border border-red-200 p-4 text-sm text-gray-600">

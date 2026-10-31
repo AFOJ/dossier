@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Button, Field, Heading2, Input } from "@/components/ui"
+import { Button, Field, Heading2, Input, Tooltip } from "@/components/ui"
 import { useFieldArray, useWatch } from "react-hook-form"
 import { useProfileFieldContext } from "@/pages/profile/schema"
 import { useFocusLastRow } from "@/hooks/useFocusLastRow"
@@ -28,7 +28,8 @@ import { cn } from "@/utils"
 export function SocialLinksFields({
   headingClassName,
   showLabels = false,
-}: Readonly<{ headingClassName?: string; showLabels?: boolean }>) {
+  hideLabels = false,
+}: Readonly<{ headingClassName?: string; showLabels?: boolean; hideLabels?: boolean }>) {
   const { control } = useProfileFieldContext()
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -110,6 +111,19 @@ export function SocialLinksFields({
           strategy={verticalListSortingStrategy}
         >
           <div ref={containerRef} className="flex flex-col gap-3">
+            {hideLabels && fields.length > 0 && (
+              <div
+                aria-hidden="true"
+                className="hidden grid-cols-[auto_auto_minmax(0,1fr)] gap-x-2 sm:grid"
+              >
+                <span className="w-9" />
+                <span className="w-9" />
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3 text-sm font-medium">
+                  <span>Label</span>
+                  <span>URL</span>
+                </div>
+              </div>
+            )}
             {fields.map((field, index) => (
               <SocialLinkRow
                 key={field.id}
@@ -117,6 +131,7 @@ export function SocialLinksFields({
                 index={index}
                 onRemove={() => removeLink(index)}
                 showLabels={showLabels}
+                hideLabels={hideLabels}
               />
             ))}
 
@@ -145,10 +160,11 @@ type SocialLinkRowProps = {
   index: number
   onRemove: () => void
   showLabels: boolean
+  hideLabels: boolean
 }
 
 function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
-  const { id, index, onRemove, showLabels } = props
+  const { id, index, onRemove, showLabels, hideLabels } = props
   const {
     attributes,
     listeners,
@@ -172,34 +188,45 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
 
   const actions = (
     <>
-      <button
-        ref={setActivatorNodeRef}
-        type="button"
-        {...attributes}
-        {...listeners}
-        onClick={(event) => event.stopPropagation()}
-        aria-label={`Reorder ${showLabels ? rowName : `link ${index + 1}`}`}
-        className={cn(
-          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
-          "text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600",
-          "focus:outline-none focus:ring-1 focus:ring-gray-600",
-          "cursor-grab touch-none active:cursor-grabbing",
-          showLabels &&
-            "col-start-1 row-start-1 mt-7 size-9 border border-gray-400/40 bg-white text-gray-500 hover:bg-gray-50 focus:ring-offset-1",
-        )}
-      >
-        <HugeiconsIcon icon={DragDropHorizontalIcon} size={16} aria-hidden />
-      </button>
+      <Tooltip content={`Reorder ${rowName}`}>
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          {...attributes}
+          {...listeners}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`Reorder ${showLabels ? rowName : `link ${index + 1}`}`}
+          className={cn(
+            "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
+            "text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600",
+            "focus:outline-none focus:ring-1 focus:ring-gray-600",
+            "cursor-grab touch-none active:cursor-grabbing",
+            showLabels &&
+              "col-start-1 row-start-1 size-9 border border-gray-400/40 bg-white text-gray-500 hover:bg-gray-50 focus:ring-offset-1",
+            showLabels && "mt-7",
+            hideLabels && "mt-0 size-11 sm:size-9",
+          )}
+        >
+          <HugeiconsIcon icon={DragDropHorizontalIcon} size={16} aria-hidden />
+        </button>
+      </Tooltip>
 
-      <Button
-        type="button"
-        intent="secondary"
-        iconClassname="text-gray-500 hover:text-red-500"
-        icon={Trash}
-        onClick={onRemove}
-        aria-label={`Remove ${showLabels ? rowName : `link ${index + 1}`}`}
-        className={cn("w-9 shrink-0 px-0", showLabels && "col-start-2 row-start-1 mt-7")}
-      />
+      <Tooltip content={`Remove ${rowName}`}>
+        <Button
+          type="button"
+          intent="secondary"
+          iconClassname="text-gray-500 hover:text-red-500"
+          icon={Trash}
+          onClick={onRemove}
+          aria-label={`Remove ${showLabels ? rowName : `link ${index + 1}`}`}
+          className={cn(
+            "w-9 shrink-0 px-0",
+            showLabels && "col-start-2 row-start-1",
+            showLabels && "mt-7",
+            hideLabels && "mt-0 size-11 sm:size-9",
+          )}
+        />
+      </Tooltip>
     </>
   )
 
@@ -215,6 +242,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
         showLabels
           ? "grid grid-cols-[auto_auto_minmax(0,1fr)] items-start gap-x-2 gap-y-3"
           : "flex items-center gap-2",
+        hideLabels && "rounded-xl border border-gray-200 p-3 sm:rounded-none sm:border-0 sm:p-0",
         isDragging && "relative z-10 opacity-50",
       )}
     >
@@ -226,10 +254,13 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
           showLabels
             ? "col-start-3 row-start-1 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
             : "flex flex-col gap-2 sm:flex-row",
+          hideLabels &&
+            "col-span-3 col-start-1 row-start-2 sm:col-span-1 sm:col-start-3 sm:row-start-1",
         )}
       >
         <div className="min-w-0 flex-1">
           <Field
+            className={hideLabels ? "sm:[&>label]:sr-only" : undefined}
             label={showLabels ? "Label" : undefined}
             inputId={`socials.${index}.label`}
             error={fieldErrors?.label?.message}
@@ -245,6 +276,7 @@ function SocialLinkRow(props: Readonly<SocialLinkRowProps>) {
 
         <div className="min-w-0 flex-1">
           <Field
+            className={hideLabels ? "sm:[&>label]:sr-only" : undefined}
             label={showLabels ? "URL" : undefined}
             inputId={`socials.${index}.url`}
             error={fieldErrors?.url?.message}
