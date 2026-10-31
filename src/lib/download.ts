@@ -59,7 +59,8 @@ export function getExportFilenameWithSettings(
 
 function renderFilenameFormat(format: string, tokens: Record<string, string>): string {
   return format.replace(/\{([a-zA-Z]+)\}/g, (match, token) => {
-    return tokens[token] ?? match
+    const value = tokens[token]
+    return value === undefined ? match : slugify(value)
   })
 }
 

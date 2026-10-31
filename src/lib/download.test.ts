@@ -1,3 +1,4 @@
+import { slugify } from "@/utils"
 import { describe, expect, it } from "vitest"
 import {
   getExportFilenameWithSettings,
@@ -61,7 +62,20 @@ describe("getProcessedPdfFilename", () => {
       year: "numeric",
     })
     expect(getProcessedPdfFilename("resume", "My Resume", "{title} ({dateShort})", DATE)).toBe(
-      `my-resume (${dateShort}).pdf`,
+      `my-resume (${slugify(dateShort)}).pdf`,
+    )
+  })
+
+  it("normalizes generated date tokens while preserving custom format text", () => {
+    const date = new Date(2026, 9, 31)
+    const renderedDate = slugify(
+      date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
+    )
+    expect(
+      getProcessedPdfFilename("resume", "My Document", "oj-abba-{title}-resume-{date}.pdf", date),
+    ).toBe(`oj-abba-my-document-resume-${renderedDate}.pdf`)
+    expect(getProcessedPdfFilename("resume", "My Document", "Custom_{month}-{day}.PDF", date)).toBe(
+      `Custom_${slugify(date.toLocaleDateString(undefined, { month: "long" }))}-31.PDF`,
     )
   })
 
@@ -128,7 +142,7 @@ describe("getExportFilenameWithSettings", () => {
 
   it("renders the default format and keeps the .json suffix", () => {
     expect(getExportFilenameWithSettings("resume", "My Resume", { exports: settings }, DATE)).toBe(
-      "resume-my-resume-export-Sep 17, 2026.json",
+      "resume-my-resume-export-sep-17-2026.json",
     )
   })
 
@@ -145,7 +159,7 @@ describe("getExportFilenameWithSettings", () => {
 
   it("falls back to the kind when the title is empty", () => {
     expect(getExportFilenameWithSettings("resume", "", { exports: settings }, DATE)).toBe(
-      "resume-resume-export-Sep 17, 2026.json",
+      "resume-resume-export-sep-17-2026.json",
     )
   })
 })

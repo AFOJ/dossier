@@ -19,7 +19,7 @@ export function useSettingsForm(settings: Settings) {
 
   useUnsavedChangesWarning(() => form.formState.isDirty)
 
-  const onSubmit = form.handleSubmit(async (data) => {
+  const saveSettings = async (data: Settings) => {
     try {
       await upsertSettings(data)
       form.reset(data)
@@ -28,10 +28,10 @@ export function useSettingsForm(settings: Settings) {
       toast.error("Failed to save settings", "Please try again.")
       console.error("Failed to save settings:", error)
     }
-  })
+  }
 
   return {
     form,
-    onSubmit,
+    saveSettings,
   }
 }

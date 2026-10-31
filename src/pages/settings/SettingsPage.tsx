@@ -1,453 +1,281 @@
-import { useState } from "react"
-import React from "react"
-import { useLiveQuery } from "dexie-react-hooks"
-import { Controller, FormProvider } from "react-hook-form"
-import { Button, Card, Field, Heading1, Heading2, Input, Subheading } from "@/components/ui"
+import { useState, type ReactNode } from "react"
+import { Controller } from "react-hook-form"
+import { Tabs } from "@base-ui/react/tabs"
 import { RadioGroup } from "@base-ui/react/radio-group"
 import { Radio } from "@base-ui/react/radio"
-import { useModal } from "@/components/modal"
-import { useToast } from "@/components/toast"
+import {
+  Button,
+  Field,
+  FormSubmitBar,
+  Heading1,
+  Heading2,
+  Input,
+  Subheading,
+} from "@/components/ui"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { useSettings } from "@/hooks/useSettings"
 import { SyncSwitch } from "@/pages/resumes/create/components/SyncSwitch"
-import { db } from "@/db/db"
 import type { Settings } from "@/db/settings"
-import { exportProfile } from "@/db/profile"
-import { downloadJson, getExportFilenameWithSettings } from "@/lib/download"
-import { DeleteAllDataDialog } from "@/pages/settings/components/DeleteAllDataDialog"
-import { DocumentsFormSkeleton } from "@/pages/settings/components/DocumentsFormSkeleton"
-import { useSettingsForm } from "@/pages/settings/hooks/useSettingsForm"
-import { renderTitle, TOKEN_HELPERS, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
+import { DocumentsFormSkeleton } from "./components/DocumentsFormSkeleton"
+import { DataSection, DangerZone } from "./components/DataSettings"
+import { useSettingsForm } from "./hooks/useSettingsForm"
+import { renderTitle, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
+import { getExportFilenameWithSettings, getPdfFilenameWithSettings } from "@/lib/download"
+
+const tabs = ["Documents", "Exports", "Data"] as const
 
 export default function SettingsPage() {
   usePageTitle("Settings")
-
+  const { settings, isLoaded } = useSettings()
   return (
-    <section className="flex max-w-[880px] flex-col gap-8 pb-20">
-      <header>
+    <section className="flex min-w-0 max-w-4xl [overflow-wrap:anywhere] flex-col gap-8 pb-24">
+      <header className="flex flex-col gap-1">
         <Heading1>Settings</Heading1>
-        <Subheading>Defaults for new documents, your data, and backups.</Subheading>
+        <Subheading>Document defaults, downloads, and local data.</Subheading>
       </header>
-
-      <DocumentsSection />
-      <DataSection />
-      <DangerZone />
+      <span role="status" className="sr-only">
+        {isLoaded ? "Settings loaded" : "Loading settings"}
+      </span>
+      {isLoaded ? <SettingsWorkspace settings={settings} /> : <DocumentsFormSkeleton />}
     </section>
   )
 }
 
-function TitleFormatHelp() {
-  return (
-    <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-      Available tokens:{" "}
-      {TITLE_FORMAT_TOKENS.map((token, index) => (
-        <React.Fragment key={token}>
-          {index > 0 && ", "}
-          <code
-            className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]"
-            title={TOKEN_HELPERS[token]}
-          >
-            {"{" + token + "}"}
-          </code>
-        </React.Fragment>
-      ))}
-      . A token with nothing behind it is left as typed.
-    </p>
-  )
-}
-
-function DocumentsSection() {
-  const { settings, isLoaded } = useSettings()
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Heading2>Documents</Heading2>
-      {/* A stable element whose text changes, rather than one swapped in and out,
-          so the transition is announced rather than silently replaced. */}
-      <span role="status" aria-live="polite" className="sr-only">
-        {isLoaded ? "Settings loaded" : "Loading settings"}
-      </span>
-      {isLoaded ? <DocumentsForm settings={settings} /> : <DocumentsFormSkeleton />}
-    </div>
-  )
-}
-
-function DocumentsForm({ settings }: { settings: Settings }) {
-  const { form, onSubmit } = useSettingsForm(settings)
-  const { profile } = useProtectedRouteData()
-
-  const pdfFilenamePattern = form.watch("exports.pdfFilenamePattern")
-  const isShared = pdfFilenamePattern === "shared"
-
-  const titleFormat = form.watch("documents.defaultResumeTitleFormat")
-  const titleFormatPreview = renderTitle(titleFormat, { profile })
-
-  const pdfFields = isShared ? (
-    <div className="mt-3">
-      <Field
-        label="PDF filename"
-        inputId="defaultPdfFilenameFormat"
-        error={form.formState.errors.exports?.defaultPdfFilenameFormat?.message}
-      >
-        <Input
-          id="defaultPdfFilenameFormat"
-          placeholder="{title}-{kind}.pdf"
-          {...form.register("exports.defaultPdfFilenameFormat")}
-          className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-        />
-      </Field>
-      <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-        One format for both resumes and cover letters. Use{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-          {"{title}"}
-        </code>{" "}
-        for the filename-safe title,{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-          {"{kind}"}
-        </code>{" "}
-        to insert "resume" or "cover-letter". Date tokens such as{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-          {"{dateShort}"}
-        </code>{" "}
-        and{" "}
-        <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-          {"{year}"}
-        </code>
-        are available. A `.pdf` suffix is added automatically.
-      </p>
-    </div>
-  ) : (
-    <>
-      <div className="mt-3">
-        <Field
-          label="Resume PDF filename"
-          inputId="defaultResumePdfFilenameFormat"
-          error={form.formState.errors.exports?.defaultResumePdfFilenameFormat?.message}
-        >
-          <Input
-            id="defaultResumePdfFilenameFormat"
-            placeholder="{title}-resume.pdf"
-            {...form.register("exports.defaultResumePdfFilenameFormat")}
-            className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-          />
-        </Field>
-        <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-          Format for resume PDFs. Use{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{title}"}
-          </code>{" "}
-          for the filename-safe title. Date tokens such as{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{dateShort}"}
-          </code>{" "}
-          and{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{year}"}
-          </code>
-          are available. A `.pdf` suffix is added automatically.
-        </p>
-      </div>
-
-      <div className="mt-1.5">
-        <Field
-          label="Cover letter PDF filename"
-          inputId="defaultCoverLetterPdfFilenameFormat"
-          error={form.formState.errors.exports?.defaultCoverLetterPdfFilenameFormat?.message}
-        >
-          <Input
-            id="defaultCoverLetterPdfFilenameFormat"
-            placeholder="{title}-cover-letter.pdf"
-            {...form.register("exports.defaultCoverLetterPdfFilenameFormat")}
-            className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-          />
-        </Field>
-        <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-          Format for cover letter PDFs. Use{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{title}"}
-          </code>{" "}
-          for the filename-safe title. Date tokens such as{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{dateShort}"}
-          </code>
-          and{" "}
-          <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-            {"{year}"}
-          </code>
-          are available. A `.pdf` suffix is added automatically.
-        </p>
-      </div>
-    </>
-  )
-
-  return (
-    <FormProvider {...form}>
-      <form onSubmit={onSubmit} className="contents">
-        <div className="flex items-start gap-3">
-          <Controller
-            control={form.control}
-            name="documents.defaultSyncProfile"
-            render={({ field }) => (
-              <SyncSwitch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                label="Sync new documents to my profile"
-              />
-            )}
-          />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Sync new documents to my profile</p>
-            <p className="mt-1 text-xs text-[#59636e]">
-              New resumes and cover letters start with your profile contact details. Turn this off
-              to give every new document its own contact details.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <Field
-            label="New resume title"
-            inputId="defaultResumeTitleFormat"
-            error={form.formState.errors.documents?.defaultResumeTitleFormat?.message}
-            description={
-              <>
-                Currently produces: <strong className="font-semibold">{titleFormatPreview}</strong>
-              </>
-            }
-          >
-            <Input
-              id="defaultResumeTitleFormat"
-              placeholder="{profile.role} Resume"
-              {...form.register("documents.defaultResumeTitleFormat")}
-              className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-            />
-          </Field>
-          <TitleFormatHelp />
-        </div>
-
-        <div className="mt-3">
-          <Field
-            label="Export filename format"
-            inputId="defaultExportFilenameFormat"
-            error={form.formState.errors.exports?.defaultExportFilenameFormat?.message}
-          >
-            <Input
-              id="defaultExportFilenameFormat"
-              placeholder="{kind}-{title}-export-{dateShort}"
-              {...form.register("exports.defaultExportFilenameFormat")}
-              className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
-            />
-          </Field>
-          <p className="mb-3 mt-1.5 text-xs text-[#59636e]">
-            Used for exported file names. Use{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{kind}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{title}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{dateShort}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{date}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{year}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{month}"}
-            </code>{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{monthShort}"}
-            </code>{" "}
-            or{" "}
-            <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-              {"{day}"}
-            </code>
-            . Invalid filename characters are removed automatically.
-          </p>
-        </div>
-
-        <div className="mt-3">
-          <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
-            <Controller
-              control={form.control}
-              name="exports.pdfFilenamePattern"
-              render={({ field }) => (
-                <RadioGroup
-                  name="exports.pdfFilenamePattern"
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="flex items-center gap-4"
-                >
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <Radio.Root
-                      value="shared"
-                      className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
-                    >
-                      <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
-                    </Radio.Root>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      Shared
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <Radio.Root
-                      value="ad-hoc"
-                      className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 focus-visible:outline-none data-[checked]:border-gray-900 dark:border-gray-600 dark:focus-visible:ring-gray-100 dark:data-[checked]:border-gray-100"
-                    >
-                      <Radio.Indicator className="h-2 w-2 rounded-full bg-gray-900 dark:bg-gray-100" />
-                    </Radio.Root>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      Ad Hoc
-                    </span>
-                  </label>
-                </RadioGroup>
-              )}
-            />
-            <p className="mt-1.5 text-xs text-[#59636e]">
-              Shared: one format for both resumes and cover letters using{" "}
-              <code className="rounded-md bg-gray-100 px-[5px] py-[2px] font-mono text-[11.5px]">
-                {"{kind}"}
-              </code>{" "}
-              to distinguish them. Ad Hoc: separate format per document type.
-            </p>
-          </Field>
-        </div>
-
-        {pdfFields}
-
-        <div>
-          <Button type="submit" disabled={!form.formState.isDirty}>
-            {form.formState.isSubmitting ? "Saving..." : "Save changes"}
-          </Button>
-        </div>
-      </form>
-    </FormProvider>
-  )
-}
-
-function DataSection() {
-  const [isExporting, setIsExporting] = useState(false)
-  const [isClearing, setIsClearing] = useState(false)
-  const cacheCount = useLiveQuery(() => db.entityCache.count(), [])
-  const { settings } = useSettings()
-  const toast = useToast()
-
-  const handleExport = async () => {
-    setIsExporting(true)
-    try {
-      const data = await exportProfile()
-      const filename = getExportFilenameWithSettings("profile", "backup", settings)
-      downloadJson(filename, data)
-      toast.success("Data exported", "Your profile and documents were downloaded as JSON.")
-    } catch (error) {
-      toast.error("Failed to export data", "Please try again.")
-      console.error("Failed to export data:", error)
-    } finally {
-      setIsExporting(false)
+function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
+  const [activeTab, setActiveTab] = useState<string>("Documents")
+  const { form, saveSettings } = useSettingsForm(settings)
+  const onSubmit = form.handleSubmit(saveSettings, (errors) => {
+    const group = errors.documents ? "documents" : "exports"
+    const field = Object.keys(errors[group] ?? {})[0]
+    setActiveTab(group === "documents" ? "Documents" : "Exports")
+    if (group === "exports") {
+      if (field === "defaultPdfFilenameFormat") {
+        form.setValue("exports.pdfFilenamePattern", "shared", { shouldDirty: true })
+      } else if (
+        field === "defaultResumePdfFilenameFormat" ||
+        field === "defaultCoverLetterPdfFilenameFormat"
+      ) {
+        form.setValue("exports.pdfFilenamePattern", "ad-hoc", { shouldDirty: true })
+      }
     }
-  }
-
-  const handleClear = async () => {
-    setIsClearing(true)
-    try {
-      await db.entityCache.clear()
-      toast.success("Cached uploads cleared", "Parsed copies of uploaded files were removed.")
-    } catch (error) {
-      toast.error("Failed to clear cached uploads", "Please try again.")
-      console.error("Failed to clear entity cache:", error)
-    } finally {
-      setIsClearing(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Heading2>Data</Heading2>
-
-      <Card tone="plain" className="gap-0 rounded-[10px] border-[#d1d9e0] p-0">
-        <div
-          id="export-your-data"
-          className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Export your data</p>
-            <p className="mt-1 text-xs text-[#59636e]">
-              Downloads your profile, documents, tags, and settings as a JSON file.
-            </p>
-          </div>
-          <Button
-            type="button"
-            intent="secondary"
-            onClick={handleExport}
-            disabled={isExporting}
-            className="w-full shrink-0 sm:w-auto"
-          >
-            {isExporting ? "Exporting..." : "Export data"}
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-3 border-t border-[#d1d9e0] p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Cached uploads</p>
-            <p className="mt-1 text-xs text-[#59636e]">
-              Dossier keeps parsed copies of uploaded files so it can show you a preview without
-              re-reading the original. Those copies stay in this browser.{" "}
-              {cacheCount === undefined
-                ? "Reading cache..."
-                : `${cacheCount} ${cacheCount === 1 ? "file" : "files"} cached.`}
-            </p>
-          </div>
-          <Button
-            type="button"
-            intent="secondary"
-            onClick={handleClear}
-            disabled={isClearing || !cacheCount}
-            className="w-full shrink-0 sm:w-auto"
-          >
-            {isClearing ? "Clearing..." : "Clear cached uploads"}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  )
-}
-
-function DangerZone() {
-  const deleteModal = useModal(DeleteAllDataDialog, {
-    closeOnBackdropClick: false,
-    closeOnEscape: false,
+    if (field)
+      requestAnimationFrame(() => {
+        form.setFocus(`${group}.${field}` as Parameters<typeof form.setFocus>[0])
+      })
   })
+  const { profile } = useProtectedRouteData()
+  const values = form.watch()
+  const exportSettings = { exports: values.exports }
+  const filename = (kind: "resume" | "cover-letter") =>
+    getPdfFilenameWithSettings(kind, "My document", exportSettings)
+  const exportFields =
+    values.exports.pdfFilenamePattern === "shared"
+      ? ([["defaultPdfFilenameFormat", "PDF filename", "resume"]] as const)
+      : ([
+          ["defaultResumePdfFilenameFormat", "Resume PDF filename", "resume"],
+          ["defaultCoverLetterPdfFilenameFormat", "Cover letter PDF filename", "cover-letter"],
+        ] as const)
 
   return (
-    <div className="flex flex-col gap-4">
-      <Heading2 className="text-[#d1242f]">Danger zone</Heading2>
-
-      <Card tone="plain" className="gap-0 rounded-[10px] border-[#cf222e] p-0">
-        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Delete all data</p>
-            <p className="mt-1 text-xs text-[#59636e]">
-              Permanently removes your profile, documents, tags, and settings from this browser.{" "}
-              <a href="#export-your-data" className="text-[#0969da] no-underline hover:underline">
-                Export a backup
-              </a>{" "}
-              first: this cannot be undone.
+    <form onSubmit={onSubmit} noValidate className="[&_input]:scroll-mb-24 [&_select]:scroll-mb-24">
+      <Tabs.Root value={activeTab} onValueChange={(value) => setActiveTab(String(value))}>
+        <Tabs.List
+          activateOnFocus
+          aria-label="Settings categories"
+          className="mb-8 flex min-w-0 flex-nowrap gap-6 overflow-x-auto border-b border-gray-200 px-1 pt-1"
+        >
+          {tabs.map((tab) => (
+            <Tabs.Tab
+              key={tab}
+              value={tab}
+              className="relative min-h-11 shrink-0 cursor-pointer whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-gray-500 hover:text-gray-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gray-600 data-active:border-gray-900 data-active:text-gray-950"
+            >
+              {tab}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+        <Tabs.Panel value="Documents" keepMounted className="space-y-8 data-hidden:hidden">
+          <SectionHeading title="Document defaults">
+            Choose how new documents begin. Existing documents keep their current settings.
+          </SectionHeading>
+          <div className="flex flex-col gap-5 divide-y divide-gray-200">
+            <div className="flex items-start justify-between gap-6 pb-5">
+              <div>
+                <p className="text-sm font-medium text-gray-950">
+                  Sync new documents to my profile
+                </p>
+                <p className="mt-1 max-w-lg text-sm text-gray-600">
+                  Keep contact details connected to your profile. Turn this off to use separate
+                  details for each new document.
+                </p>
+              </div>
+              <Controller
+                control={form.control}
+                name="documents.defaultSyncProfile"
+                render={({ field }) => (
+                  <SyncSwitch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    label="Sync new documents to my profile"
+                  />
+                )}
+              />
+            </div>
+            <div className="pt-5">
+              <Field
+                label="New resume title"
+                inputId="resume-title-format"
+                error={form.formState.errors.documents?.defaultResumeTitleFormat?.message}
+                description={
+                  <>
+                    Currently produces:{" "}
+                    <strong>
+                      {renderTitle(values.documents.defaultResumeTitleFormat, { profile })}
+                    </strong>
+                  </>
+                }
+              >
+                <Input
+                  id="resume-title-format"
+                  className="font-mono text-sm"
+                  {...form.register("documents.defaultResumeTitleFormat")}
+                />
+              </Field>
+              <TokenHelp tokens={TITLE_FORMAT_TOKENS} />
+            </div>
+          </div>
+        </Tabs.Panel>
+        <Tabs.Panel value="Exports" keepMounted className="space-y-8 data-hidden:hidden">
+          <SectionHeading title="File naming">
+            Choose names for downloaded files. Your document content stays the same.
+          </SectionHeading>
+          <div>
+            <Field
+              label="Export filename format"
+              inputId="json-filename-format"
+              error={form.formState.errors.exports?.defaultExportFilenameFormat?.message}
+              description={`Example: ${getExportFilenameWithSettings("resume", "My document", exportSettings)}`}
+            >
+              <Input
+                id="json-filename-format"
+                className="font-mono text-sm"
+                {...form.register("exports.defaultExportFilenameFormat")}
+              />
+            </Field>
+            <p className="mt-2 text-sm text-gray-600">
+              Used for JSON document exports and backups.
             </p>
           </div>
-          <Button
-            type="button"
-            intent="secondary"
-            onClick={() => deleteModal.open(undefined)}
-            className="w-full shrink-0 text-[#d1242f] sm:w-auto"
-          >
-            Delete all data
-          </Button>
-        </div>
-      </Card>
-    </div>
+          <div className="space-y-5 border-t border-gray-200 pt-6">
+            <fieldset className="space-y-2">
+              <legend id="pdf-pattern-label" className="text-sm font-medium">
+                PDF filename pattern
+              </legend>
+              <Controller
+                control={form.control}
+                name="exports.pdfFilenamePattern"
+                render={({ field }) => (
+                  <RadioGroup
+                    aria-labelledby="pdf-pattern-label"
+                    aria-describedby="pdf-pattern-help"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="flex flex-wrap gap-x-6 gap-y-3"
+                  >
+                    {(
+                      [
+                        ["ad-hoc", "Separate formats"],
+                        ["shared", "Shared format"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <label
+                        key={value}
+                        className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-gray-900"
+                      >
+                        <Radio.Root
+                          value={value}
+                          className="flex size-4 shrink-0 items-center justify-center rounded-full border border-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 data-checked:border-gray-900"
+                        >
+                          <Radio.Indicator className="size-2 rounded-full bg-gray-900" />
+                        </Radio.Root>
+                        {label}
+                      </label>
+                    ))}
+                  </RadioGroup>
+                )}
+              />
+              <p id="pdf-pattern-help" className="text-sm text-gray-600">
+                Use one format for both document types, or give each its own format.
+              </p>
+            </fieldset>
+            {exportFields.map(([key, label, kind]) => (
+              <Field
+                key={key}
+                label={label}
+                inputId={key}
+                error={form.formState.errors.exports?.[key]?.message}
+                description={`Example: ${filename(kind)}`}
+              >
+                <Input
+                  id={key}
+                  className="font-mono text-sm"
+                  {...form.register(`exports.${key}`)}
+                />
+              </Field>
+            ))}
+          </div>
+          <div>
+            <TokenHelp
+              tokens={["title", "kind", "date", "dateShort", "year", "month", "monthShort", "day"]}
+            />
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              Token values use lowercase and hyphens. Invalid filename characters are removed and
+              the file extension is added automatically.
+            </p>
+          </div>
+        </Tabs.Panel>
+        <Tabs.Panel value="Data" keepMounted className="space-y-10 data-hidden:hidden">
+          <DataSection />
+          <DangerZone />
+        </Tabs.Panel>
+      </Tabs.Root>
+      <FormSubmitBar>
+        <Button
+          type="button"
+          intent="secondary"
+          disabled={!form.formState.isDirty || form.formState.isSubmitting}
+          onClick={() => form.reset()}
+        >
+          Revert
+        </Button>
+        <Button type="submit" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Saving..." : "Save changes"}
+        </Button>
+      </FormSubmitBar>
+    </form>
+  )
+}
+
+function SectionHeading({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
+  return (
+    <header>
+      <Heading2>{title}</Heading2>
+      <p className="mt-1 text-sm text-gray-600">{children}</p>
+    </header>
+  )
+}
+
+function TokenHelp({ tokens }: Readonly<{ tokens: readonly string[] }>) {
+  return (
+    <p className="mt-3 text-xs leading-loose text-gray-500">
+      Tokens:{" "}
+      {tokens.map((token, index) => (
+        <span key={token}>
+          {index > 0 && " "}
+          <code className="inline-block rounded bg-gray-100 px-1.5 font-mono text-gray-600">{`{${token}}`}</code>
+        </span>
+      ))}
+    </p>
   )
 }
