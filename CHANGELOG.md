@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/AFOJ/dossier/compare/dossier-v1.8.0...dossier-v1.9.0) (2026-10-31)
+
+
+### Features
+
+* introduce tabbed settings and grouped preferences ([#52](https://github.com/AFOJ/dossier/issues/52)) ([5551edc](https://github.com/AFOJ/dossier/commit/5551edc9468c7ba0f92ddf1ec92adef732070e55))
+
+
+### Bug Fixes
+
+* improve social link layouts and mobile navigation layering ([#50](https://github.com/AFOJ/dossier/issues/50)) ([e211314](https://github.com/AFOJ/dossier/commit/e211314e8ab59ec0390eba3ae389c3bb724577ca))
+
 ## [1.8.0](https://github.com/AFOJ/dossier/compare/dossier-v1.7.0...dossier-v1.8.0) (2026-10-29)
 
 
