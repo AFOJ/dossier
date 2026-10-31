@@ -67,7 +67,7 @@ export function SetupProfileFields({ step }: Readonly<{ step: number }>) {
           </div>
         </fieldset>
       )}
-      {step === 2 && <SocialLinksFields showLabels headingClassName="sr-only" />}
+      {step === 2 && <SocialLinksFields showLabels hideLabels headingClassName="sr-only" />}
     </>
   )
 }

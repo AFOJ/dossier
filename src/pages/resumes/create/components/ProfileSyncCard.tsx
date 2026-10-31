@@ -34,7 +34,7 @@ export function ProfileSyncCard(props: Readonly<ProfileSyncCardProps>) {
       {!syncProfile && (
         <Card tone="plain" className="gap-6">
           <PersonalInfoFields />
-          <SocialLinksFields />
+          <SocialLinksFields showLabels hideLabels />
         </Card>
       )}
     </Card>
