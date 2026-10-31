@@ -191,8 +191,10 @@ describe("useProcessedCoverLetter", () => {
 
   it("ignores the resume format when naming cover letter PDFs", async () => {
     await upsertSettings({
-      defaultResumePdfFilenameFormat: "{title}-CV.pdf",
-      defaultCoverLetterPdfFilenameFormat: "{title}-CL.pdf",
+      exports: {
+        defaultResumePdfFilenameFormat: "{title}-CV.pdf",
+        defaultCoverLetterPdfFilenameFormat: "{title}-CL.pdf",
+      },
     })
     try {
       const letter = await makeLetter()
@@ -212,8 +214,7 @@ describe("useProcessedCoverLetter", () => {
 
   it("uses the shared format when the pattern is shared", async () => {
     await upsertSettings({
-      pdfFilenamePattern: "shared",
-      defaultPdfFilenameFormat: "{kind}-{title}.pdf",
+      exports: { pdfFilenamePattern: "shared", defaultPdfFilenameFormat: "{kind}-{title}.pdf" },
     })
     try {
       const letter = await makeLetter()

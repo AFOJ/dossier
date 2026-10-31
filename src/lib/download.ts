@@ -1,3 +1,4 @@
+import type { Settings } from "@/db/settings"
 export function downloadJson(filename: string, data: unknown): void {
   downloadBlob(filename, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }))
 }
@@ -23,10 +24,10 @@ export type PdfKind = "resume" | "cover-letter"
 export function getExportFilenameWithSettings(
   kind: ExportKind,
   title: string,
-  settings: { defaultExportFilenameFormat: string },
+  settings: { exports: Pick<Settings["exports"], "defaultExportFilenameFormat"> },
   date = new Date(),
 ): string {
-  const format = settings.defaultExportFilenameFormat
+  const format = settings.exports.defaultExportFilenameFormat
   const dateShort = date.toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
@@ -112,20 +113,15 @@ export function getProcessedPdfFilename(
 export function getPdfFilenameWithSettings(
   kind: PdfKind,
   title: string,
-  settings: {
-    pdfFilenamePattern: "shared" | "ad-hoc"
-    defaultPdfFilenameFormat: string
-    defaultResumePdfFilenameFormat: string
-    defaultCoverLetterPdfFilenameFormat: string
-  },
+  settings: { exports: Omit<Settings["exports"], "defaultExportFilenameFormat"> },
   date = new Date(),
 ): string {
   const format =
-    settings.pdfFilenamePattern === "shared"
-      ? settings.defaultPdfFilenameFormat
+    settings.exports.pdfFilenamePattern === "shared"
+      ? settings.exports.defaultPdfFilenameFormat
       : kind === "resume"
-        ? settings.defaultResumePdfFilenameFormat
-        : settings.defaultCoverLetterPdfFilenameFormat
+        ? settings.exports.defaultResumePdfFilenameFormat
+        : settings.exports.defaultCoverLetterPdfFilenameFormat
 
   return getProcessedPdfFilename(kind, title, format, date)
 }

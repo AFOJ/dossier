@@ -91,23 +91,23 @@ describe("getPdfFilenameWithSettings", () => {
   }
 
   it("uses the per-kind format in ad hoc mode", () => {
-    expect(getPdfFilenameWithSettings("resume", "My Resume", baseSettings, DATE)).toBe(
+    expect(getPdfFilenameWithSettings("resume", "My Resume", { exports: baseSettings }, DATE)).toBe(
       "my-resume-resume.pdf",
     )
-    expect(getPdfFilenameWithSettings("cover-letter", "My Letter", baseSettings, DATE)).toBe(
-      "my-letter-cover-letter.pdf",
-    )
+    expect(
+      getPdfFilenameWithSettings("cover-letter", "My Letter", { exports: baseSettings }, DATE),
+    ).toBe("my-letter-cover-letter.pdf")
   })
 
   it("uses the shared format in shared mode, with {kind} telling them apart", () => {
     const settings = { ...baseSettings, pdfFilenamePattern: "shared" as const }
 
-    expect(getPdfFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+    expect(getPdfFilenameWithSettings("resume", "My Resume", { exports: settings }, DATE)).toBe(
       "my-resume-resume.pdf",
     )
-    expect(getPdfFilenameWithSettings("cover-letter", "My Letter", settings, DATE)).toBe(
-      "my-letter-cover-letter.pdf",
-    )
+    expect(
+      getPdfFilenameWithSettings("cover-letter", "My Letter", { exports: settings }, DATE),
+    ).toBe("my-letter-cover-letter.pdf")
   })
 
   it("uses a custom shared format over a custom per-kind format", () => {
@@ -117,7 +117,7 @@ describe("getPdfFilenameWithSettings", () => {
       defaultPdfFilenameFormat: "{kind}-{title}-{year}.pdf",
     }
 
-    expect(getPdfFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+    expect(getPdfFilenameWithSettings("resume", "My Resume", { exports: settings }, DATE)).toBe(
       "resume-my-resume-2026.pdf",
     )
   })
@@ -127,7 +127,7 @@ describe("getExportFilenameWithSettings", () => {
   const settings = { defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT }
 
   it("renders the default format and keeps the .json suffix", () => {
-    expect(getExportFilenameWithSettings("resume", "My Resume", settings, DATE)).toBe(
+    expect(getExportFilenameWithSettings("resume", "My Resume", { exports: settings }, DATE)).toBe(
       "resume-my-resume-export-Sep 17, 2026.json",
     )
   })
@@ -137,14 +137,14 @@ describe("getExportFilenameWithSettings", () => {
       getExportFilenameWithSettings(
         "resume",
         "My Resume",
-        { defaultExportFilenameFormat: "{title}.json" },
+        { exports: { defaultExportFilenameFormat: "{title}.json" } },
         DATE,
       ),
     ).toBe("my-resume.json")
   })
 
   it("falls back to the kind when the title is empty", () => {
-    expect(getExportFilenameWithSettings("resume", "", settings, DATE)).toBe(
+    expect(getExportFilenameWithSettings("resume", "", { exports: settings }, DATE)).toBe(
       "resume-resume-export-Sep 17, 2026.json",
     )
   })

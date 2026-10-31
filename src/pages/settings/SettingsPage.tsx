@@ -77,10 +77,10 @@ function DocumentsForm({ settings }: { settings: Settings }) {
   const { form, onSubmit } = useSettingsForm(settings)
   const { profile } = useProtectedRouteData()
 
-  const pdfFilenamePattern = form.watch("pdfFilenamePattern")
+  const pdfFilenamePattern = form.watch("exports.pdfFilenamePattern")
   const isShared = pdfFilenamePattern === "shared"
 
-  const titleFormat = form.watch("defaultResumeTitleFormat")
+  const titleFormat = form.watch("documents.defaultResumeTitleFormat")
   const titleFormatPreview = renderTitle(titleFormat, { profile })
 
   const pdfFields = isShared ? (
@@ -88,12 +88,12 @@ function DocumentsForm({ settings }: { settings: Settings }) {
       <Field
         label="PDF filename"
         inputId="defaultPdfFilenameFormat"
-        error={form.formState.errors.defaultPdfFilenameFormat?.message}
+        error={form.formState.errors.exports?.defaultPdfFilenameFormat?.message}
       >
         <Input
           id="defaultPdfFilenameFormat"
           placeholder="{title}-{kind}.pdf"
-          {...form.register("defaultPdfFilenameFormat")}
+          {...form.register("exports.defaultPdfFilenameFormat")}
           className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
         />
       </Field>
@@ -123,12 +123,12 @@ function DocumentsForm({ settings }: { settings: Settings }) {
         <Field
           label="Resume PDF filename"
           inputId="defaultResumePdfFilenameFormat"
-          error={form.formState.errors.defaultResumePdfFilenameFormat?.message}
+          error={form.formState.errors.exports?.defaultResumePdfFilenameFormat?.message}
         >
           <Input
             id="defaultResumePdfFilenameFormat"
             placeholder="{title}-resume.pdf"
-            {...form.register("defaultResumePdfFilenameFormat")}
+            {...form.register("exports.defaultResumePdfFilenameFormat")}
             className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
           />
         </Field>
@@ -153,12 +153,12 @@ function DocumentsForm({ settings }: { settings: Settings }) {
         <Field
           label="Cover letter PDF filename"
           inputId="defaultCoverLetterPdfFilenameFormat"
-          error={form.formState.errors.defaultCoverLetterPdfFilenameFormat?.message}
+          error={form.formState.errors.exports?.defaultCoverLetterPdfFilenameFormat?.message}
         >
           <Input
             id="defaultCoverLetterPdfFilenameFormat"
             placeholder="{title}-cover-letter.pdf"
-            {...form.register("defaultCoverLetterPdfFilenameFormat")}
+            {...form.register("exports.defaultCoverLetterPdfFilenameFormat")}
             className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
           />
         </Field>
@@ -187,7 +187,7 @@ function DocumentsForm({ settings }: { settings: Settings }) {
         <div className="flex items-start gap-3">
           <Controller
             control={form.control}
-            name="defaultSyncProfile"
+            name="documents.defaultSyncProfile"
             render={({ field }) => (
               <SyncSwitch
                 checked={field.value}
@@ -209,7 +209,7 @@ function DocumentsForm({ settings }: { settings: Settings }) {
           <Field
             label="New resume title"
             inputId="defaultResumeTitleFormat"
-            error={form.formState.errors.defaultResumeTitleFormat?.message}
+            error={form.formState.errors.documents?.defaultResumeTitleFormat?.message}
             description={
               <>
                 Currently produces: <strong className="font-semibold">{titleFormatPreview}</strong>
@@ -219,7 +219,7 @@ function DocumentsForm({ settings }: { settings: Settings }) {
             <Input
               id="defaultResumeTitleFormat"
               placeholder="{profile.role} Resume"
-              {...form.register("defaultResumeTitleFormat")}
+              {...form.register("documents.defaultResumeTitleFormat")}
               className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
             />
           </Field>
@@ -230,12 +230,12 @@ function DocumentsForm({ settings }: { settings: Settings }) {
           <Field
             label="Export filename format"
             inputId="defaultExportFilenameFormat"
-            error={form.formState.errors.defaultExportFilenameFormat?.message}
+            error={form.formState.errors.exports?.defaultExportFilenameFormat?.message}
           >
             <Input
               id="defaultExportFilenameFormat"
               placeholder="{kind}-{title}-export-{dateShort}"
-              {...form.register("defaultExportFilenameFormat")}
+              {...form.register("exports.defaultExportFilenameFormat")}
               className="h-8 border-[#d1d9e0] px-3 font-mono text-[13px]"
             />
           </Field>
@@ -274,10 +274,10 @@ function DocumentsForm({ settings }: { settings: Settings }) {
           <Field label="PDF filename pattern" inputId="pdfFilenamePattern">
             <Controller
               control={form.control}
-              name="pdfFilenamePattern"
+              name="exports.pdfFilenamePattern"
               render={({ field }) => (
                 <RadioGroup
-                  name="pdfFilenamePattern"
+                  name="exports.pdfFilenamePattern"
                   value={field.value}
                   onValueChange={field.onChange}
                   className="flex items-center gap-4"

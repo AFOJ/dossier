@@ -34,8 +34,8 @@ vi.mock("@/pages/resumes/list/hooks/useProcessedResume", () => ({
 vi.mock("@/lib/download", () => ({
   downloadJson: vi.fn(),
   getExportFilenameWithSettings: vi.fn(
-    (kind: string, title: string, settings: { defaultExportFilenameFormat: string }) =>
-      `${settings.defaultExportFilenameFormat}/${kind}/${title}`,
+    (kind: string, title: string, settings: { exports: { defaultExportFilenameFormat: string } }) =>
+      `${settings.exports.defaultExportFilenameFormat}/${kind}/${title}`,
   ),
 }))
 
@@ -210,11 +210,13 @@ describe("ResumesListPage", () => {
         "resume",
         "Export Me",
         expect.objectContaining({
-          defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
+          exports: expect.objectContaining({
+            defaultExportFilenameFormat: DEFAULT_SETTINGS.exports.defaultExportFilenameFormat,
+          }),
         }),
       )
       expect(downloadJson).toHaveBeenCalledWith(
-        `${DEFAULT_SETTINGS.defaultExportFilenameFormat}/resume/Export Me`,
+        `${DEFAULT_SETTINGS.exports.defaultExportFilenameFormat}/resume/Export Me`,
         expect.objectContaining({
           id: "exp-1",
           title: "Export Me",

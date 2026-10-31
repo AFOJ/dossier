@@ -170,42 +170,17 @@ export const coverLetterExportContactSchema = z.object({
 })
 
 export const appSettingsSchema = z.object({
-  /** Whether new resumes and cover letters start synced to the profile. */
-  defaultSyncProfile: z.boolean(),
-  /**
-   * Title format for new resumes; see {@link renderTitle}.
-   *
-   * Bounded because settings round-trip through the export file, so an
-   * unbounded format string would be restorable from an arbitrary file.
-   */
-  defaultResumeTitleFormat: z.string().min(1).max(120),
-  /**
-   * Export filename format for downloaded documents.
-   *
-   * Available tokens: {kind}, {title}, {date}, {dateShort}, {year}, {month}, {monthShort}, {day}.
-   * Invalid filename characters (<>:"/\|?*) will be sanitized automatically.
-   */
-  defaultExportFilenameFormat: z.string().min(1).max(120),
-  /**
-   * PDF filename formats, one per document kind so resume and cover-letter
-   * PDFs can be named differently. Supports `{title}` (filename-safe title,
-   * falling back to the kind), `{kind}`, and the `{date}`, `{dateShort}`,
-   * `{year}`, `{month}`, `{monthShort}`, `{day}` tokens. A `.pdf` suffix is
-   * added on download unless the rendered name already ends with one.
-   */
-  defaultResumePdfFilenameFormat: z.string().min(1).max(120),
-  defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
-  /**
-   * PDF filename format used when pdfFilenamePattern is "shared".
-   * Supports `{title}` (filename-safe title), `{kind}` ("resume" or "cover-letter"),
-   * and date tokens. A `.pdf` suffix is added if missing.
-   */
-  defaultPdfFilenameFormat: z.string().min(1).max(120),
-  /**
-   * PDF filename pattern mode: "shared" uses one format with {kind} token,
-   * "ad-hoc" uses separate formats per document type.
-   */
-  pdfFilenamePattern: z.enum(["shared", "ad-hoc"]).default("ad-hoc"),
+  documents: z.object({
+    defaultSyncProfile: z.boolean(),
+    defaultResumeTitleFormat: z.string().min(1).max(120),
+  }),
+  exports: z.object({
+    defaultExportFilenameFormat: z.string().min(1).max(120),
+    defaultResumePdfFilenameFormat: z.string().min(1).max(120),
+    defaultCoverLetterPdfFilenameFormat: z.string().min(1).max(120),
+    defaultPdfFilenameFormat: z.string().min(1).max(120),
+    pdfFilenamePattern: z.enum(["shared", "ad-hoc"]),
+  }),
 })
 
 export type SettingsData = z.infer<typeof appSettingsSchema>

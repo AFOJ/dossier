@@ -604,7 +604,7 @@ export function useCreateResumeForm(
       // capture the placeholder rather than the stored format.
       title: "",
       tagIds: [],
-      syncProfile: settings.defaultSyncProfile,
+      syncProfile: settings.documents.defaultSyncProfile,
       ...(profile
         ? toContactValues(profile)
         : {
@@ -623,10 +623,13 @@ export function useCreateResumeForm(
 
   const hydrate = useCallback(
     (setUnlessTouched: (name: "syncProfile" | "title", value: unknown) => void) => {
-      setUnlessTouched("syncProfile", settings.defaultSyncProfile)
-      setUnlessTouched("title", renderTitle(settings.defaultResumeTitleFormat, { profile }))
+      setUnlessTouched("syncProfile", settings.documents.defaultSyncProfile)
+      setUnlessTouched(
+        "title",
+        renderTitle(settings.documents.defaultResumeTitleFormat, { profile }),
+      )
     },
-    [profile, settings.defaultResumeTitleFormat, settings.defaultSyncProfile],
+    [profile, settings.documents.defaultResumeTitleFormat, settings.documents.defaultSyncProfile],
   )
 
   useSettingsHydration({ form, settingsLoaded, hydrate })

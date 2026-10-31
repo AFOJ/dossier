@@ -1,122 +1,97 @@
 import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it } from "vitest"
 import { db, type AppSettings } from "@/db/db"
-import { DEFAULT_SETTINGS, SETTINGS_ID, getSettings, upsertSettings } from "@/db/settings"
+import {
+  DEFAULT_SETTINGS,
+  SETTINGS_ID,
+  getSettings,
+  parseStoredSettings,
+  upsertSettings,
+} from "@/db/settings"
 
 beforeEach(async () => {
   await db.settings.clear()
 })
-
-// Rows like these exist after a schema change: written by an older build, or by
-// a hand-edited database. getSettings must survive all of them.
 function writeRawRow(row: unknown) {
   return db.settings.put(row as AppSettings)
 }
 
-describe("getSettings", () => {
-  it("returns the defaults when nothing has been saved", async () => {
-    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
+describe("settings compatibility", () => {
+  it("provides fresh defaults for absent or malformed groups", () => {
+    for (const row of [undefined, null, [], { documents: null, exports: [] }]) {
+      expect(parseStoredSettings(row)).toEqual(DEFAULT_SETTINGS)
+    }
+    const first = parseStoredSettings(undefined)
+    first.documents.defaultSyncProfile = false
+    expect(parseStoredSettings(undefined)).toEqual(DEFAULT_SETTINGS)
   })
 
-  it("returns the saved settings", async () => {
-    await upsertSettings({ defaultSyncProfile: false })
-
-    expect(await getSettings()).toEqual({
-      ...DEFAULT_SETTINGS,
-      defaultSyncProfile: false,
-    })
-  })
-
-  it("fills gaps in a row written before a setting existed", async () => {
-    await writeRawRow({ id: SETTINGS_ID, defaultSyncProfile: false })
-
-    expect(await getSettings()).toEqual({
-      ...DEFAULT_SETTINGS,
-      defaultSyncProfile: false,
-    })
-  })
-
-  it("drops keys it does not recognise", async () => {
-    await writeRawRow({ ...DEFAULT_SETTINGS, id: SETTINGS_ID, retiredOption: true })
-
-    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
-    expect(await getSettings()).not.toHaveProperty("retiredOption")
-  })
-
-  it("falls back to the defaults rather than propagating a corrupt value", async () => {
+  it("reads legacy flat settings without losing valid values", async () => {
     await writeRawRow({
       id: SETTINGS_ID,
-      defaultSyncProfile: "yes",
-      defaultResumeTitleFormat: 42,
-    })
-
-    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
-  })
-
-  it("falls back to the defaults when the format is empty", async () => {
-    await writeRawRow({ ...DEFAULT_SETTINGS, id: SETTINGS_ID, defaultResumeTitleFormat: "" })
-
-    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
-  })
-
-  it("keeps the valid fields when one field holds a retired value", async () => {
-    await writeRawRow({
-      ...DEFAULT_SETTINGS,
-      id: SETTINGS_ID,
       defaultSyncProfile: false,
-      defaultExportFilenameFormat: "{title}-export",
+      defaultResumeTitleFormat: "{profile.name} CV",
+      defaultExportFilenameFormat: "{title}.json",
       pdfFilenamePattern: "per-kind",
+      defaultPdfFilenameFormat: "",
     })
-
-    const settings = await getSettings()
-
-    expect(settings.defaultSyncProfile).toBe(false)
-    expect(settings.defaultExportFilenameFormat).toBe("{title}-export")
-    expect(settings.pdfFilenamePattern).toBe(DEFAULT_SETTINGS.pdfFilenamePattern)
-  })
-})
-
-describe("upsertSettings", () => {
-  it("merges into the existing settings rather than replacing them", async () => {
-    await upsertSettings({ defaultResumeTitleFormat: "{profile.name}" })
-    await upsertSettings({ defaultSyncProfile: false })
-
     expect(await getSettings()).toEqual({
-      defaultSyncProfile: false,
-      defaultResumeTitleFormat: "{profile.name}",
-      defaultExportFilenameFormat: DEFAULT_SETTINGS.defaultExportFilenameFormat,
-      defaultResumePdfFilenameFormat: DEFAULT_SETTINGS.defaultResumePdfFilenameFormat,
-      defaultCoverLetterPdfFilenameFormat: DEFAULT_SETTINGS.defaultCoverLetterPdfFilenameFormat,
-      defaultPdfFilenameFormat: DEFAULT_SETTINGS.defaultPdfFilenameFormat,
-      pdfFilenamePattern: DEFAULT_SETTINGS.pdfFilenamePattern,
+      documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "{profile.name} CV" },
+      exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "{title}.json" },
     })
   })
 
-  it("keeps a single row", async () => {
-    await upsertSettings({ defaultSyncProfile: false })
-    await upsertSettings({ defaultSyncProfile: true })
-
-    expect(await db.settings.count()).toBe(1)
+  it("prefers grouped values and defaults invalid fields independently", () => {
+    expect(
+      parseStoredSettings({
+        defaultSyncProfile: true,
+        defaultResumeTitleFormat: "Legacy",
+        documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "" },
+        exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "retired" },
+      }),
+    ).toEqual({
+      documents: { ...DEFAULT_SETTINGS.documents, defaultSyncProfile: false },
+      exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "custom-{title}" },
+    })
   })
 
-  it("does not lose one update to another that starts alongside it", async () => {
+  it("merges partial groups and writes only the canonical shape", async () => {
+    await writeRawRow({
+      id: SETTINGS_ID,
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "Legacy title",
+    })
+    await upsertSettings({ exports: { pdfFilenamePattern: "shared" } })
+    await upsertSettings({ documents: { defaultResumeTitleFormat: "New title" } })
+    const saved = await getSettings()
+    expect(saved.documents).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "New title",
+    })
+    expect(saved.exports).toEqual({ ...DEFAULT_SETTINGS.exports, pdfFilenamePattern: "shared" })
+    expect(await db.settings.toArray()).toEqual([{ ...saved, id: SETTINGS_ID }])
+  })
+
+  it("preserves concurrent updates to different fields within the same group", async () => {
     await Promise.all([
-      upsertSettings({ defaultSyncProfile: false }),
-      upsertSettings({ defaultResumeTitleFormat: "{profile.name} CV" }),
+      upsertSettings({ documents: { defaultSyncProfile: false } }),
+      upsertSettings({ documents: { defaultResumeTitleFormat: "{profile.name} CV" } }),
+      upsertSettings({ exports: { defaultPdfFilenameFormat: "{title}-custom" } }),
     ])
-
-    const settings = await getSettings()
-
-    expect(settings.defaultSyncProfile).toBe(false)
-    expect(settings.defaultResumeTitleFormat).toBe("{profile.name} CV")
+    const saved = await getSettings()
+    expect(saved.documents).toEqual({
+      defaultSyncProfile: false,
+      defaultResumeTitleFormat: "{profile.name} CV",
+    })
+    expect(saved.exports.defaultPdfFilenameFormat).toBe("{title}-custom")
   })
 
-  it("rejects a value the reader could not use", async () => {
-    await expect(upsertSettings({ defaultResumeTitleFormat: "" })).rejects.toThrow(
+  it("rejects invalid updates without changing the saved settings", async () => {
+    await upsertSettings({ documents: { defaultSyncProfile: false } })
+    const saved = await getSettings()
+    await expect(upsertSettings({ documents: { defaultResumeTitleFormat: "" } })).rejects.toThrow(
       "Invalid app settings.",
     )
-
-    // The rejected write must not have partially landed.
-    expect(await getSettings()).toEqual(DEFAULT_SETTINGS)
+    expect(await getSettings()).toEqual(saved)
   })
 })

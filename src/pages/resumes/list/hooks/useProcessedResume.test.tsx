@@ -173,7 +173,7 @@ describe("useProcessedResume", () => {
   }, 20_000)
 
   it("honors a custom resume filename format", async () => {
-    await upsertSettings({ defaultResumePdfFilenameFormat: "{title}-CV.pdf" })
+    await upsertSettings({ exports: { defaultResumePdfFilenameFormat: "{title}-CV.pdf" } })
     try {
       const resume = await makeResume()
       const { result } = renderHook(() => useProcessedResume(resume))
@@ -192,8 +192,7 @@ describe("useProcessedResume", () => {
 
   it("uses the shared format when the pattern is shared", async () => {
     await upsertSettings({
-      pdfFilenamePattern: "shared",
-      defaultPdfFilenameFormat: "{kind}-{title}.pdf",
+      exports: { pdfFilenamePattern: "shared", defaultPdfFilenameFormat: "{kind}-{title}.pdf" },
     })
     try {
       const resume = await makeResume()

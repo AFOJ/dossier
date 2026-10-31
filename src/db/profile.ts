@@ -71,7 +71,7 @@ export async function deleteProfile(): Promise<void> {
 }
 
 export interface ExportFile {
-  version: 3
+  version: 4
   exportedAt: string
   profile: Omit<Profile, "id">
   tags: Tag[]
@@ -104,7 +104,7 @@ export async function exportProfile(): Promise<ExportFile> {
   ])
 
   return {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     profile: profileData,
     tags,
@@ -116,11 +116,9 @@ export async function exportProfile(): Promise<ExportFile> {
 
 export const exportFileSchema = z
   .object({
-    // Any numeric version is accepted so future formats do not need a code
-    // change here. Backups written before tags existed omit `tags` and document
-    // `tagIds`, which the defaults below turn into empty arrays. The strict
-    // objects still reject anything whose shape we do not recognise.
-    version: z.number().int(),
+    // Versions 1–3 use flat settings; version 4 groups them by purpose.
+    // Refuse unknown versions before a restore can replace local data.
+    version: z.number().int().min(1).max(4),
     exportedAt: z.string(),
     profile: exportContactSchema,
     tags: z
