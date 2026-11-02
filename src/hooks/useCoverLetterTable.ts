@@ -1,3 +1,5 @@
+import { useInitialPageData } from "@/hooks/useInitialPageData"
+import { readListQuery, listQueryKey } from "@/lib/listQuery"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useLiveQuery } from "dexie-react-hooks"
@@ -18,9 +20,12 @@ type CoverLetterQueryState = {
 export function useCoverLetterTable() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const committedQuery = (searchParams.get("query") ?? "").trim()
-  const requestedPage = toPositiveInteger(Number(searchParams.get("page")), DEFAULT_PAGE)
-  const requestedPerPage = toPositiveInteger(Number(searchParams.get("perPage")), DEFAULT_PAGE_SIZE)
+  const initial = useInitialPageData()?.coverLetters
+  const {
+    query: committedQuery,
+    page: requestedPage,
+    perPage: requestedPerPage,
+  } = readListQuery(searchParams)
 
   const [query, setInputQuery] = useState(committedQuery)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -63,19 +68,27 @@ export function useCoverLetterTable() {
     }
   }, [committedQuery])
 
-  const totalDbCount = useLiveQuery(() => db.coverLetters.count(), [])
+  const totalDbCount = useLiveQuery(() => db.coverLetters.count(), [], initial?.totalDbCount)
 
-  const queryKey = `${committedQuery}\u0000${requestedPage}\u0000${requestedPerPage}`
-  const taggedResult = useLiveQuery<CoverLetterQueryState>(async () => {
-    return {
-      key: queryKey,
-      result: await queryCoverLetters({
-        query: committedQuery,
-        page: requestedPage,
-        perPage: requestedPerPage,
-      }),
-    }
-  }, [queryKey])
+  const queryKey = listQueryKey({
+    query: committedQuery,
+    page: requestedPage,
+    perPage: requestedPerPage,
+  })
+  const taggedResult = useLiveQuery<CoverLetterQueryState, CoverLetterQueryState | undefined>(
+    async () => {
+      return {
+        key: queryKey,
+        result: await queryCoverLetters({
+          query: committedQuery,
+          page: requestedPage,
+          perPage: requestedPerPage,
+        }),
+      }
+    },
+    [queryKey],
+    initial?.query,
+  )
 
   const result = taggedResult?.key === queryKey ? taggedResult.result : undefined
 

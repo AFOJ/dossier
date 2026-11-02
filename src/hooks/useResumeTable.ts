@@ -1,3 +1,5 @@
+import { useInitialPageData } from "@/hooks/useInitialPageData"
+import { readListQuery, listQueryKey } from "@/lib/listQuery"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useLiveQuery } from "dexie-react-hooks"
@@ -18,9 +20,12 @@ type ResumeQueryState = {
 export function useResumeTable() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const committedQuery = (searchParams.get("query") ?? "").trim()
-  const requestedPage = toPositiveInteger(Number(searchParams.get("page")), DEFAULT_PAGE)
-  const requestedPerPage = toPositiveInteger(Number(searchParams.get("perPage")), DEFAULT_PAGE_SIZE)
+  const initial = useInitialPageData()?.resumes
+  const {
+    query: committedQuery,
+    page: requestedPage,
+    perPage: requestedPerPage,
+  } = readListQuery(searchParams)
 
   const [query, setInputQuery] = useState(committedQuery)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -59,10 +64,14 @@ export function useResumeTable() {
 
   useEffect(() => () => window.clearTimeout(commitTimer.current), [committedQuery])
 
-  const totalDbCount = useLiveQuery(() => db.resumes.count(), [])
+  const totalDbCount = useLiveQuery(() => db.resumes.count(), [], initial?.totalDbCount)
 
-  const queryKey = `${committedQuery}\u0000${requestedPage}\u0000${requestedPerPage}`
-  const taggedResult = useLiveQuery<ResumeQueryState>(
+  const queryKey = listQueryKey({
+    query: committedQuery,
+    page: requestedPage,
+    perPage: requestedPerPage,
+  })
+  const taggedResult = useLiveQuery<ResumeQueryState, ResumeQueryState | undefined>(
     async () => ({
       key: queryKey,
       result: await queryResumes({
@@ -72,6 +81,7 @@ export function useResumeTable() {
       }),
     }),
     [queryKey],
+    initial?.query,
   )
 
   const result = taggedResult?.key === queryKey ? taggedResult.result : undefined

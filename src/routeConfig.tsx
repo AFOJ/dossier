@@ -1,4 +1,5 @@
-import { createRoutesFromElements, Route, redirect, Outlet } from "react-router-dom"
+import type { ComponentType } from "react"
+import { createRoutesFromElements, Route, redirect, Outlet, useLoaderData } from "react-router-dom"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ModalProvider } from "@/components/modal"
 import { Toaster } from "@/components/toast"
@@ -7,6 +8,26 @@ import { getCoverLetter } from "@/db/coverLetter"
 import { getResume } from "@/db/resume"
 import type { ProtectedRouteData } from "@/hooks/useProtectedRouteData"
 import ProtectedLayout from "@/layouts/ProtectedLayout"
+
+import { InitialPageDataContext, type InitialPageData } from "@/hooks/useInitialPageData"
+import {
+  settingsPageLoader,
+  resumesPageLoader,
+  coverLettersPageLoader,
+  tagsPageLoader,
+  initialListShouldRevalidate,
+} from "@/loaders/initialPageData"
+
+function withInitialPageData(Page: ComponentType) {
+  return function LoadedPage() {
+    const data = useLoaderData<InitialPageData>()
+    return (
+      <InitialPageDataContext value={data}>
+        <Page />
+      </InitialPageDataContext>
+    )
+  }
+}
 
 const protectedRouteLoader = async () => {
   const profile = await getProfile()
@@ -110,11 +131,18 @@ export function createAppRoutes() {
           <Route path="resumes">
             <Route
               index
-              lazy={async () => ({ Component: (await import("@/pages/resumes/list")).default })}
+              loader={resumesPageLoader}
+              shouldRevalidate={initialListShouldRevalidate}
+              lazy={async () => ({
+                Component: withInitialPageData((await import("@/pages/resumes/list")).default),
+              })}
             />
             <Route
               path="create"
-              lazy={async () => ({ Component: (await import("@/pages/resumes/create")).default })}
+              loader={settingsPageLoader}
+              lazy={async () => ({
+                Component: withInitialPageData((await import("@/pages/resumes/create")).default),
+              })}
             />
             <Route
               path="upload"
@@ -130,14 +158,21 @@ export function createAppRoutes() {
           <Route path="cover-letters">
             <Route
               index
+              loader={coverLettersPageLoader}
+              shouldRevalidate={initialListShouldRevalidate}
               lazy={async () => ({
-                Component: (await import("@/pages/cover-letters/list")).default,
+                Component: withInitialPageData(
+                  (await import("@/pages/cover-letters/list")).default,
+                ),
               })}
             />
             <Route
               path="create"
+              loader={settingsPageLoader}
               lazy={async () => ({
-                Component: (await import("@/pages/cover-letters/create")).default,
+                Component: withInitialPageData(
+                  (await import("@/pages/cover-letters/create")).default,
+                ),
               })}
             />
             <Route
@@ -161,11 +196,18 @@ export function createAppRoutes() {
           />
           <Route
             path="tags"
-            lazy={async () => ({ Component: (await import("@/pages/tags")).default })}
+            loader={tagsPageLoader}
+            shouldRevalidate={initialListShouldRevalidate}
+            lazy={async () => ({
+              Component: withInitialPageData((await import("@/pages/tags")).default),
+            })}
           />
           <Route
             path="settings"
-            lazy={async () => ({ Component: (await import("@/pages/settings")).default })}
+            loader={settingsPageLoader}
+            lazy={async () => ({
+              Component: withInitialPageData((await import("@/pages/settings")).default),
+            })}
           />
         </Route>
       </Route>

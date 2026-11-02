@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Outlet } from "react-router-dom"
+import { Outlet, useNavigation } from "react-router-dom"
 import { Drawer } from "@base-ui/react/drawer"
 import { Menu01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -7,6 +7,7 @@ import { Sidebar } from "@/layouts/Sidebar"
 
 export default function ProtectedLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const navigation = useNavigation()
 
   return (
     <div className="min-h-dvh bg-white lg:pl-64">
@@ -18,7 +19,10 @@ export default function ProtectedLayout() {
         <MobileDrawer onNavigate={() => setDrawerOpen(false)} />
       </Drawer.Root>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      <main
+        aria-busy={navigation.state === "loading"}
+        className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-8"
+      >
         <Outlet />
       </main>
     </div>

@@ -1,4 +1,5 @@
-import { Suspense, lazy, useRef } from "react"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
+import { useRef } from "react"
 import { Controller, FormProvider } from "react-hook-form"
 import {
   Button,
@@ -17,14 +18,6 @@ import { useSettings } from "@/hooks/useSettings"
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useCreateCoverLetterForm } from "@/pages/cover-letters/create/hooks/useCreateCoverLetterForm"
-
-const RichTextEditor = lazy(() => {
-  return import("@/components/ui/RichTextEditor").then((module) => {
-    return {
-      default: module.RichTextEditor,
-    }
-  })
-})
 
 export default function CreateCoverLetterPage() {
   const titleFieldRef = useRef<HTMLDivElement>(null)
@@ -121,29 +114,21 @@ export default function CreateCoverLetterPage() {
             required
             error={form.formState.errors.body?.message}
           >
-            <Suspense
-              fallback={
-                <div className="rounded-[10px] border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
-                  Loading editor…
-                </div>
-              }
-            >
-              <Controller
-                control={form.control}
-                name="body"
-                render={({ field, fieldState }) => {
-                  return (
-                    <RichTextEditor
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      placeholder="Write your cover letter…"
-                      invalid={Boolean(fieldState.error)}
-                      label="Cover letter body"
-                    />
-                  )
-                }}
-              />
-            </Suspense>
+            <Controller
+              control={form.control}
+              name="body"
+              render={({ field, fieldState }) => {
+                return (
+                  <RichTextEditor
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Write your cover letter…"
+                    invalid={Boolean(fieldState.error)}
+                    label="Cover letter body"
+                  />
+                )
+              }}
+            />
           </Field>
 
           {formError && (
