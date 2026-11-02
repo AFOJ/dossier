@@ -1,3 +1,4 @@
+import { useInitialPageData } from "@/hooks/useInitialPageData"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useLiveQuery } from "dexie-react-hooks"
@@ -53,7 +54,8 @@ export function useTagsTable() {
     }
   }, [committedQuery])
 
-  const tags = useLiveQuery(() => listTags(), [])
+  const initial = useInitialPageData()?.tags
+  const tags = useLiveQuery(() => listTags(), [], initial)
   const filteredTags = useMemo(() => {
     const source = tags ?? EMPTY_TAGS
     const normalisedQuery = committedQuery.toLowerCase()

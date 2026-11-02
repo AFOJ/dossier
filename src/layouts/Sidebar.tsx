@@ -13,6 +13,7 @@ import {
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react"
 import { Divider } from "@/components/ui"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
+import { prefetchNavigation } from "@/lib/navigationPrefetch"
 import { cn } from "@/utils"
 
 type NavItem = {
@@ -84,6 +85,8 @@ export function Sidebar(props: Readonly<SidebarProps>) {
                 to={item.to}
                 end={item.end}
                 onClick={onNavigate}
+                onPointerEnter={() => prefetchNavigation(item.to)}
+                onFocus={() => prefetchNavigation(item.to)}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium transition-colors",

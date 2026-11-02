@@ -1,4 +1,5 @@
-import { Suspense, lazy, useRef } from "react"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
+import { useRef } from "react"
 import { useRouteLoaderData } from "react-router-dom"
 import { Controller, FormProvider } from "react-hook-form"
 import {
@@ -18,14 +19,6 @@ import { TagCombobox } from "@/components/tags"
 import type { CoverLetter, Profile } from "@/db/db"
 import { CoverLetterSyncCard } from "@/pages/cover-letters/create/components/CoverLetterSyncCard"
 import { useEditCoverLetterForm } from "@/pages/cover-letters/edit/hooks/useEditCoverLetterForm"
-
-const RichTextEditor = lazy(() => {
-  return import("@/components/ui/RichTextEditor").then((module) => {
-    return {
-      default: module.RichTextEditor,
-    }
-  })
-})
 
 export default function EditCoverLetterPage() {
   const { coverLetter } = useRouteLoaderData("cover-letter-edit") as { coverLetter: CoverLetter }
@@ -127,29 +120,21 @@ function EditCoverLetterForm({
             required
             error={form.formState.errors.body?.message}
           >
-            <Suspense
-              fallback={
-                <div className="rounded-[10px] border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400">
-                  Loading editor…
-                </div>
-              }
-            >
-              <Controller
-                control={form.control}
-                name="body"
-                render={({ field, fieldState }) => {
-                  return (
-                    <RichTextEditor
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      placeholder="Write your cover letter…"
-                      invalid={Boolean(fieldState.error)}
-                      label="Cover letter body"
-                    />
-                  )
-                }}
-              />
-            </Suspense>
+            <Controller
+              control={form.control}
+              name="body"
+              render={({ field, fieldState }) => {
+                return (
+                  <RichTextEditor
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Write your cover letter…"
+                    invalid={Boolean(fieldState.error)}
+                    label="Cover letter body"
+                  />
+                )
+              }}
+            />
           </Field>
 
           {formError && (
