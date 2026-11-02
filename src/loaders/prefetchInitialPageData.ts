@@ -7,8 +7,13 @@ import { listQueryKey, readListQuery } from "@/lib/listQuery"
 import { prefetchRouteData } from "@/lib/routePrefetch"
 import type { InitialPageData } from "@/hooks/useInitialPageData"
 
+function normalizeInitialPagePath(pathname: string) {
+  const path = pathname.toLowerCase().replace(/\/+$/, "")
+  return path || "/"
+}
+
 export function initialPageDataPrefetchKey(url: URL) {
-  return `initial-page-data:${url.pathname}${url.search}`
+  return `initial-page-data:${normalizeInitialPagePath(url.pathname)}${url.search}`
 }
 
 async function loadSettingsPage(): Promise<InitialPageData> {
@@ -50,7 +55,8 @@ const initialPageLoaders: Record<string, (url: URL) => Promise<InitialPageData>>
 }
 
 export function loadInitialPageData(url: URL): Promise<InitialPageData> {
-  const load = initialPageLoaders[url.pathname]
+  const pathname = normalizeInitialPagePath(url.pathname)
+  const load = initialPageLoaders[pathname]
   if (!load) {
     throw new Error(`No initial page loader for ${url.pathname}.`)
   }
@@ -59,7 +65,8 @@ export function loadInitialPageData(url: URL): Promise<InitialPageData> {
 
 /** Warms loader data only for destinations whose complete snapshot is known. */
 export function prefetchInitialPageData(url: URL) {
-  if (!initialPageLoaders[url.pathname]) {
+  const pathname = normalizeInitialPagePath(url.pathname)
+  if (!initialPageLoaders[pathname]) {
     return undefined
   }
 

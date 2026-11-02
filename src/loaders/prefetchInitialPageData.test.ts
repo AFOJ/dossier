@@ -35,3 +35,13 @@ it("leaves unrelated loader URLs to perform their own read", async () => {
 it("does not attempt to prefetch data for a code-only route", () => {
   expect(prefetchInitialPageData(new URL("http://localhost/profile"))).toBeUndefined()
 })
+
+it.each(["/resumes/", "/RESUMES"])("prefetches data for the normalized route %s", async (path) => {
+  const getSettings = vi.spyOn(settingsStore, "getSettings")
+  const url = `http://localhost${path}`
+
+  await prefetchInitialPageData(new URL(url))
+  await resumesPageLoader({ request: new Request(url) } as never)
+
+  expect(getSettings).toHaveBeenCalledOnce()
+})
