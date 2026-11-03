@@ -1,9 +1,6 @@
 import type { LoaderFunctionArgs, ShouldRevalidateFunction } from "react-router-dom"
 import { takePrefetchedRouteData } from "@/lib/routePrefetch"
-import {
-  initialPageDataPrefetchKey,
-  loadInitialPageData,
-} from "@/loaders/prefetchInitialPageData"
+import { initialPageDataPrefetchKey, loadInitialPageData } from "@/loaders/prefetchInitialPageData"
 import type { InitialPageData } from "@/hooks/useInitialPageData"
 
 async function loadPageData({ request }: LoaderFunctionArgs): Promise<InitialPageData> {
