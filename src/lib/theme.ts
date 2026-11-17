@@ -21,6 +21,7 @@ export function applyResolvedTheme(theme: ResolvedTheme): void {
   root.classList.toggle("dark", theme === "dark")
   root.dataset.theme = theme
   root.style.colorScheme = theme
+  root.removeAttribute("data-theme-pending")
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute("content", theme === "dark" ? "#000000" : "#ffffff")
@@ -29,10 +30,21 @@ export function applyResolvedTheme(theme: ResolvedTheme): void {
 export function readBootstrapTheme(): ThemePreference {
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-    return isThemePreference(stored) ? stored : "system"
+    if (isThemePreference(stored)) return stored
   } catch {
-    return "system"
+    // A cookie remains synchronously readable when localStorage is blocked.
   }
+  try {
+    const cookie = document.cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${THEME_STORAGE_KEY}=`))
+    const stored = cookie?.slice(THEME_STORAGE_KEY.length + 1)
+    if (isThemePreference(stored)) return stored
+  } catch {
+    // Fall back to the operating-system preference.
+  }
+  return "system"
 }
 
 export function writeBootstrapTheme(theme: ThemePreference): void {
@@ -40,5 +52,10 @@ export function writeBootstrapTheme(theme: ThemePreference): void {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme)
   } catch {
     // The IndexedDB setting remains authoritative when storage is unavailable.
+  }
+  try {
+    document.cookie = `${THEME_STORAGE_KEY}=${theme}; Max-Age=31536000; Path=/; SameSite=Lax`
+  } catch {
+    // The IndexedDB setting remains authoritative when cookies are unavailable.
   }
 }

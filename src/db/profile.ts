@@ -2,6 +2,7 @@ import { z } from "zod"
 import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/db"
 import {
   getSettings,
+  appearanceSettingsRow,
   parseStoredSettings,
   toCompatibleSettings,
   SETTINGS_ID,
@@ -279,7 +280,10 @@ export async function importProfile(fileContent: string): Promise<void> {
       await db.settings.clear()
 
       await db.profiles.add(profile)
-      await db.settings.put({ ...toCompatibleSettings(settings), id: SETTINGS_ID })
+      await db.settings.bulkPut([
+        { ...toCompatibleSettings(settings), id: SETTINGS_ID },
+        appearanceSettingsRow(settings.appearance),
+      ])
 
       if (restoredTags.length > 0) {
         await db.tags.bulkPut(restoredTags)

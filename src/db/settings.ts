@@ -13,6 +13,7 @@ export type Settings = Omit<AppSettings, "id">
 export type ThemePreference = Settings["appearance"]["theme"]
 
 export const SETTINGS_ID = "app"
+export const APPEARANCE_SETTINGS_ID = "appearance"
 
 export const DEFAULT_SETTINGS: Settings = {
   appearance: {
@@ -109,8 +110,25 @@ export function parseStoredSettings(row: unknown): Settings {
   }
 }
 
+async function readStoredSettings(): Promise<Settings> {
+  const [row, appearanceRow] = await Promise.all([
+    db.settings.get(SETTINGS_ID),
+    db.settings.get(APPEARANCE_SETTINGS_ID),
+  ])
+  const settings = parseStoredSettings(row)
+  const appearance = appSettingsSchema.shape.appearance.safeParse(
+    asRecord(appearanceRow).appearance,
+  )
+  return { ...settings, appearance: appearance.success ? appearance.data : settings.appearance }
+}
+
 export async function getSettings(): Promise<Settings> {
-  return parseStoredSettings(await db.settings.get(SETTINGS_ID))
+  return readStoredSettings()
+}
+
+/** Older builds replace the app row, so keep the theme in a separate row too. */
+export function appearanceSettingsRow(appearance: Settings["appearance"]): AppSettings {
+  return { id: APPEARANCE_SETTINGS_ID, appearance } as AppSettings
 }
 
 export type SettingsUpdate = {
@@ -135,7 +153,7 @@ export function toCompatibleSettings(settings: Settings) {
 /** Merge within groups in one transaction so concurrent partial updates survive. */
 export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
   return db.transaction("rw", db.settings, async () => {
-    const current = parseStoredSettings(await db.settings.get(SETTINGS_ID))
+    const current = await readStoredSettings()
     const merged = appSettingsSchema.safeParse({
       appearance: { ...current.appearance, ...data.appearance },
       documents: { ...current.documents, ...data.documents },
@@ -144,7 +162,10 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
     if (!merged.success) {
       throw new Error("Invalid app settings.")
     }
-    await db.settings.put({ ...toCompatibleSettings(merged.data), id: SETTINGS_ID })
+    await db.settings.bulkPut([
+      { ...toCompatibleSettings(merged.data), id: SETTINGS_ID },
+      appearanceSettingsRow(merged.data.appearance),
+    ])
     return merged.data
   })
 }

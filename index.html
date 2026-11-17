@@ -9,7 +9,28 @@
     <script>
       ;(() => {
         try {
-          const stored = localStorage.getItem("dossier-theme")
+          let stored
+          let storageBlocked = false
+          try {
+            stored = localStorage.getItem("dossier-theme")
+          } catch {
+            storageBlocked = true
+            // Continue with the cookie mirror when localStorage is blocked.
+          }
+          if (!["system", "light", "dark"].includes(stored)) {
+            try {
+              stored = document.cookie
+                .split(";")
+                .map((part) => part.trim())
+                .find((part) => part.startsWith("dossier-theme="))
+                ?.slice("dossier-theme=".length)
+            } catch {
+              // Resolve the operating-system preference below.
+            }
+          }
+          if (storageBlocked && !["system", "light", "dark"].includes(stored)) {
+            document.documentElement.dataset.themePending = ""
+          }
           const preference = ["system", "light", "dark"].includes(stored) ? stored : "system"
           const theme =
             preference === "system"

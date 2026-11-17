@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import { db, type AppSettings } from "@/db/db"
 import {
   DEFAULT_SETTINGS,
+  APPEARANCE_SETTINGS_ID,
   SETTINGS_ID,
   getSettings,
   parseStoredSettings,
@@ -82,19 +83,28 @@ describe("settings compatibility", () => {
     expect(saved.exports).toEqual({ ...DEFAULT_SETTINGS.exports, pdfFilenamePattern: "shared" })
     expect(saved.appearance).toEqual(DEFAULT_SETTINGS.appearance)
     const rows = await db.settings.toArray()
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toMatchObject({ ...saved, id: SETTINGS_ID })
-    expect(legacySettingsSchema.parse(rows[0])).toEqual({ ...saved.documents, ...saved.exports })
+    expect(rows).toHaveLength(2)
+    expect(await db.settings.get(SETTINGS_ID)).toMatchObject({ ...saved, id: SETTINGS_ID })
+    expect(await db.settings.get(APPEARANCE_SETTINGS_ID)).toMatchObject({
+      id: APPEARANCE_SETTINGS_ID,
+      appearance: saved.appearance,
+    })
+    expect(legacySettingsSchema.parse(await db.settings.get(SETTINGS_ID))).toEqual({
+      ...saved.documents,
+      ...saved.exports,
+    })
   })
 
   it("keeps preferences when an older tab reads and replaces the settings row", async () => {
     await upsertSettings({
+      appearance: { theme: "dark" },
       documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "My CV" },
       exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "shared" },
     })
     const legacy = legacySettingsSchema.parse(await db.settings.get(SETTINGS_ID))
     await writeRawRow({ ...legacy, defaultPdfFilenameFormat: "updated-{title}", id: SETTINGS_ID })
     const saved = await getSettings()
+    expect(saved.appearance.theme).toBe("dark")
     expect(saved.documents).toEqual({
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "My CV",
@@ -104,6 +114,8 @@ describe("settings compatibility", () => {
       pdfFilenamePattern: "shared",
       defaultPdfFilenameFormat: "updated-{title}",
     })
+    await upsertSettings({ documents: { defaultSyncProfile: true } })
+    expect((await getSettings()).appearance.theme).toBe("dark")
   })
 
   it("preserves concurrent updates to different fields within the same group", async () => {

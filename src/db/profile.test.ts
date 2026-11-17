@@ -553,7 +553,7 @@ describe("importProfile", () => {
       ...legacySettings,
       id: "app",
     } as unknown as import("@/db/db").AppSettings)
-    expect(await getSettings()).toEqual({ ...saved, appearance: DEFAULT_SETTINGS.appearance })
+    expect(await getSettings()).toEqual(saved)
   })
 
   it("rejects future backup versions without replacing local data", async () => {

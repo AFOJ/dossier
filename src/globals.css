@@ -14,6 +14,10 @@ body,
   min-height: 100%;
 }
 
+html[data-theme-pending] body {
+  visibility: hidden;
+}
+
 body {
   margin: 0;
   background: var(--app-canvas);
@@ -65,6 +69,10 @@ html.dark {
 
 .app-surface {
   background-color: var(--app-surface);
+}
+
+.app-backdrop {
+  background-color: rgb(0 0 0 / 0.4);
 }
 
 ::selection {
