@@ -63,6 +63,7 @@ export default function CreateCoverLetterPage() {
               id="cover-letter-title"
               placeholder="Backend Engineer Application"
               {...form.register("title")}
+              onFocus={() => form.setValue("title", form.getValues("title"), { shouldTouch: true })}
             />
           </Field>
 

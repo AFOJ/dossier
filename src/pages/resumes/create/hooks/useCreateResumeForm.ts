@@ -658,7 +658,7 @@ export function useCreateResumeForm(
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {
-      setValue("syncProfile", sync, { shouldDirty: true })
+      setValue("syncProfile", sync, { shouldDirty: true, shouldTouch: true })
 
       if (sync && profile) {
         // Turning sync back on discards local edits in favour of the profile.

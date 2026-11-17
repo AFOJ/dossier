@@ -1,5 +1,5 @@
 import type { ZodType } from "zod"
-import { db, type AppSettings } from "@/db/db"
+import { db, type AppSettings, type CoverLetterTitleSettingsRow } from "@/db/db"
 import { appSettingsSchema } from "@/db/schemas"
 import {
   DEFAULT_RESUME_TITLE_FORMAT,
@@ -12,6 +12,7 @@ import {
 export type Settings = Omit<AppSettings, "id">
 
 export const SETTINGS_ID = "app"
+export const COVER_LETTER_TITLE_SETTINGS_ID = "cover-letter-title"
 
 export const DEFAULT_SETTINGS: Settings = {
   documents: {
@@ -107,21 +108,46 @@ export function parseStoredSettings(row: unknown): Settings {
   }
 }
 
+async function readStoredSettings(): Promise<Settings> {
+  const [row, titleRow] = await Promise.all([
+    db.settings.get(SETTINGS_ID),
+    db.settings.get(COVER_LETTER_TITLE_SETTINGS_ID),
+  ])
+  const settings = parseStoredSettings(row)
+  const title = appSettingsSchema.shape.documents.shape.defaultCoverLetterTitleFormat.safeParse(
+    asRecord(titleRow).defaultCoverLetterTitleFormat,
+  )
+  return {
+    ...settings,
+    documents: {
+      ...settings.documents,
+      defaultCoverLetterTitleFormat: title.success
+        ? title.data
+        : settings.documents.defaultCoverLetterTitleFormat,
+    },
+  }
+}
+
 export async function getSettings(): Promise<Settings> {
-  return parseStoredSettings(await db.settings.get(SETTINGS_ID))
+  return readStoredSettings()
+}
+
+/** Older builds replace the app row, so keep this preference in a separate row too. */
+export function coverLetterTitleSettingsRow(title: string): CoverLetterTitleSettingsRow {
+  return { id: COVER_LETTER_TITLE_SETTINGS_ID, defaultCoverLetterTitleFormat: title }
 }
 
 export type SettingsUpdate = {
   [Group in keyof Settings]?: Partial<Settings[Group]>
 }
 
-/** Compatibility aliases for builds released before grouped settings.
- * Only the original fields are mirrored; future preferences stay in their group. */
+/** Flat aliases keep document settings readable across older builds and backups. */
 export function toCompatibleSettings(settings: Settings) {
   return {
     ...settings,
     defaultSyncProfile: settings.documents.defaultSyncProfile,
     defaultResumeTitleFormat: settings.documents.defaultResumeTitleFormat,
+    defaultCoverLetterTitleFormat: settings.documents.defaultCoverLetterTitleFormat,
     defaultExportFilenameFormat: settings.exports.defaultExportFilenameFormat,
     defaultResumePdfFilenameFormat: settings.exports.defaultResumePdfFilenameFormat,
     defaultCoverLetterPdfFilenameFormat: settings.exports.defaultCoverLetterPdfFilenameFormat,
@@ -133,7 +159,7 @@ export function toCompatibleSettings(settings: Settings) {
 /** Merge within groups in one transaction so concurrent partial updates survive. */
 export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
   return db.transaction("rw", db.settings, async () => {
-    const current = parseStoredSettings(await db.settings.get(SETTINGS_ID))
+    const current = await readStoredSettings()
     const merged = appSettingsSchema.safeParse({
       documents: { ...current.documents, ...data.documents },
       exports: { ...current.exports, ...data.exports },
@@ -141,7 +167,10 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
     if (!merged.success) {
       throw new Error("Invalid app settings.")
     }
-    await db.settings.put({ ...toCompatibleSettings(merged.data), id: SETTINGS_ID })
+    await db.settings.bulkPut([
+      { ...toCompatibleSettings(merged.data), id: SETTINGS_ID },
+      coverLetterTitleSettingsRow(merged.data.documents.defaultCoverLetterTitleFormat),
+    ])
     return merged.data
   })
 }

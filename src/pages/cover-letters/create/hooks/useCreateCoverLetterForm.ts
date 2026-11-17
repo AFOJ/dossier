@@ -133,7 +133,7 @@ export function useCreateCoverLetterForm(
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {
-      setValue("syncProfile", sync, { shouldDirty: true })
+      setValue("syncProfile", sync, { shouldDirty: true, shouldTouch: true })
 
       if (sync && profile) {
         Object.entries(profileToContactValues(profile)).forEach(([key, value]) => {

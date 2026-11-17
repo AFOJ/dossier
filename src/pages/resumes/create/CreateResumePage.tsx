@@ -88,6 +88,7 @@ export default function CreateResumePage() {
               id="resume-title"
               placeholder="Data Analyst Resume"
               {...form.register("title")}
+              onFocus={() => form.setValue("title", form.getValues("title"), { shouldTouch: true })}
             />
           </Field>
 

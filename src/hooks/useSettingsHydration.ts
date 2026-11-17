@@ -10,8 +10,8 @@ export interface UseSettingsHydrationOptions<T extends FieldValues> {
   settingsLoaded: boolean
   /**
    * Applies the stored settings to the form's fields. Called at most once.
-   * Fields the visitor has already changed are skipped, so hydration cannot roll
-   * back anything entered before the settings arrived.
+   * Fields the visitor has already changed or touched are skipped, so hydration
+   * cannot replace an in-progress choice even if its value is back at the default.
    */
   hydrate: (setUnlessDirty: (name: FieldPath<T>, value: unknown) => void) => void
 }
@@ -30,6 +30,7 @@ export function useSettingsHydration<T extends FieldValues>({
   hydrate,
 }: UseSettingsHydrationOptions<T>): void {
   const hydrated = useRef(false)
+  const { dirtyFields, touchedFields } = form.formState
 
   useEffect(() => {
     if (!settingsLoaded || hydrated.current) {
@@ -37,12 +38,13 @@ export function useSettingsHydration<T extends FieldValues>({
     }
     hydrated.current = true
 
-    // dirtyFields is deeply partial to allow nested paths, so narrowing it to
-    // the flat lookup these form fields need costs a cast.
-    const dirtyFields = form.formState.dirtyFields as Record<string, boolean>
+    // These forms hydrate only flat fields. React Hook Form types both maps as
+    // deeply partial because other forms can contain nested paths.
+    const dirty = dirtyFields as Record<string, boolean>
+    const touched = touchedFields as Record<string, boolean>
 
     hydrate((name, value) => {
-      if (dirtyFields[name]) {
+      if (dirty[name] || touched[name]) {
         return
       }
 
@@ -50,5 +52,5 @@ export function useSettingsHydration<T extends FieldValues>({
       // which cannot be expressed across a whole FieldPath union.
       form.setValue(name, value as never, { shouldDirty: false })
     })
-  }, [form, hydrate, settingsLoaded])
+  }, [dirtyFields, form, hydrate, settingsLoaded, touchedFields])
 }
