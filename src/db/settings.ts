@@ -1,5 +1,10 @@
 import type { ZodType } from "zod"
-import { db, type AppSettings } from "@/db/db"
+import {
+  db,
+  type AppSettings,
+  type AppearanceSettingsRow,
+  type CoverLetterTitleSettingsRow,
+} from "@/db/db"
 import { appSettingsSchema } from "@/db/schemas"
 import {
   DEFAULT_RESUME_TITLE_FORMAT,
@@ -13,6 +18,7 @@ export type Settings = Omit<AppSettings, "id">
 export type ThemePreference = Settings["appearance"]["theme"]
 
 export const SETTINGS_ID = "app"
+export const COVER_LETTER_TITLE_SETTINGS_ID = "cover-letter-title"
 export const APPEARANCE_SETTINGS_ID = "appearance"
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -22,6 +28,7 @@ export const DEFAULT_SETTINGS: Settings = {
   documents: {
     defaultSyncProfile: true,
     defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
+    defaultCoverLetterTitleFormat: "",
   },
   exports: {
     defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT,
@@ -74,6 +81,12 @@ export function parseStoredSettings(row: unknown): Settings {
         documentSchema.defaultResumeTitleFormat,
         DEFAULT_SETTINGS.documents.defaultResumeTitleFormat,
       ),
+      defaultCoverLetterTitleFormat: read(
+        documents,
+        "defaultCoverLetterTitleFormat",
+        documentSchema.defaultCoverLetterTitleFormat,
+        DEFAULT_SETTINGS.documents.defaultCoverLetterTitleFormat,
+      ),
     },
     exports: {
       defaultExportFilenameFormat: read(
@@ -111,37 +124,55 @@ export function parseStoredSettings(row: unknown): Settings {
 }
 
 async function readStoredSettings(): Promise<Settings> {
-  const [row, appearanceRow] = await Promise.all([
+  const [row, titleRow, appearanceRow] = await Promise.all([
     db.settings.get(SETTINGS_ID),
+    db.settings.get(COVER_LETTER_TITLE_SETTINGS_ID),
     db.settings.get(APPEARANCE_SETTINGS_ID),
   ])
   const settings = parseStoredSettings(row)
+  const title = appSettingsSchema.shape.documents.shape.defaultCoverLetterTitleFormat.safeParse(
+    asRecord(titleRow).defaultCoverLetterTitleFormat,
+  )
   const appearance = appSettingsSchema.shape.appearance.safeParse(
     asRecord(appearanceRow).appearance,
   )
-  return { ...settings, appearance: appearance.success ? appearance.data : settings.appearance }
+  return {
+    ...settings,
+    appearance: appearance.success ? appearance.data : settings.appearance,
+    documents: {
+      ...settings.documents,
+      defaultCoverLetterTitleFormat: title.success
+        ? title.data
+        : settings.documents.defaultCoverLetterTitleFormat,
+    },
+  }
 }
 
 export async function getSettings(): Promise<Settings> {
   return readStoredSettings()
 }
 
+/** Older builds replace the app row, so keep this preference in a separate row too. */
+export function coverLetterTitleSettingsRow(title: string): CoverLetterTitleSettingsRow {
+  return { id: COVER_LETTER_TITLE_SETTINGS_ID, defaultCoverLetterTitleFormat: title }
+}
+
 /** Older builds replace the app row, so keep the theme in a separate row too. */
-export function appearanceSettingsRow(appearance: Settings["appearance"]): AppSettings {
-  return { id: APPEARANCE_SETTINGS_ID, appearance } as AppSettings
+export function appearanceSettingsRow(appearance: Settings["appearance"]): AppearanceSettingsRow {
+  return { id: APPEARANCE_SETTINGS_ID, appearance }
 }
 
 export type SettingsUpdate = {
   [Group in keyof Settings]?: Partial<Settings[Group]>
 }
 
-/** Compatibility aliases for builds released before grouped settings.
- * Only the original fields are mirrored; future preferences stay in their group. */
+/** Flat aliases keep document settings readable across older builds and backups. */
 export function toCompatibleSettings(settings: Settings) {
   return {
     ...settings,
     defaultSyncProfile: settings.documents.defaultSyncProfile,
     defaultResumeTitleFormat: settings.documents.defaultResumeTitleFormat,
+    defaultCoverLetterTitleFormat: settings.documents.defaultCoverLetterTitleFormat,
     defaultExportFilenameFormat: settings.exports.defaultExportFilenameFormat,
     defaultResumePdfFilenameFormat: settings.exports.defaultResumePdfFilenameFormat,
     defaultCoverLetterPdfFilenameFormat: settings.exports.defaultCoverLetterPdfFilenameFormat,
@@ -164,6 +195,7 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
     }
     await db.settings.bulkPut([
       { ...toCompatibleSettings(merged.data), id: SETTINGS_ID },
+      coverLetterTitleSettingsRow(merged.data.documents.defaultCoverLetterTitleFormat),
       appearanceSettingsRow(merged.data.appearance),
     ])
     return merged.data

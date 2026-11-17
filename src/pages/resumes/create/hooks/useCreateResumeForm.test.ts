@@ -196,6 +196,18 @@ describe("useCreateResumeForm", () => {
     expect(result.current.isDirty).toBe(false)
   })
 
+  it("starts with an empty title when the resume default is blank", () => {
+    const { result } = renderHook(() =>
+      useCreateResumeForm(profile, {
+        ...DEFAULT_SETTINGS,
+        documents: { ...DEFAULT_SETTINGS.documents, defaultResumeTitleFormat: "" },
+      }),
+    )
+
+    expect(result.current.form.getValues("title")).toBe("")
+    expect(result.current.isDirty).toBe(false)
+  })
+
   it("honours the default sync setting", () => {
     const synced = renderHook(() => useCreateResumeForm(profile, DEFAULT_SETTINGS))
     const unsynced = renderHook(() =>

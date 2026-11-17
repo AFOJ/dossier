@@ -175,7 +175,8 @@ export const appSettingsSchema = z.object({
   }),
   documents: z.object({
     defaultSyncProfile: z.boolean(),
-    defaultResumeTitleFormat: z.string().min(1, "Enter a title format.").max(120),
+    defaultResumeTitleFormat: z.string().max(120),
+    defaultCoverLetterTitleFormat: z.string().max(120),
   }),
   exports: z.object({
     defaultExportFilenameFormat: z.string().min(1).max(120),

@@ -11,6 +11,7 @@ import { isCoverLetterBodyEmpty, sanitizeCoverLetterBody } from "@/lib/coverLett
 import { isValidCoverLetterDate } from "@/lib/coverLetterDate"
 import { DEFAULT_SETTINGS, type Settings } from "@/db/settings"
 import { releaseUnsavedChangesGuard } from "@/lib/unsavedChangesGuard"
+import { renderTitle } from "@/lib/titleFormat"
 
 export const coverLetterFormSchema = z
   .object({
@@ -112,17 +113,27 @@ export function useCreateCoverLetterForm(
   const { setValue } = form
 
   const hydrate = useCallback(
-    (setUnlessTouched: (name: "syncProfile", value: unknown) => void) => {
+    (setUnlessTouched: (name: "syncProfile" | "title", value: unknown) => void) => {
       setUnlessTouched("syncProfile", settings.documents.defaultSyncProfile)
+      setUnlessTouched(
+        "title",
+        settings.documents.defaultCoverLetterTitleFormat.trim()
+          ? renderTitle(settings.documents.defaultCoverLetterTitleFormat, { profile })
+          : "",
+      )
     },
-    [settings.documents.defaultSyncProfile],
+    [
+      profile,
+      settings.documents.defaultCoverLetterTitleFormat,
+      settings.documents.defaultSyncProfile,
+    ],
   )
 
   useSettingsHydration({ form, settingsLoaded, hydrate })
 
   const setSyncProfile = useCallback(
     (sync: boolean) => {
-      setValue("syncProfile", sync, { shouldDirty: true })
+      setValue("syncProfile", sync, { shouldDirty: true, shouldTouch: true })
 
       if (sync && profile) {
         Object.entries(profileToContactValues(profile)).forEach(([key, value]) => {
