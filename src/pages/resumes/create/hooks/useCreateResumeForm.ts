@@ -626,7 +626,9 @@ export function useCreateResumeForm(
       setUnlessTouched("syncProfile", settings.documents.defaultSyncProfile)
       setUnlessTouched(
         "title",
-        renderTitle(settings.documents.defaultResumeTitleFormat, { profile }),
+        settings.documents.defaultResumeTitleFormat.trim()
+          ? renderTitle(settings.documents.defaultResumeTitleFormat, { profile })
+          : "",
       )
     },
     [profile, settings.documents.defaultResumeTitleFormat, settings.documents.defaultSyncProfile],

@@ -530,7 +530,10 @@ describe("importProfile", () => {
   it("round-trips grouped settings through version 4 backups", async () => {
     await upsertProfile(baseProfile)
     await upsertSettings({
-      documents: { defaultSyncProfile: false },
+      documents: {
+        defaultSyncProfile: false,
+        defaultCoverLetterTitleFormat: "{profile.role} Letter",
+      },
       exports: { defaultExportFilenameFormat: "backup-{title}" },
     })
     const saved = await getSettings()
@@ -539,11 +542,15 @@ describe("importProfile", () => {
     expect(backup.settings).toMatchObject(saved)
     const legacySettings = z
       .object({
-        ...appSettingsSchema.shape.documents.shape,
+        ...appSettingsSchema.shape.documents.omit({ defaultCoverLetterTitleFormat: true }).shape,
         ...appSettingsSchema.shape.exports.shape,
       })
       .parse(backup.settings)
-    expect(legacySettings).toEqual({ ...saved.documents, ...saved.exports })
+    expect(legacySettings).toEqual({
+      defaultSyncProfile: saved.documents.defaultSyncProfile,
+      defaultResumeTitleFormat: saved.documents.defaultResumeTitleFormat,
+      ...saved.exports,
+    })
     await db.settings.clear()
     await importProfile(JSON.stringify(backup))
     expect(await getSettings()).toEqual(saved)
@@ -552,7 +559,13 @@ describe("importProfile", () => {
       ...legacySettings,
       id: "app",
     } as unknown as import("@/db/db").AppSettings)
-    expect(await getSettings()).toEqual(saved)
+    expect(await getSettings()).toEqual({
+      ...saved,
+      documents: {
+        ...saved.documents,
+        defaultCoverLetterTitleFormat: DEFAULT_SETTINGS.documents.defaultCoverLetterTitleFormat,
+      },
+    })
   })
 
   it("rejects future backup versions without replacing local data", async () => {

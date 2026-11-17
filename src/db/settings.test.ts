@@ -20,7 +20,7 @@ function writeRawRow(row: unknown) {
 
 // The pre-grouping schema reads only these seven flat fields and strips groups.
 const legacySettingsSchema = z.object({
-  ...appSettingsSchema.shape.documents.shape,
+  ...appSettingsSchema.shape.documents.omit({ defaultCoverLetterTitleFormat: true }).shape,
   ...appSettingsSchema.shape.exports.shape,
 })
 
@@ -44,7 +44,11 @@ describe("settings compatibility", () => {
       defaultPdfFilenameFormat: "",
     })
     expect(await getSettings()).toEqual({
-      documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "{profile.name} CV" },
+      documents: {
+        ...DEFAULT_SETTINGS.documents,
+        defaultSyncProfile: false,
+        defaultResumeTitleFormat: "{profile.name} CV",
+      },
       exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "{title}.json" },
     })
   })
@@ -54,7 +58,7 @@ describe("settings compatibility", () => {
       parseStoredSettings({
         defaultSyncProfile: true,
         defaultResumeTitleFormat: "Legacy",
-        documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "" },
+        documents: { defaultSyncProfile: false, defaultResumeTitleFormat: 123 },
         exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "retired" },
       }),
     ).toEqual({
@@ -73,6 +77,7 @@ describe("settings compatibility", () => {
     await upsertSettings({ documents: { defaultResumeTitleFormat: "New title" } })
     const saved = await getSettings()
     expect(saved.documents).toEqual({
+      ...DEFAULT_SETTINGS.documents,
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "New title",
     })
@@ -80,7 +85,11 @@ describe("settings compatibility", () => {
     const rows = await db.settings.toArray()
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ ...saved, id: SETTINGS_ID })
-    expect(legacySettingsSchema.parse(rows[0])).toEqual({ ...saved.documents, ...saved.exports })
+    expect(legacySettingsSchema.parse(rows[0])).toEqual({
+      defaultSyncProfile: saved.documents.defaultSyncProfile,
+      defaultResumeTitleFormat: saved.documents.defaultResumeTitleFormat,
+      ...saved.exports,
+    })
   })
 
   it("keeps preferences when an older tab reads and replaces the settings row", async () => {
@@ -92,6 +101,7 @@ describe("settings compatibility", () => {
     await writeRawRow({ ...legacy, defaultPdfFilenameFormat: "updated-{title}", id: SETTINGS_ID })
     const saved = await getSettings()
     expect(saved.documents).toEqual({
+      ...DEFAULT_SETTINGS.documents,
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "My CV",
     })
@@ -110,6 +120,7 @@ describe("settings compatibility", () => {
     ])
     const saved = await getSettings()
     expect(saved.documents).toEqual({
+      ...DEFAULT_SETTINGS.documents,
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "{profile.name} CV",
     })
@@ -119,9 +130,24 @@ describe("settings compatibility", () => {
   it("rejects invalid updates without changing the saved settings", async () => {
     await upsertSettings({ documents: { defaultSyncProfile: false } })
     const saved = await getSettings()
-    await expect(upsertSettings({ documents: { defaultResumeTitleFormat: "" } })).rejects.toThrow(
-      "Invalid app settings.",
-    )
+    await expect(
+      upsertSettings({ documents: { defaultResumeTitleFormat: "x".repeat(121) } }),
+    ).rejects.toThrow("Invalid app settings.")
     expect(await getSettings()).toEqual(saved)
+  })
+
+  it("saves blank title defaults and restores the new cover-letter field from a backup row", async () => {
+    await upsertSettings({
+      documents: {
+        defaultResumeTitleFormat: "",
+        defaultCoverLetterTitleFormat: "{profile.role} Letter",
+      },
+    })
+    const stored = await db.settings.get(SETTINGS_ID)
+    expect(parseStoredSettings(stored).documents).toEqual({
+      defaultSyncProfile: true,
+      defaultResumeTitleFormat: "",
+      defaultCoverLetterTitleFormat: "{profile.role} Letter",
+    })
   })
 })

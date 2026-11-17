@@ -142,7 +142,29 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
   })
 
-  it("switches PDF patterns without losing the inactive formats", async () => {
+  it("discards unsaved PDF edits when their pattern becomes inactive", async () => {
+    const user = userEvent.setup()
+    await upsertSettings({ exports: { pdfFilenamePattern: "shared" } })
+    renderPage()
+    await user.click(await screen.findByRole("tab", { name: "Exports" }))
+    await user.click(screen.getByRole("radio", { name: "Separate formats" }))
+    fireEvent.change(screen.getByLabelText("Resume PDF filename"), {
+      target: { value: "{title}-cv" },
+    })
+    await user.click(screen.getByRole("radio", { name: "Shared format" }))
+    expect(screen.getByLabelText("PDF filename")).toHaveValue("{title}-{kind}.pdf")
+    expect(screen.queryByLabelText("Resume PDF filename")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
+    await user.click(screen.getByRole("radio", { name: "Separate formats" }))
+    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue(
+      DEFAULT_SETTINGS.exports.defaultResumePdfFilenameFormat,
+    )
+    await user.clear(screen.getByLabelText("Resume PDF filename"))
+    await user.click(screen.getByRole("radio", { name: "Shared format" }))
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
+  })
+
+  it("saves a pattern change without saving edits to the now-hidden format", async () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(await screen.findByRole("tab", { name: "Exports" }))
@@ -150,30 +172,26 @@ describe("SettingsPage", () => {
       target: { value: "{title}-cv" },
     })
     await user.click(screen.getByRole("radio", { name: "Shared format" }))
-    expect(screen.getByLabelText("PDF filename")).toHaveValue("{title}-{kind}.pdf")
-    expect(screen.queryByLabelText("Resume PDF filename")).not.toBeInTheDocument()
-    await user.click(screen.getByRole("radio", { name: "Separate formats" }))
-    expect(screen.getByLabelText("Resume PDF filename")).toHaveValue("{title}-cv")
-    await user.clear(screen.getByLabelText("Resume PDF filename"))
-    await user.click(screen.getByRole("radio", { name: "Shared format" }))
     await user.click(screen.getByRole("button", { name: "Save changes" }))
-    await waitFor(() => expect(screen.getByLabelText("Resume PDF filename")).toHaveFocus())
-    expect(screen.getByRole("radio", { name: "Separate formats" })).toBeChecked()
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    const saved = await getSettings()
+    expect(saved.exports.pdfFilenamePattern).toBe("shared")
+    expect(saved.exports.defaultResumePdfFilenameFormat).toBe(
+      DEFAULT_SETTINGS.exports.defaultResumePdfFilenameFormat,
+    )
   })
 
   it("reveals and focuses invalid settings when saved from another tab", async () => {
     const user = userEvent.setup()
     renderPage()
     await screen.findByRole("switch")
-    await user.clear(screen.getByLabelText("New resume title"))
+    await user.click(screen.getByRole("tab", { name: "Exports" }))
+    await user.clear(screen.getByLabelText("Export filename format"))
     await user.click(screen.getByRole("tab", { name: "Data" }))
     await user.click(screen.getByRole("button", { name: "Save changes" }))
-    await waitFor(() => expect(screen.getByLabelText("New resume title")).toHaveFocus())
-    expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByLabelText("New resume title")).toHaveAccessibleDescription(
-      expect.stringContaining("Enter a title format."),
-    )
-    expect((await getSettings()).documents).toEqual(DEFAULT_SETTINGS.documents)
+    await waitFor(() => expect(screen.getByLabelText("Export filename format")).toHaveFocus())
+    expect(screen.getByRole("tab", { name: "Exports" })).toHaveAttribute("aria-selected", "true")
+    expect((await getSettings()).exports).toEqual(DEFAULT_SETTINGS.exports)
   })
 
   it("saves only edited fields and adopts changes saved by another tab", async () => {
@@ -191,6 +209,7 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }))
     await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
     expect((await getSettings()).documents).toEqual({
+      ...DEFAULT_SETTINGS.documents,
       defaultSyncProfile: false,
       defaultResumeTitleFormat: "My CV",
     })
@@ -198,6 +217,25 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("switch")).not.toBeChecked()
     await user.click(screen.getByRole("tab", { name: "Exports" }))
     expect(screen.getByRole("radio", { name: "Shared format" })).toBeChecked()
+  })
+
+  it("saves an opted-out resume title and a cover letter title format", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole("switch")
+    await user.clear(screen.getByLabelText("New resume title"))
+    fireEvent.change(screen.getByLabelText("New cover letter title"), {
+      target: { value: "{profile.role} Application" },
+    })
+    expect(screen.getByText("Leave blank to enter each resume title yourself.")).toBeVisible()
+    expect(screen.getByText("Engineer Application")).toBeVisible()
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    expect((await getSettings()).documents).toEqual({
+      defaultSyncProfile: true,
+      defaultResumeTitleFormat: "",
+      defaultCoverLetterTitleFormat: "{profile.role} Application",
+    })
   })
 
   it("supports keyboard tab navigation", async () => {

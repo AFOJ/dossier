@@ -129,18 +129,48 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
                 inputId="resume-title-format"
                 error={form.formState.errors.documents?.defaultResumeTitleFormat?.message}
                 description={
-                  <>
-                    Currently produces:{" "}
-                    <strong>
-                      {renderTitle(values.documents.defaultResumeTitleFormat, { profile })}
-                    </strong>
-                  </>
+                  values.documents.defaultResumeTitleFormat.trim() ? (
+                    <>
+                      Currently produces:{" "}
+                      <strong>
+                        {renderTitle(values.documents.defaultResumeTitleFormat, { profile })}
+                      </strong>
+                    </>
+                  ) : (
+                    "Leave blank to enter each resume title yourself."
+                  )
                 }
               >
                 <Input
                   id="resume-title-format"
                   className="font-mono text-sm"
                   {...form.register("documents.defaultResumeTitleFormat")}
+                />
+              </Field>
+              <TokenHelp tokens={TITLE_FORMAT_TOKENS} />
+            </div>
+            <div className="pt-5">
+              <Field
+                label="New cover letter title"
+                inputId="cover-letter-title-format"
+                error={form.formState.errors.documents?.defaultCoverLetterTitleFormat?.message}
+                description={
+                  values.documents.defaultCoverLetterTitleFormat.trim() ? (
+                    <>
+                      Currently produces:{" "}
+                      <strong>
+                        {renderTitle(values.documents.defaultCoverLetterTitleFormat, { profile })}
+                      </strong>
+                    </>
+                  ) : (
+                    "Leave blank to enter each cover letter title yourself."
+                  )
+                }
+              >
+                <Input
+                  id="cover-letter-title-format"
+                  className="font-mono text-sm"
+                  {...form.register("documents.defaultCoverLetterTitleFormat")}
                 />
               </Field>
               <TokenHelp tokens={TITLE_FORMAT_TOKENS} />
@@ -181,7 +211,15 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
                     aria-labelledby="pdf-pattern-label"
                     aria-describedby="pdf-pattern-help"
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      if (value === "shared") {
+                        form.resetField("exports.defaultResumePdfFilenameFormat")
+                        form.resetField("exports.defaultCoverLetterPdfFilenameFormat")
+                      } else {
+                        form.resetField("exports.defaultPdfFilenameFormat")
+                      }
+                      field.onChange(value)
+                    }}
                     className="flex flex-wrap gap-x-6 gap-y-3"
                   >
                     {(
@@ -207,7 +245,8 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
                 )}
               />
               <p id="pdf-pattern-help" className="text-sm text-gray-600">
-                Use one format for both document types, or give each its own format.
+                Use one format for both document types, or give each its own format. Switching
+                formats discards unsaved edits to the other format.
               </p>
             </fieldset>
             {exportFields.map(([key, label, kind]) => (

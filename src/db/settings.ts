@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS: Settings = {
   documents: {
     defaultSyncProfile: true,
     defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
+    defaultCoverLetterTitleFormat: "",
   },
   exports: {
     defaultExportFilenameFormat: DEFAULT_EXPORT_FILENAME_FORMAT,
@@ -63,6 +64,12 @@ export function parseStoredSettings(row: unknown): Settings {
         "defaultResumeTitleFormat",
         documentSchema.defaultResumeTitleFormat,
         DEFAULT_SETTINGS.documents.defaultResumeTitleFormat,
+      ),
+      defaultCoverLetterTitleFormat: read(
+        documents,
+        "defaultCoverLetterTitleFormat",
+        documentSchema.defaultCoverLetterTitleFormat,
+        DEFAULT_SETTINGS.documents.defaultCoverLetterTitleFormat,
       ),
     },
     exports: {
