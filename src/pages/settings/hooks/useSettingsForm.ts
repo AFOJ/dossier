@@ -23,6 +23,7 @@ export function useSettingsForm(settings: Settings) {
   const saveSettings = async (data: Settings) => {
     try {
       const saved = await upsertSettings({
+        appearance: changedFields(data.appearance, dirtyFields.appearance),
         documents: changedFields(data.documents, dirtyFields.documents),
         exports: changedFields(data.exports, dirtyFields.exports),
       })

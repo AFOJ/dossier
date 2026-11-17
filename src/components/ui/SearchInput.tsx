@@ -25,13 +25,14 @@ export function SearchInput(props: Readonly<SearchInputProps>) {
       ) : (
         <Icon
           aria-hidden
-          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
           icon={Search01Icon}
           size={20}
           strokeWidth={2}
         />
       )}
       <Input
+        aria-label={placeholder}
         className="w-full pl-10 text-sm"
         onValueChange={onChange}
         placeholder={placeholder}

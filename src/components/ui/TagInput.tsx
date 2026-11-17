@@ -69,7 +69,7 @@ export function TagInput(props: Readonly<TagInputProps>) {
                   ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
                   onChange(next)
                 }}
-                className="rounded px-1 disabled:opacity-30"
+                className="rounded px-1 disabled:opacity-70"
               >
                 &uarr;
               </button>
@@ -83,7 +83,7 @@ export function TagInput(props: Readonly<TagInputProps>) {
                   ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
                   onChange(next)
                 }}
-                className="rounded px-1 disabled:opacity-30"
+                className="rounded px-1 disabled:opacity-70"
               >
                 &darr;
               </button>
@@ -105,7 +105,7 @@ export function TagInput(props: Readonly<TagInputProps>) {
         aria-label={ariaLabel}
         placeholder={placeholder}
         value={draft}
-        className="min-w-24 flex-1 text-sm outline-none placeholder:text-gray-400"
+        className="min-w-24 flex-1 text-sm outline-none placeholder:text-gray-500"
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={commitDraft}

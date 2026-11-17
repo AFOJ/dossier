@@ -1,5 +1,10 @@
 import type { ZodType } from "zod"
-import { db, type AppSettings, type CoverLetterTitleSettingsRow } from "@/db/db"
+import {
+  db,
+  type AppSettings,
+  type AppearanceSettingsRow,
+  type CoverLetterTitleSettingsRow,
+} from "@/db/db"
 import { appSettingsSchema } from "@/db/schemas"
 import {
   DEFAULT_RESUME_TITLE_FORMAT,
@@ -10,11 +15,16 @@ import {
 } from "@/lib/titleFormat"
 
 export type Settings = Omit<AppSettings, "id">
+export type ThemePreference = Settings["appearance"]["theme"]
 
 export const SETTINGS_ID = "app"
 export const COVER_LETTER_TITLE_SETTINGS_ID = "cover-letter-title"
+export const APPEARANCE_SETTINGS_ID = "appearance"
 
 export const DEFAULT_SETTINGS: Settings = {
+  appearance: {
+    theme: "system",
+  },
   documents: {
     defaultSyncProfile: true,
     defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
@@ -41,6 +51,7 @@ export function parseStoredSettings(row: unknown): Settings {
   const stored = asRecord(row)
   const documents = asRecord(stored.documents)
   const exports = asRecord(stored.exports)
+  const appearance = asRecord(stored.appearance)
   const read = <Value>(
     group: Record<string, unknown>,
     key: string,
@@ -52,7 +63,11 @@ export function parseStoredSettings(row: unknown): Settings {
   }
   const documentSchema = appSettingsSchema.shape.documents.shape
   const exportSchema = appSettingsSchema.shape.exports.shape
+  const appearanceSchema = appSettingsSchema.shape.appearance.shape
   return {
+    appearance: {
+      theme: read(appearance, "theme", appearanceSchema.theme, DEFAULT_SETTINGS.appearance.theme),
+    },
     documents: {
       defaultSyncProfile: read(
         documents,
@@ -109,16 +124,21 @@ export function parseStoredSettings(row: unknown): Settings {
 }
 
 async function readStoredSettings(): Promise<Settings> {
-  const [row, titleRow] = await Promise.all([
+  const [row, titleRow, appearanceRow] = await Promise.all([
     db.settings.get(SETTINGS_ID),
     db.settings.get(COVER_LETTER_TITLE_SETTINGS_ID),
+    db.settings.get(APPEARANCE_SETTINGS_ID),
   ])
   const settings = parseStoredSettings(row)
   const title = appSettingsSchema.shape.documents.shape.defaultCoverLetterTitleFormat.safeParse(
     asRecord(titleRow).defaultCoverLetterTitleFormat,
   )
+  const appearance = appSettingsSchema.shape.appearance.safeParse(
+    asRecord(appearanceRow).appearance,
+  )
   return {
     ...settings,
+    appearance: appearance.success ? appearance.data : settings.appearance,
     documents: {
       ...settings.documents,
       defaultCoverLetterTitleFormat: title.success
@@ -135,6 +155,11 @@ export async function getSettings(): Promise<Settings> {
 /** Older builds replace the app row, so keep this preference in a separate row too. */
 export function coverLetterTitleSettingsRow(title: string): CoverLetterTitleSettingsRow {
   return { id: COVER_LETTER_TITLE_SETTINGS_ID, defaultCoverLetterTitleFormat: title }
+}
+
+/** Older builds replace the app row, so keep the theme in a separate row too. */
+export function appearanceSettingsRow(appearance: Settings["appearance"]): AppearanceSettingsRow {
+  return { id: APPEARANCE_SETTINGS_ID, appearance }
 }
 
 export type SettingsUpdate = {
@@ -161,6 +186,7 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
   return db.transaction("rw", db.settings, async () => {
     const current = await readStoredSettings()
     const merged = appSettingsSchema.safeParse({
+      appearance: { ...current.appearance, ...data.appearance },
       documents: { ...current.documents, ...data.documents },
       exports: { ...current.exports, ...data.exports },
     })
@@ -170,6 +196,7 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
     await db.settings.bulkPut([
       { ...toCompatibleSettings(merged.data), id: SETTINGS_ID },
       coverLetterTitleSettingsRow(merged.data.documents.defaultCoverLetterTitleFormat),
+      appearanceSettingsRow(merged.data.appearance),
     ])
     return merged.data
   })

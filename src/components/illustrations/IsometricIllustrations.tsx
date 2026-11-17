@@ -7,19 +7,19 @@ interface IsometricFileOpenProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export function IsometricFileOpen(props: Readonly<IsometricFileOpenProps>) {
-  const { size = 96, fillColor = "#E0E0E0", className = "", ...rest } = props
+  const { size = 96, fillColor, className = "", ...rest } = props
 
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 93 133"
-      fill={fillColor}
+      fill={fillColor ?? "var(--color-gray-100)"}
       xmlns="http://www.w3.org/2000/svg"
       strokeWidth="0.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`stroke-[#0B0B0F] stroke-[0.5px] stroke-round join-round ${className}`}
+      className={`isometric-illustration stroke-[0.5px] stroke-round join-round ${className}`}
       {...rest}
     >
       <path
@@ -94,16 +94,16 @@ interface IsometricCircleXProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export function IsometricCircleX(props: Readonly<IsometricCircleXProps>) {
-  const { size = 96, fillColor = "#F5F5F5", className = "", ...rest } = props
+  const { size = 96, fillColor, className = "", ...rest } = props
 
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 108 121"
-      fill={fillColor}
+      fill={fillColor ?? "var(--color-gray-50)"}
       xmlns="http://www.w3.org/2000/svg"
-      className={`stroke-neutral-900 stroke-[0.5px] stroke-round join-round ${className}`}
+      className={`isometric-illustration stroke-[0.5px] stroke-round join-round ${className}`}
       {...rest}
     >
       <path
@@ -141,16 +141,16 @@ interface IsometricLibraryAddProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export function IsometricLibraryAdd(props: Readonly<IsometricLibraryAddProps>) {
-  const { size = 96, fillColor = "#F5F5F5", className = "", ...rest } = props
+  const { size = 96, fillColor, className = "", ...rest } = props
 
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 89 107"
-      fill={fillColor}
+      fill={fillColor ?? "var(--color-gray-50)"}
       xmlns="http://www.w3.org/2000/svg"
-      className={`stroke-neutral-900 stroke-[0.5px] stroke-round join-round ${className}`}
+      className={`isometric-illustration stroke-[0.5px] stroke-round join-round ${className}`}
       {...rest}
     >
       <path
@@ -200,16 +200,16 @@ interface IsometricFaceProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export function IsometricFace(props: Readonly<IsometricFaceProps>) {
-  const { size = 96, fillColor = "#FFFFFF", className = "", ...rest } = props
+  const { size = 96, fillColor, className = "", ...rest } = props
 
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 112 87"
-      fill={fillColor}
+      fill={fillColor ?? "var(--color-gray-50)"}
       xmlns="http://www.w3.org/2000/svg"
-      className={`stroke-[#0B0B0F] stroke-[0.5px] stroke-round join-round ${className}`}
+      className={`isometric-illustration stroke-[0.5px] stroke-round join-round ${className}`}
       {...rest}
     >
       <path

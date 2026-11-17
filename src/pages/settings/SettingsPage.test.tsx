@@ -247,7 +247,24 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("tab", { name: "Exports" })).toHaveFocus()
     expect(screen.getByRole("tab", { name: "Exports" })).toHaveAttribute("aria-selected", "true")
     await user.keyboard("{End}")
-    expect(screen.getByRole("tab", { name: "Data" })).toHaveFocus()
-    expect(screen.getByRole("tabpanel", { name: "Data" })).toBeVisible()
+    expect(screen.getByRole("tab", { name: "Preferences" })).toHaveFocus()
+    expect(screen.getByRole("tabpanel", { name: "Preferences" })).toBeVisible()
+  })
+
+  it("saves and reverts the appearance preference", async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole("tab", { name: "Preferences" }))
+    expect(screen.getByRole("radio", { name: /System/ })).toBeChecked()
+
+    await user.click(screen.getByRole("radio", { name: /Dark/ }))
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled()
+    await user.click(screen.getByRole("button", { name: "Revert" }))
+    expect(screen.getByRole("radio", { name: /System/ })).toBeChecked()
+
+    await user.click(screen.getByRole("radio", { name: /Dark/ }))
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled())
+    expect((await getSettings()).appearance.theme).toBe("dark")
   })
 })

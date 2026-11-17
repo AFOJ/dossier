@@ -6,6 +6,7 @@ import { db, type AppSettings } from "@/db/db"
 import {
   DEFAULT_SETTINGS,
   COVER_LETTER_TITLE_SETTINGS_ID,
+  APPEARANCE_SETTINGS_ID,
   SETTINGS_ID,
   getSettings,
   parseStoredSettings,
@@ -45,6 +46,7 @@ describe("settings compatibility", () => {
       defaultPdfFilenameFormat: "",
     })
     expect(await getSettings()).toEqual({
+      appearance: DEFAULT_SETTINGS.appearance,
       documents: {
         ...DEFAULT_SETTINGS.documents,
         defaultSyncProfile: false,
@@ -57,12 +59,14 @@ describe("settings compatibility", () => {
   it("prefers grouped values and defaults invalid fields independently", () => {
     expect(
       parseStoredSettings({
+        appearance: { theme: "sepia" },
         defaultSyncProfile: true,
         defaultResumeTitleFormat: "Legacy",
         documents: { defaultSyncProfile: false, defaultResumeTitleFormat: 123 },
         exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "retired" },
       }),
     ).toEqual({
+      appearance: DEFAULT_SETTINGS.appearance,
       documents: { ...DEFAULT_SETTINGS.documents, defaultSyncProfile: false },
       exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "custom-{title}" },
     })
@@ -83,8 +87,9 @@ describe("settings compatibility", () => {
       defaultResumeTitleFormat: "New title",
     })
     expect(saved.exports).toEqual({ ...DEFAULT_SETTINGS.exports, pdfFilenamePattern: "shared" })
+    expect(saved.appearance).toEqual(DEFAULT_SETTINGS.appearance)
     const rows = await db.settings.toArray()
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
     expect(await db.settings.get(SETTINGS_ID)).toMatchObject({
       ...saved,
       id: SETTINGS_ID,
@@ -93,6 +98,10 @@ describe("settings compatibility", () => {
     expect(await db.settings.get(COVER_LETTER_TITLE_SETTINGS_ID)).toMatchObject({
       id: COVER_LETTER_TITLE_SETTINGS_ID,
       defaultCoverLetterTitleFormat: saved.documents.defaultCoverLetterTitleFormat,
+    })
+    expect(await db.settings.get(APPEARANCE_SETTINGS_ID)).toMatchObject({
+      id: APPEARANCE_SETTINGS_ID,
+      appearance: saved.appearance,
     })
     expect(legacySettingsSchema.parse(await db.settings.get(SETTINGS_ID))).toEqual({
       defaultSyncProfile: saved.documents.defaultSyncProfile,
@@ -103,6 +112,7 @@ describe("settings compatibility", () => {
 
   it("keeps preferences when an older tab reads and replaces the settings row", async () => {
     await upsertSettings({
+      appearance: { theme: "dark" },
       documents: {
         defaultSyncProfile: false,
         defaultResumeTitleFormat: "My CV",
@@ -113,6 +123,7 @@ describe("settings compatibility", () => {
     const legacy = legacySettingsSchema.parse(await db.settings.get(SETTINGS_ID))
     await writeRawRow({ ...legacy, defaultPdfFilenameFormat: "updated-{title}", id: SETTINGS_ID })
     const saved = await getSettings()
+    expect(saved.appearance.theme).toBe("dark")
     expect(saved.documents).toEqual({
       ...DEFAULT_SETTINGS.documents,
       defaultSyncProfile: false,
@@ -128,10 +139,12 @@ describe("settings compatibility", () => {
     expect((await getSettings()).documents.defaultCoverLetterTitleFormat).toBe(
       "{profile.role} Letter",
     )
+    expect((await getSettings()).appearance.theme).toBe("dark")
   })
 
   it("preserves concurrent updates to different fields within the same group", async () => {
     await Promise.all([
+      upsertSettings({ appearance: { theme: "dark" } }),
       upsertSettings({ documents: { defaultSyncProfile: false } }),
       upsertSettings({ documents: { defaultResumeTitleFormat: "{profile.name} CV" } }),
       upsertSettings({ exports: { defaultPdfFilenameFormat: "{title}-custom" } }),
@@ -143,6 +156,7 @@ describe("settings compatibility", () => {
       defaultResumeTitleFormat: "{profile.name} CV",
     })
     expect(saved.exports.defaultPdfFilenameFormat).toBe("{title}-custom")
+    expect(saved.appearance.theme).toBe("dark")
   })
 
   it("rejects invalid updates without changing the saved settings", async () => {

@@ -2,6 +2,7 @@ import { useLoaderData } from "react-router-dom"
 import { ArrowUpRight01Icon, File01Icon, Mail01Icon, UserIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react"
 import { ButtonLink, Heading1, Heading2, Heading3, Subheading } from "@/components/ui"
+import { DossierLogo } from "@/components/DossierLogo"
 
 const GITHUB_URL = "https://github.com/AFOJ/dossier"
 
@@ -42,7 +43,7 @@ export default function LandingPage() {
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-10">
             <div className="flex items-center justify-between border-x border-gray-200 px-6 py-4">
               <a href="/" className="flex items-center">
-                <img src="/d-logo.svg" alt="Dossier" className="size-7" />
+                <DossierLogo title="Dossier" className="size-7 text-gray-900" />
               </a>
 
               <nav className="flex items-center gap-2">

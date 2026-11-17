@@ -76,13 +76,18 @@ export interface CoverLetterTitleSettingsRow {
   defaultCoverLetterTitleFormat: string
 }
 
+export interface AppearanceSettingsRow {
+  id: string
+  appearance: SettingsData["appearance"]
+}
+
 export class DossierDatabase extends Dexie {
   profiles!: Table<Profile, number>
   tags!: Table<Tag, number>
   resumes!: Table<Resume, string>
   coverLetters!: Table<CoverLetter, string>
   entityCache!: Table<EntityCacheEntry, string>
-  settings!: Table<AppSettings | CoverLetterTitleSettingsRow, string>
+  settings!: Table<AppSettings | CoverLetterTitleSettingsRow | AppearanceSettingsRow, string>
 
   constructor() {
     super("DossierDatabase")

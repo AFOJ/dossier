@@ -3,6 +3,7 @@ import { db, type CoverLetter, type Profile, type Resume, type Tag } from "@/db/
 import {
   getSettings,
   coverLetterTitleSettingsRow,
+  appearanceSettingsRow,
   parseStoredSettings,
   toCompatibleSettings,
   SETTINGS_ID,
@@ -283,6 +284,7 @@ export async function importProfile(fileContent: string): Promise<void> {
       await db.settings.bulkPut([
         { ...toCompatibleSettings(settings), id: SETTINGS_ID },
         coverLetterTitleSettingsRow(settings.documents.defaultCoverLetterTitleFormat),
+        appearanceSettingsRow(settings.appearance),
       ])
 
       if (restoredTags.length > 0) {

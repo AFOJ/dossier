@@ -530,6 +530,7 @@ describe("importProfile", () => {
   it("round-trips grouped settings through version 4 backups", async () => {
     await upsertProfile(baseProfile)
     await upsertSettings({
+      appearance: { theme: "dark" },
       documents: {
         defaultSyncProfile: false,
         defaultCoverLetterTitleFormat: "{profile.role} Letter",
