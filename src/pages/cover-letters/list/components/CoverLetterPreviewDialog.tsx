@@ -25,7 +25,7 @@ export function CoverLetterPreviewDialog({
           <iframe
             src={processed.url}
             title={`${letter.title} preview`}
-            className="absolute inset-0 size-full"
+            className="theme-light absolute inset-0 size-full bg-white"
           />
         )}
 

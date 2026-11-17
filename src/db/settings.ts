@@ -10,10 +10,14 @@ import {
 } from "@/lib/titleFormat"
 
 export type Settings = Omit<AppSettings, "id">
+export type ThemePreference = Settings["appearance"]["theme"]
 
 export const SETTINGS_ID = "app"
 
 export const DEFAULT_SETTINGS: Settings = {
+  appearance: {
+    theme: "system",
+  },
   documents: {
     defaultSyncProfile: true,
     defaultResumeTitleFormat: DEFAULT_RESUME_TITLE_FORMAT,
@@ -39,6 +43,7 @@ export function parseStoredSettings(row: unknown): Settings {
   const stored = asRecord(row)
   const documents = asRecord(stored.documents)
   const exports = asRecord(stored.exports)
+  const appearance = asRecord(stored.appearance)
   const read = <Value>(
     group: Record<string, unknown>,
     key: string,
@@ -50,7 +55,11 @@ export function parseStoredSettings(row: unknown): Settings {
   }
   const documentSchema = appSettingsSchema.shape.documents.shape
   const exportSchema = appSettingsSchema.shape.exports.shape
+  const appearanceSchema = appSettingsSchema.shape.appearance.shape
   return {
+    appearance: {
+      theme: read(appearance, "theme", appearanceSchema.theme, DEFAULT_SETTINGS.appearance.theme),
+    },
     documents: {
       defaultSyncProfile: read(
         documents,
@@ -128,6 +137,7 @@ export async function upsertSettings(data: SettingsUpdate): Promise<Settings> {
   return db.transaction("rw", db.settings, async () => {
     const current = parseStoredSettings(await db.settings.get(SETTINGS_ID))
     const merged = appSettingsSchema.safeParse({
+      appearance: { ...current.appearance, ...data.appearance },
       documents: { ...current.documents, ...data.documents },
       exports: { ...current.exports, ...data.exports },
     })

@@ -170,6 +170,9 @@ export const coverLetterExportContactSchema = z.object({
 })
 
 export const appSettingsSchema = z.object({
+  appearance: z.object({
+    theme: z.enum(["system", "light", "dark"]),
+  }),
   documents: z.object({
     defaultSyncProfile: z.boolean(),
     defaultResumeTitleFormat: z.string().min(1, "Enter a title format.").max(120),

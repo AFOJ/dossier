@@ -10,7 +10,7 @@ export default function ProtectedLayout() {
   const navigation = useNavigation()
 
   return (
-    <div className="min-h-dvh bg-white lg:pl-64">
+    <div className="app-canvas min-h-dvh lg:pl-64">
       <Sidebar className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-gray-200 lg:flex" />
 
       <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} swipeDirection="left">

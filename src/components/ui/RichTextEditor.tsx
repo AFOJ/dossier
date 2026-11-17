@@ -144,7 +144,7 @@ export function RichTextEditor(props: Readonly<RichTextEditorProps>) {
       </div>
       <div className="relative">
         {editor.isEmpty && placeholder && (
-          <p aria-hidden className="pointer-events-none absolute px-4 py-3 text-sm text-gray-400">
+          <p aria-hidden className="pointer-events-none absolute px-4 py-3 text-sm text-gray-500">
             {placeholder}
           </p>
         )}
@@ -175,7 +175,7 @@ function ToolbarButton(
       className={cn(
         "rounded-md px-2.5 py-1 text-sm transition-colors",
         "text-gray-600 hover:bg-gray-200 hover:text-gray-900",
-        "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent",
+        "disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-transparent",
         active && "bg-white text-gray-900 shadow-sm ring-1 ring-gray-300 hover:bg-white",
       )}
     >

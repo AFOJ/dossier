@@ -530,6 +530,7 @@ describe("importProfile", () => {
   it("round-trips grouped settings through version 4 backups", async () => {
     await upsertProfile(baseProfile)
     await upsertSettings({
+      appearance: { theme: "dark" },
       documents: { defaultSyncProfile: false },
       exports: { defaultExportFilenameFormat: "backup-{title}" },
     })
@@ -552,7 +553,7 @@ describe("importProfile", () => {
       ...legacySettings,
       id: "app",
     } as unknown as import("@/db/db").AppSettings)
-    expect(await getSettings()).toEqual(saved)
+    expect(await getSettings()).toEqual({ ...saved, appearance: DEFAULT_SETTINGS.appearance })
   })
 
   it("rejects future backup versions without replacing local data", async () => {

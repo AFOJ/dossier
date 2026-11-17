@@ -44,6 +44,7 @@ describe("settings compatibility", () => {
       defaultPdfFilenameFormat: "",
     })
     expect(await getSettings()).toEqual({
+      appearance: DEFAULT_SETTINGS.appearance,
       documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "{profile.name} CV" },
       exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "{title}.json" },
     })
@@ -52,12 +53,14 @@ describe("settings compatibility", () => {
   it("prefers grouped values and defaults invalid fields independently", () => {
     expect(
       parseStoredSettings({
+        appearance: { theme: "sepia" },
         defaultSyncProfile: true,
         defaultResumeTitleFormat: "Legacy",
         documents: { defaultSyncProfile: false, defaultResumeTitleFormat: "" },
         exports: { defaultExportFilenameFormat: "custom-{title}", pdfFilenamePattern: "retired" },
       }),
     ).toEqual({
+      appearance: DEFAULT_SETTINGS.appearance,
       documents: { ...DEFAULT_SETTINGS.documents, defaultSyncProfile: false },
       exports: { ...DEFAULT_SETTINGS.exports, defaultExportFilenameFormat: "custom-{title}" },
     })
@@ -77,6 +80,7 @@ describe("settings compatibility", () => {
       defaultResumeTitleFormat: "New title",
     })
     expect(saved.exports).toEqual({ ...DEFAULT_SETTINGS.exports, pdfFilenamePattern: "shared" })
+    expect(saved.appearance).toEqual(DEFAULT_SETTINGS.appearance)
     const rows = await db.settings.toArray()
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ ...saved, id: SETTINGS_ID })
@@ -104,6 +108,7 @@ describe("settings compatibility", () => {
 
   it("preserves concurrent updates to different fields within the same group", async () => {
     await Promise.all([
+      upsertSettings({ appearance: { theme: "dark" } }),
       upsertSettings({ documents: { defaultSyncProfile: false } }),
       upsertSettings({ documents: { defaultResumeTitleFormat: "{profile.name} CV" } }),
       upsertSettings({ exports: { defaultPdfFilenameFormat: "{title}-custom" } }),
@@ -114,6 +119,7 @@ describe("settings compatibility", () => {
       defaultResumeTitleFormat: "{profile.name} CV",
     })
     expect(saved.exports.defaultPdfFilenameFormat).toBe("{title}-custom")
+    expect(saved.appearance.theme).toBe("dark")
   })
 
   it("rejects invalid updates without changing the saved settings", async () => {

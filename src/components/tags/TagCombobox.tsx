@@ -66,7 +66,7 @@ export function TagCombobox(props: Readonly<TagComboboxProps>) {
                 <Combobox.Input
                   id={id}
                   aria-label={ariaLabel}
-                  className="min-w-20 flex-1 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-gray-400"
+                  className="min-w-20 flex-1 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-gray-500"
                   placeholder={currentTags.length === 0 ? placeholder : ""}
                 />
               </>

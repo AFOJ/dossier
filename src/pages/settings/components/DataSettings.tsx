@@ -55,7 +55,7 @@ export function DataSection() {
         >
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Export your data</p>
-            <p className="mt-1 text-xs text-[#59636e]">
+            <p className="mt-1 text-xs text-gray-600">
               Downloads your profile, documents, tags, and settings as a JSON file.
             </p>
           </div>
@@ -73,7 +73,7 @@ export function DataSection() {
         <div className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Cached previews</p>
-            <p className="mt-1 text-xs text-[#59636e]">
+            <p className="mt-1 text-xs text-gray-600">
               Saved PDF previews stay in this browser. Clearing them leaves your documents intact;
               Dossier generates a new preview when you next need one.{" "}
               {cacheCount === undefined
@@ -104,13 +104,13 @@ export function DangerZone() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Heading2 className="text-[#d1242f]">Danger zone</Heading2>
+      <Heading2 className="text-red-700">Danger zone</Heading2>
 
       <div className="border-t border-gray-200">
         <div className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Delete all data</p>
-            <p className="mt-1 text-xs text-[#59636e]">
+            <p className="mt-1 text-xs text-gray-600">
               Permanently removes your profile, documents, tags, and settings from this browser.{" "}
               Export a backup first: this cannot be undone.
             </p>
@@ -119,7 +119,7 @@ export function DangerZone() {
             type="button"
             intent="secondary"
             onClick={() => deleteModal.open(undefined)}
-            className="w-full shrink-0 text-[#d1242f] sm:w-auto"
+            className="w-full shrink-0 text-red-700 sm:w-auto"
           >
             Delete all data
           </Button>

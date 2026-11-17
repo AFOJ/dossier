@@ -15,6 +15,7 @@ import { Divider } from "@/components/ui"
 import useProtectedRouteData from "@/hooks/useProtectedRouteData"
 import { prefetchNavigation } from "@/lib/navigationPrefetch"
 import { cn } from "@/utils"
+import { DossierLogo } from "@/components/DossierLogo"
 
 type NavItem = {
   to: string
@@ -69,13 +70,13 @@ export function Sidebar(props: Readonly<SidebarProps>) {
   const { profile } = useProtectedRouteData()
 
   return (
-    <aside className={cn("flex h-full flex-col bg-white", className)}>
-      <div className="flex items-center gap-2.5 px-4 pt-5 pb-6">
-        <img src="/favicon.svg" alt="" className="size-8" />
+    <aside className={cn("app-surface flex h-full flex-col", className)}>
+      <div className="flex items-center gap-2.5 border-b border-gray-200 px-4 py-4">
+        <DossierLogo className="size-8 text-gray-900" />
         <span className="font-heading text-lg font-bold text-gray-900">Dossier</span>
       </div>
 
-      <nav aria-label="Main" className="flex flex-1 flex-col gap-3 overflow-y-auto px-3">
+      <nav aria-label="Main" className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 pt-4">
         {NAV_SECTIONS.map((section, index) => (
           <div key={section.label} className="space-y-1">
             <p className="px-3 pb-1 text-xs font-medium text-gray-500">{section.label}</p>
