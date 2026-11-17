@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/AFOJ/dossier/compare/dossier-v1.9.0...dossier-v1.10.0) (2026-11-17)
+
+
+### Features
+
+* add dark mode and theme preference support ([#56](https://github.com/AFOJ/dossier/issues/56)) ([de6c66f](https://github.com/AFOJ/dossier/commit/de6c66f00a60dd95670ea1be2c666da6016bf303))
+
+
+### Bug Fixes
+
+* make document title defaults optional and reset inactive PDF edits ([#57](https://github.com/AFOJ/dossier/issues/57)) ([42525b1](https://github.com/AFOJ/dossier/commit/42525b1dc48b017986a8c9ffc9b6225b9aa71278))
+
 ## [1.9.0](https://github.com/AFOJ/dossier/compare/dossier-v1.8.0...dossier-v1.9.0) (2026-11-02)
 
 
