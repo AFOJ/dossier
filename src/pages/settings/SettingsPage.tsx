@@ -23,7 +23,7 @@ import { useSettingsForm } from "./hooks/useSettingsForm"
 import { renderTitle, TITLE_FORMAT_TOKENS } from "@/lib/titleFormat"
 import { getExportFilenameWithSettings, getPdfFilenameWithSettings } from "@/lib/download"
 
-const tabs = ["Documents", "Exports", "Data"] as const
+const tabs = ["Data", "Documents", "Exports", "Preferences"] as const
 
 export default function SettingsPage() {
   usePageTitle("Settings")
@@ -46,9 +46,11 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
   const [activeTab, setActiveTab] = useState<string>("Documents")
   const { form, saveSettings } = useSettingsForm(settings)
   const onSubmit = form.handleSubmit(saveSettings, (errors) => {
-    const group = errors.documents ? "documents" : "exports"
+    const group = errors.appearance ? "appearance" : errors.documents ? "documents" : "exports"
     const field = Object.keys(errors[group] ?? {})[0]
-    setActiveTab(group === "documents" ? "Documents" : "Exports")
+    setActiveTab(
+      group === "appearance" ? "Preferences" : group === "documents" ? "Documents" : "Exports",
+    )
     if (group === "exports") {
       if (field === "defaultPdfFilenameFormat") {
         form.setValue("exports.pdfFilenamePattern", "shared", { shouldDirty: true })
@@ -90,7 +92,7 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
             <Tabs.Tab
               key={tab}
               value={tab}
-              className="relative min-h-11 shrink-0 cursor-pointer whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-gray-500 hover:text-gray-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gray-600 data-active:border-gray-900 data-active:text-gray-950"
+              className="relative min-h-11 shrink-0 cursor-pointer whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-gray-500 hover:text-gray-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gray-600 data-active:border-[var(--app-accent)] data-active:text-gray-950"
             >
               {tab}
             </Tabs.Tab>
@@ -239,6 +241,54 @@ function SettingsWorkspace({ settings }: Readonly<{ settings: Settings }>) {
         <Tabs.Panel value="Data" keepMounted className="space-y-10 data-hidden:hidden">
           <DataSection />
           <DangerZone />
+        </Tabs.Panel>
+        <Tabs.Panel value="Preferences" keepMounted className="space-y-8 data-hidden:hidden">
+          <SectionHeading title="Appearance">
+            Choose how Dossier looks. System follows your device setting automatically.
+          </SectionHeading>
+          <fieldset className="space-y-3">
+            <legend id="theme-label" className="text-sm font-medium text-gray-950">
+              Theme
+            </legend>
+            <Controller
+              control={form.control}
+              name="appearance.theme"
+              render={({ field }) => (
+                <RadioGroup
+                  aria-labelledby="theme-label"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="grid max-w-xl gap-3 sm:grid-cols-3"
+                >
+                  {(
+                    [
+                      ["system", "System", "Match your device setting"],
+                      ["light", "Light", "Always use light mode"],
+                      ["dark", "Dark", "Always use dark mode"],
+                    ] as const
+                  ).map(([value, label, description]) => (
+                    <label
+                      key={value}
+                      className="flex min-h-20 cursor-pointer items-start gap-3 rounded-[10px] border border-gray-300 bg-white p-4 transition-colors hover:border-gray-400 has-[[data-checked]]:border-[var(--app-accent)] has-[[data-checked]]:ring-1 has-[[data-checked]]:ring-[var(--app-accent)]"
+                    >
+                      <Radio.Root
+                        value={value}
+                        className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 data-checked:border-gray-900"
+                      >
+                        <Radio.Indicator className="size-2 rounded-full bg-gray-900" />
+                      </Radio.Root>
+                      <span>
+                        <span className="block text-sm font-medium text-gray-950">{label}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-gray-600">
+                          {description}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </RadioGroup>
+              )}
+            />
+          </fieldset>
         </Tabs.Panel>
       </Tabs.Root>
       <FormSubmitBar>

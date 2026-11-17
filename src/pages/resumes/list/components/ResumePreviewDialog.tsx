@@ -22,7 +22,7 @@ export function ResumePreviewDialog({ data: resume, close }: Readonly<ModalConte
           <iframe
             src={processed.url}
             title={`${resume.title} preview`}
-            className="absolute inset-0 size-full"
+            className="theme-light absolute inset-0 size-full bg-white"
           />
         )}
 

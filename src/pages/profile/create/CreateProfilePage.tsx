@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui"
+import { DossierLogo } from "@/components/DossierLogo"
 import { cn } from "@/utils"
 import { FormProvider, type FieldPath } from "react-hook-form"
 import type { ProfileFormData } from "@/pages/profile/schema"
@@ -109,12 +110,15 @@ export default function CreateProfilePage() {
         <div className="grid flex-1 gap-6 lg:grid-cols-2">
           <section className="flex min-w-0 flex-col px-2 py-2 sm:px-8 sm:py-3">
             <div className="hidden items-center gap-2 self-start lg:flex" aria-label="Dossier">
-              <img src="/d-logo.svg" alt="" className="size-8" />
+              <DossierLogo className="size-8 text-gray-950" />
               <span className="font-heading text-xl font-bold text-gray-950">Dossier</span>
             </div>
             <div className="flex flex-1 items-center justify-center py-16">
               <div className="w-full max-w-sm">
-                <img src="/d-logo.svg" alt="Dossier" className="mx-auto mb-6 size-16 lg:hidden" />
+                <DossierLogo
+                  title="Dossier"
+                  className="mx-auto mb-6 size-16 text-gray-950 lg:hidden"
+                />
                 <h1 className="mb-8 text-center text-3xl font-semibold tracking-tight text-gray-950">
                   Set up your Dossier profile
                 </h1>
@@ -146,7 +150,7 @@ export default function CreateProfilePage() {
         <>
           <div className="hidden px-2 py-2 sm:px-8 sm:py-3 lg:block">
             <div className="hidden items-center gap-2 self-start lg:flex" aria-label="Dossier">
-              <img src="/d-logo.svg" alt="" className="size-8" />
+              <DossierLogo className="size-8 text-gray-950" />
               <span className="font-heading text-xl font-bold text-gray-950">Dossier</span>
             </div>
           </div>
@@ -156,7 +160,10 @@ export default function CreateProfilePage() {
               step === 2 ? "max-w-2xl" : "max-w-md",
             )}
           >
-            <img src="/d-logo.svg" alt="Dossier" className="mb-8 size-16 self-center lg:hidden" />
+            <DossierLogo
+              title="Dossier"
+              className="mb-8 size-16 self-center text-gray-950 lg:hidden"
+            />
             <p id="setup-step-progress" className="mb-3 text-sm text-gray-500">
               Step {step + 1} of 3
             </p>
@@ -200,7 +207,7 @@ export default function CreateProfilePage() {
                     type="submit"
                     aria-disabled={isSubmitting}
                     aria-busy={isSubmitting}
-                    className="aria-disabled:cursor-wait aria-disabled:opacity-50"
+                    className="aria-disabled:cursor-wait aria-disabled:opacity-70"
                   >
                     {isSubmitting ? "Creating…" : step === 2 ? "Create my profile" : "Continue"}
                   </Button>

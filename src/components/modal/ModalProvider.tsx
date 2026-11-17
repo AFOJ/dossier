@@ -128,7 +128,7 @@ function ModalSurface(props: Readonly<ModalSurfaceProps>) {
   }
 
   const modal = (
-    <div className="fixed inset-0 overflow-y-auto bg-gray-950/40" style={{ zIndex }}>
+    <div className="app-backdrop fixed inset-0 overflow-y-auto" style={{ zIndex }}>
       <div
         className="flex min-h-full p-4"
         onMouseDown={(event) => {

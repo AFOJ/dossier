@@ -10,7 +10,7 @@ export default function ProtectedLayout() {
   const navigation = useNavigation()
 
   return (
-    <div className="min-h-dvh bg-white lg:pl-64">
+    <div className="app-canvas min-h-dvh lg:pl-64">
       <Sidebar className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-gray-200 lg:flex" />
 
       <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen} swipeDirection="left">
@@ -55,7 +55,7 @@ function MobileDrawer(props: Readonly<MobileDrawerProps>) {
 
   return (
     <Drawer.Portal>
-      <Drawer.Backdrop className="fixed inset-0 z-60 bg-black/40 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0 lg:hidden" />
+      <Drawer.Backdrop className="app-backdrop fixed inset-0 z-60 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0 lg:hidden" />
       <Drawer.Viewport className="fixed inset-0 z-60 flex justify-start lg:hidden">
         <Drawer.Popup className="h-dvh w-64 max-w-[85vw] overflow-y-auto overscroll-contain bg-white outline-none transform-[translateX(var(--drawer-swipe-movement-x))] transition-transform duration-300 ease-out data-swiping:duration-0 data-starting-style:transform-[translateX(-100%)] data-ending-style:transform-[translateX(-100%)]">
           <Drawer.Content className="h-full">

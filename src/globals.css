@@ -3,6 +3,102 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Google Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --app-canvas: #ffffff;
+  --app-surface: #ffffff;
+  --app-accent: #6b7280;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html[data-theme-pending] body {
+  visibility: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--app-canvas);
+  color: var(--color-gray-900);
+}
+
+/* Existing components use a deliberately small neutral palette. Rebinding that
+   palette at the root gives every surface a consistent dark theme, including
+   portals, without duplicating dark: utilities throughout the component tree. */
+html.dark {
+  --app-canvas: #000000;
+  --app-surface: #080808;
+  --app-accent: #a3a3a3;
+  --color-white: #111111;
+  --color-black: #f9fafb;
+  --color-gray-50: #161616;
+  --color-gray-100: #1d1d1d;
+  --color-gray-200: #2a2a2a;
+  --color-gray-300: #3b3b3b;
+  --color-gray-400: #666666;
+  --color-gray-500: #949494;
+  --color-gray-600: #b5b5b5;
+  --color-gray-700: #d0d0d0;
+  --color-gray-800: #e4e4e4;
+  --color-gray-900: #f3f3f3;
+  --color-gray-950: #fafafa;
+  --color-slate-500: #969da2;
+  --color-red-50: #3f171b;
+  --color-red-200: #7f1d1d;
+  --color-red-300: #991b1b;
+  --color-red-500: #ef4444;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-red-900: #fee2e2;
+  --color-green-50: #102d22;
+  --color-green-300: #166534;
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+  --color-green-900: #dcfce7;
+  --color-amber-50: #35270f;
+  --color-amber-300: #92400e;
+  --color-amber-900: #fef3c7;
+}
+
+.app-canvas {
+  background-color: var(--app-canvas);
+}
+
+.app-surface {
+  background-color: var(--app-surface);
+}
+
+.app-backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--app-accent) 35%, transparent);
+}
+
+/* A paper island opts out of the dark palette for printable previews. */
+.theme-light {
+  color-scheme: light;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+}
+
+.isometric-illustration path {
+  stroke: var(--color-gray-700);
 }
 
 .no-scrollbar {

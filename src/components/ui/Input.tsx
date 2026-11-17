@@ -11,10 +11,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       {...rest}
       ref={ref}
       className={cn(
-        "w-full border border-gray-300 hover:border-gray-400",
+        "w-full border border-gray-300 bg-white hover:border-gray-400",
         "focus:outline-none focus:ring-1 focus:ring-gray-600 focus:border-gray-600",
         "p-2",
-        "rounded-[10px] placeholder:text-gray-400",
+        "rounded-[10px] placeholder:text-gray-500",
         className,
       )}
     />

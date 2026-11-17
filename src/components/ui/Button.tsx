@@ -21,7 +21,7 @@ const buttonVariants = cva(
     "gap-x-1.5 h-9 px-3",
     "rounded-[10px] focus:outline-none focus:ring-1 focus:ring-offset-1",
     "font-medium text-sm text-nowrap transition-colors cursor-pointer ",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none",
+    "disabled:opacity-70 disabled:cursor-not-allowed disabled:select-none",
   ),
   {
     variants: {
